@@ -10,7 +10,7 @@
 
 - Implementation reviewer: 実装手順、scope、検証可能性。
 - Adversarial reviewer: 隠れた失敗、矛盾、曖昧さ。
-- UX reviewer: 初見、日常利用、一般知識ユーザー、モバイル、状態表示。
+- UX reviewer: 初見、日常利用、一般知識ユーザー、モバイル、状態表示、各 component / 文言のユーザー価値。
 - Simplicity reviewer: 過剰設計、不要な抽象化、将来予測の複雑化。
 
 Conditional reviewers:
