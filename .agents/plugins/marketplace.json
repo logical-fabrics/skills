@@ -1,0 +1,9 @@
+{
+  "name": "lf-skills",
+  "plugins": [
+    {
+      "name": "implementation-workflow",
+      "source": "./plugins/implementation-workflow"
+    }
+  ]
+}

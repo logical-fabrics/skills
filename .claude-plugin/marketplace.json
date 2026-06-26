@@ -1,0 +1,13 @@
+{
+  "name": "lf-skills",
+  "description": "Logical Fabrics internal engineering workflow plugins for Codex and Claude Code.",
+  "owner": {
+    "name": "Logical Fabrics"
+  },
+  "plugins": [
+    {
+      "name": "implementation-workflow",
+      "source": "./plugins/implementation-workflow"
+    }
+  ]
+}

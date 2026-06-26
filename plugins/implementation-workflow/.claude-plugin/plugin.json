@@ -1,0 +1,13 @@
+{
+  "name": "implementation-workflow",
+  "version": "0.1.0",
+  "description": "Japanese implementation planning, auditing, and execution workflow shared with Codex.",
+  "author": {
+    "name": "Logical Fabrics"
+  },
+  "homepage": "https://github.com/logical-fabrics/lf-skills",
+  "repository": "https://github.com/logical-fabrics/lf-skills",
+  "license": "Proprietary",
+  "skills": "./skills/",
+  "commands": "./commands/"
+}

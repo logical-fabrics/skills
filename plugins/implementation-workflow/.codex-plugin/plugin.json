@@ -1,0 +1,40 @@
+{
+  "name": "implementation-workflow",
+  "version": "0.1.0",
+  "description": "Japanese implementation planning, auditing, and execution workflow for Codex and Claude Code, with UX-first review loops, simplicity review, and verification discipline.",
+  "author": {
+    "name": "Logical Fabrics"
+  },
+  "homepage": "https://github.com/logical-fabrics/lf-skills",
+  "repository": "https://github.com/logical-fabrics/lf-skills",
+  "license": "Proprietary",
+  "keywords": [
+    "implementation-plan",
+    "execution",
+    "audit",
+    "review",
+    "ux",
+    "agent-skills",
+    "codex",
+    "claude-code"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Implementation Workflow",
+    "shortDescription": "Plan, audit, implement, and verify engineering work in Japanese",
+    "longDescription": "A shared implementation workflow for Codex and Claude Code. It audits existing implementations, creates executable Japanese implementation plans, reviews them from UX, simplicity, schema, security, delivery, and adversarial perspectives, then executes accepted plans with verification and learning persistence.",
+    "developerName": "Logical Fabrics",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "defaultPrompt": [
+      "現在の実装を見直して、UX・設計・テスト・過剰設計の問題を洗い出して",
+      "実装計画を作って",
+      "docs/implementation/current.md に実装計画をまとめて",
+      "current.md の次の slice を実装して、検証までやって",
+      "現在の実装を見直して改善点を出して",
+      "この implementation-plan.md を実装して",
+      "この計画をレビューして改善して"
+    ],
+    "brandColor": "#111827"
+  }
+}

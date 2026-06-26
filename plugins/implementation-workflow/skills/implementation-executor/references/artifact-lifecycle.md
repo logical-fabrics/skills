@@ -1,0 +1,44 @@
+# Artifact Lifecycle
+
+実装中も成果物を増やしすぎない。次セッションが迷わず再開できる状態を維持する。
+
+## Active Plan
+
+優先順位:
+
+1. ユーザーが明示した plan file。
+2. 既存 repo の active plan 慣習。
+3. `docs/implementation/current.md`。
+
+既存 repo に慣習がなく、ユーザーも明示していない場合、active plan は以下に置く:
+
+```text
+docs/implementation/current.md
+```
+
+実装開始時:
+
+- ユーザー明示 plan、repo 慣習上の active plan、または `docs/implementation/current.md` があるか確認する。
+- `Status`、`Last updated`、`Current state`、`Next actions`、`Implementation Handoff` を読む。
+- 古い計画、別名 plan、archive を source of truth にしない。ただしユーザーが明示した plan は今回の source of truth とする。
+
+実装終了時:
+
+- 完了した slice を `Completed` に反映する。
+- 次の最小 slice を `Next actions` に反映する。
+- 通った verification と失敗した verification を更新する。
+- scope、UX、schema、infra、security、cost、production behavior が変わった場合は plan を更新する。
+
+## Archive / Cleanup
+
+- 完了または置換された active plan は `docs/implementation/archive/YYYY-MM-DD-slug.md` に薄く残す。
+- 古い draft、途中 reviewer memo、一時 HTML を増やさない。
+- 新しいファイルを作る前に、既存の active plan を更新できないか確認する。
+- `abstract-plan.html` は人間向け合意形成が必要な場合だけ残す。
+
+## Do Not
+
+- `implementation-plan-v2.md`、`final.md`、`final-final.md` を作らない。
+- セッションごとの plan ファイルを乱立させない。
+- 古い plan を消さずに新 plan を横に置かない。
+- 会話履歴だけを次セッションの source of truth にしない。

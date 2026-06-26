@@ -1,0 +1,17 @@
+{
+  "name": "lf-skills",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Logical Fabrics shared agent skills and plugins for Codex and Claude Code.",
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "validate": "node scripts/validate-plugins.mjs",
+    "format": "biome format --write .",
+    "lint": "biome check . && knip"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.1",
+    "knip": "6.21.0"
+  }
+}

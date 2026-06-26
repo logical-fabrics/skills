@@ -1,0 +1,88 @@
+# Artifact Lifecycle
+
+開発は複数セッションにまたがる。謎の計画ファイルや古い設計が増え続けると、次の LLM と人間の認知負荷が上がる。成果物は「明確な active plan」と「薄い archive」を原則にする。
+
+## Placement
+
+優先順位:
+
+1. ユーザーが明示した plan file。
+2. 既存 repo にある計画置き場の慣習。
+3. `docs/implementation/current.md`。
+
+ユーザーが特定ファイルを明示した場合は、そのファイルを今回の source of truth とする。継続運用が必要なときだけ `current.md` への統合を提案する。
+
+慣習がない場合の既定:
+
+```text
+docs/implementation/
+  README.md
+  current.md
+  abstract-plan.html
+  archive/
+    YYYY-MM-DD-slug.md
+```
+
+- `current.md`: 既定の active implementation plan。
+- `abstract-plan.html`: 人間向け合意形成が必要なときだけ作る。軽微な作業では作らない。
+- `README.md`: このディレクトリの読み方と active plan へのリンク。
+- `archive/`: 完了、棄却、置換された計画の薄い記録。
+
+`implementation-plan-v2.md`、`final.md`、`final-final.md`、session ごとの謎ファイルを作らない。
+
+## Active Plan
+
+`current.md` を使う場合、それは次セッションの入口である。必ず以下を持つ:
+
+- Status: `draft` / `approved` / `in-progress` / `blocked` / `done` / `superseded`
+- Last updated
+- Goal
+- Current state
+- Completed
+- Next actions
+- Verification status
+- Open decisions
+- Implementation Handoff
+
+既定運用では、新しい plan を作るよりまず `current.md` を更新する。新計画が必要な場合は、古い `current.md` を `archive/` に移してから置き換える。
+
+## Archive
+
+archive は履歴の墓場ではなく、後から判断を追うための薄い記録。
+
+archive に残す:
+
+- 最終 status。
+- 採用した判断。
+- 棄却した重要案。
+- 完了した verification。
+- 次に再開する場合の注意。
+
+archive に残さない:
+
+- 古い draft の全文コピー。
+- 途中の reviewer メモ全量。
+- 一時的な TODO。
+- 生成されたが使われなかった HTML。
+
+## Session Handoff
+
+各セッション終了時、必要なら `current.md` の `Implementation Handoff` を更新する。
+
+必須:
+
+- 今回完了したこと。
+- まだ終わっていないこと。
+- 次に読むべきファイル。
+- 次に実行する最小 slice。
+- 最後に通った verification。
+- 失敗した verification と残リスク。
+
+次セッションは、会話履歴ではなく明確な active plan と現在の repo を source of truth にする。
+
+## Cleanup Rules
+
+- 作業に使わない一時ファイルは残さない。
+- 古い plan を source of truth として残さない。`superseded` と `replaced by` を明記する。
+- `abstract-plan.html` は人間の合意形成に効く場合だけ維持する。実装が完了したら archive するか削除候補にする。
+- docs を更新したら、計画内の status と handoff も合わせる。
