@@ -65,7 +65,7 @@ Disallowed unless explicitly requested:
 - `references/ui-ux.md`: UI/UX canonical rubric、視覚検証、URL状態、改行品質。
 - `references/ai-ux.md`: AI-first UX。
 - `references/ai-runtime.md`: Cloudflare AI Gateway、Workers AI、Gemma。
-- `references/default-stack.md`: greenfield または既存選定がない場合の Drizzle、Better Auth、Hono、React、Vite、Vitest、Zod。
+- `references/default-stack.md`: greenfield または既存選定がない場合の Drizzle、Better Auth、Hono（typed RPC）、React、Vite、Vitest、Zod、Expo。
 - `references/data-modeling.md`: schema、Drizzle、raw SQL、YAGNI。
 - `references/delivery.md`: CI/CD、Cloudflare、staging、production、OGP。
 - `references/accessibility.md`: 実操作で確認する accessibility guardrails。

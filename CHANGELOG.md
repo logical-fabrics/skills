@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.12
+
+- Added Expo as the default mobile framework for greenfield JS/TS mobile apps when the repo has no existing mobile stack decision.
+- Strengthened the Hono API default: use typed RPC (`AppType` + `hc<AppType>()`), `InferRequestType` / `InferResponseType`, validator-backed request parsing, and typed JSON responses with explicit status codes for client-facing endpoints.
+- Updated reference routing so mobile planning can consult the mobile default without importing Web stack choices into native/mobile work.
+- Migration: none for users; installed plugin users should update to refresh skill reference content.
+
 ## 0.1.11
 
 - Unified the plan template: `current.md`（active plan）と implementation-plan content を 1 つの section 契約に統合し、`output-contracts.md` を単一の正本にした。`Completed` / `Verification status` / `Open decisions` は独立 section をやめ、`Current State` / `Verification Plan` / `Review Findings` に畳む。

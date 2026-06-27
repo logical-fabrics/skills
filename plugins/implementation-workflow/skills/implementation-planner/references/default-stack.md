@@ -1,28 +1,35 @@
 # Default Stack
 
-このファイルは LF のハウス既定であり、汎用ベストプラクティスではない。**greenfield かつ TypeScript / JavaScript の Web アプリで、技術選定が未確定のときだけ**適用する。
+このファイルは LF のハウス既定であり、汎用ベストプラクティスではない。**greenfield かつ TypeScript / JavaScript の Web app / API service / mobile app で、技術選定が未確定のときだけ**適用する。
 
 適用しない場合:
 
 - 既存 repo に技術選定がある（その repo 慣習を優先する）。
 - 言語が JS/TS でない（Python / Go / Rust / Ruby など。その言語・エコシステムの標準に従う）。
-- 領域が Web UI でない（CLI / batch / data pipeline / library / mobile / native / 組み込み）。
+- 領域が Web app / API service / mobile app でない（CLI / batch / data pipeline / library / native module / 組み込み）。
 
 これらでは、ここに並ぶ具体 library を持ち込まない。下の Auth 方針（passwordless 既定）など、言語非依存の原則だけは横展開してよい。
 
-既存 repo の明確な選択がない場合、または greenfield で特段指示がない場合（上記の適用条件を満たすとき）:
+既存 repo の明確な選択がない場合、または greenfield で特段指示がない場合（上記の適用条件を満たす Web app / API service のとき）:
 
 - DB / ORM: Drizzle
 - Auth: Better Auth
 - API: Hono
-- Frontend: React
-- Styling: Tailwind CSS
-- Build / dev server: Vite
+- Runtime schema: Zod
 - Test: Vitest
 - Format / lint: Biome
 - Dependency / unused exports check: Knip
-- Runtime schema: Zod
 - Error monitoring: Sentry
+
+Web frontend の既定:
+
+- Frontend: React
+- Styling: Tailwind CSS
+- Build / dev server: Vite
+
+Mobile app の既定:
+
+- Mobile framework: Expo
 
 ルール:
 
@@ -31,6 +38,15 @@
 - package は原則最新。ただし既存 repo の制約に合わせる。
 - raw SQL は原則禁止。例外は `data-modeling.md` に従う。
 - Sentry は local では発火させない。staging と production で有効化し、1 project の中で environment を `staging` / `production` として分ける。
+
+API:
+
+- Hono を使う場合は、server route type を client に渡す RPC 型を既定にする。`export type AppType = typeof route`（または compose 済み routes）と `hc<AppType>()` を使い、手書き client 型や duplicated DTO を増やさない。
+- request / response 型が必要な箇所では `InferRequestType` / `InferResponseType` を使う。
+- request validation は Zod などの validator と Hono の validation flow に寄せ、handler では `c.req.valid()` で検証済み値を読む。
+- RPC 型推論を壊さないため、route は宣言済み変数から `typeof` を export できる形にし、larger app では routes を chain / compose して型を保つ。
+- client が読む API では、not found や error も `c.json(body, status)` のように status code 付きの typed JSON response にする。RPC client の推論が必要な endpoint で無自覚に `c.notFound()` を返さない。
+- monorepo で backend / frontend を分ける場合は、両側の TypeScript strictness と project references / build artifact の扱いを確認してから `AppType` を共有する。
 
 Frontend:
 
