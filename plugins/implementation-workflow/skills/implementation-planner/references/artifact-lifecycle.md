@@ -24,7 +24,7 @@ docs/implementation/
 ```
 
 - `current.md`: 既定の active implementation plan。
-- `abstract-plan.html`: 人間向け合意形成が必要なときだけ作る。軽微な作業では作らない。
+- `abstract-plan.html`: 人間向け合意形成が必要なときに作る。複数領域、複数ユーザーフロー、DB/schema、API 境界、auth/security、外部サービス、課金/コスト、deploy/production、非自明な product/UX 判断を含む計画では、ユーザーが明示的に不要と言わない限り作成または更新する。軽微な作業では作らない。
 - `README.md`: このディレクトリの読み方と active plan へのリンク。
 - `archive/`: 完了、棄却、置換された計画の薄い記録。
 
@@ -62,6 +62,8 @@ archive に残さない:
 ## Session Handoff
 
 各セッション終了時、必要なら `current.md` の `Implementation Handoff` を更新する。
+
+Plan lane の終了前に、`abstract-plan.html` の要否を必ず明示的に判定する。作らない場合は、`Next Action Contract` または final response に `abstract-plan.html: 不要` と理由を残す。
 
 必須:
 

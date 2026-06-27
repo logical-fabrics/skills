@@ -18,11 +18,12 @@ Conditional reviewers:
 - Schema reviewer: DB schema / migration / validation。
 - Security reviewer: auth、secret、permission、CI、external input。
 - Delivery reviewer: CI/CD、staging、production、OGP、monitoring。
-- AI reviewer: AI UX、AI Gateway、latency、cost、fallback。
+- AI reviewer: AI UX、AI Gateway、latency、cost、fallback。特に、ユーザーの入力、本人素材、ライブ生成、AI 生成結果などの主成果物を、別素材、seed、sample、mock、demo asset で置き換えて成功扱いしていないかを確認する。
 
 ## Stop Conditions
 
 - accepted scope、touched surface、changed behavior に関する P0/P1 がゼロになるまで改善する。
+- ユーザーが期待する成果物を別素材で代替して success / preview / published / sent / paid / deleted などの状態に進める設計は P1 以上とし、本人入力と切り離された seed / sample 用途へ分離するまで closure しない。
 - scope 外の P0/P1 は隠さず、blocked または backlog として記録する。
 - P2 は ledger に残す。
 - 最大 10 rounds を超える場合は、残課題と判断不能点を明示してユーザーに確認する。

@@ -21,6 +21,7 @@ Disallowed unless explicitly requested:
 - billing、auth provider、cloud resource、production database、secret の変更。
 - plan を超える scope expansion。
 - hidden fallback。
+- ユーザーの入力、本人素材、ライブ生成、外部送信、課金、削除、公開などの主成果物を、別素材、seed、sample、mock、demo asset で代替して成功または準成功として扱う実装。
 
 ## Core Rules
 
@@ -32,6 +33,7 @@ Disallowed unless explicitly requested:
 - 既存 stack、命名、format、test、UI pattern を優先する。
 - 軽微で可逆な修正は、計画成果物を増やさず、変更内容と検証を簡潔に報告する。
 - UI/UX を最上位価値にする。ただし過剰設計を避ける。
+- plan に fallback / degraded mode が書かれていても、それがユーザーの期待する主成果物を別素材で置き換える設計なら実装せず、P1 として plan / audit へ戻す。失敗は失敗として表示し、再試行、入力変更、既存の本物候補選択、後で再開の導線にする。
 - リファクタリングは重要。命名、責務、重複、記述差異が LLM の誤読を招く場合は同じ slice で直す。
 - Context7、公式 docs、web を使うべき不確実性があれば調査する。
 - accepted slice、touched surface、changed behavior に関する P0/P1 findings が残る状態で完了しない。scope 外の P1 は backlog 化して完了可能にする。

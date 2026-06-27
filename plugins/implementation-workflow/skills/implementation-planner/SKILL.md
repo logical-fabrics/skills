@@ -23,6 +23,7 @@ Disallowed unless explicitly requested:
 - production、billing、auth provider、cloud resource、database、secret を変更する。
 - 推測を確定事実として扱う。
 - hidden fallback を成功扱いする。
+- ユーザーの入力、本人素材、ライブ生成、外部送信、課金、削除、公開などの主成果物を、別素材、seed、sample、mock、demo asset で代替して成功または準成功として扱う。
 
 ## Core Rules
 
@@ -32,7 +33,11 @@ Disallowed unless explicitly requested:
 - ユーザーが plan ファイルを明示した場合、そのファイルをその依頼の source of truth として扱う。継続運用が必要な場合だけ `docs/implementation/current.md` への統合を提案する。
 - 計画は implementation LLM 向けに具体化する。対象ファイル、手順、検証、停止条件を書く。
 - 人間向けにはコード変数ではなく、目的、アーキテクチャ、判断、リスク、検証を説明する。
+- `abstract-plan.html` は任意の飾りではない。計画が複数領域や複数ユーザーフローにまたがる、DB/schema、API 境界、auth/security、外部サービス、課金/コスト、deploy/production、または非自明な product/UX 判断を含む場合は、人間の合意形成が必要とみなし、ユーザーが明示的に不要と言わない限り作成または更新する。
+- `abstract-plan.html` を作らない場合は、final response と `Next Action Contract` で「なぜ不要か」を明記する。
 - UI/UX を最上位価値にする。ただし短期 UX を理由に過剰設計を入れない。
+- fallback / degraded mode は「真実を保つ」場合だけ許可する。失敗は失敗として見せ、再試行、入力変更、既存の本物の候補選択、後で再開などの回復導線にする。ユーザーが期待する「自分の入力から生まれた結果」を、関係ない素材で置き換える設計は、明示表示しても UX 破綻として扱う。
+- seed / sample / demo asset は初期状態、説明、テスト、セーフモードには使えるが、ユーザー生成物や本人素材の結果として混ぜない。計画に fallback を入れる場合は、誰の何を何で代替しているのか、ユーザーが誤認しないか、成功条件を偽っていないかを必ず書く。
 - 軽微で可逆な作業では、永続 plan や `abstract-plan.html` を作らず、短い方針と検証だけで終えてよい。
 - レビューは P0/P1 がゼロになるまで回す。P2 は修正、受け入れ、延期のいずれかを記録する。
 - material unknown は調査する。repo や一次情報で解けず、product / business / rollout 判断が必要な場合だけ AskUserTool または host equivalent を使う。
@@ -53,7 +58,8 @@ Disallowed unless explicitly requested:
 8. `references/review-rubric.md` で adversarial、implementation、UX、simplicity などのレビューを行う。
 9. 関連 profile のレビュー観点を追加する。
 10. P0/P1 がなくなるまで修正する。最大 10 review rounds。
-11. `Next Action Contract` と `Implementation Handoff` で終える。
+11. final response 前に `abstract-plan.html` 要否を判定する。必要なら作成/更新し、不要なら理由を `Next Action Contract` に残す。
+12. `Next Action Contract` と `Implementation Handoff` で終える。
 
 ## Required References
 
