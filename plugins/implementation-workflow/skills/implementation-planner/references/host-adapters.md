@@ -16,6 +16,5 @@ Codex:
 Claude Code:
 
 - `.claude-plugin/plugin.json` は Claude Code 配布用。
-- `commands/` は薄い alias として使い、skill 本体を重複させない。
-- Claude Code 固有の slash command や namespace は Claude 専用として分けて書く。
-
+- thin slash command alias は配布しない。入口を増やすより、skill の自然文 trigger と description を整える。
+- Claude Code 固有の namespace は Claude 専用として分けて書く。

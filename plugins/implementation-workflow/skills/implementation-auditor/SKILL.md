@@ -30,6 +30,7 @@ Disallowed unless explicitly requested:
 - ただし短期 UX を理由に過剰設計、不要な抽象化、独自基盤を肯定しない。
 - findings は証拠に基づける。推測は推測として書く。
 - 「全部直す」ではなく、ユーザー価値、リスク、修正コスト、検証容易性で優先順位を付ける。
+- findings は Evidence、Impact、Recommended next action、Verification を持たせる。next action は `Plan first` / `Execute small fix` / `Ask user` / `Accept risk` から選ぶ。
 - auditor は候補提示が基本。実編集はユーザーが「修正して」と明示した狭い finding、または executor への handoff 後に限る。
 - 立ち返りレビュー自体が成果物を増殖させないようにする。
 - 永続化が必要な場合は `references/artifact-lifecycle.md` に従う。

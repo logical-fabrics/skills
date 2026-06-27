@@ -125,7 +125,9 @@ async function validatePlugin(pluginName) {
     }
   }
 
-  const skillNames = await readdir(skillsDir);
+  const skillNames = (await readdir(skillsDir, { withFileTypes: true }))
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
   for (const skillName of skillNames) {
     const skillDir = path.join(skillsDir, skillName);
     const skillPath = path.join(skillDir, "SKILL.md");
@@ -221,7 +223,9 @@ async function validateMarketplace(filePath, pluginNames, label) {
   }
 }
 
-const pluginNames = await readdir(pluginsDir);
+const pluginNames = (await readdir(pluginsDir, { withFileTypes: true }))
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name);
 await validateMarketplace(codexMarketplacePath, pluginNames, "Codex");
 await validateMarketplace(claudeMarketplacePath, pluginNames, "Claude Code");
 for (const pluginName of pluginNames) {

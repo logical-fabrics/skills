@@ -21,8 +21,8 @@
    - Web UI は可能なら実ブラウザで主要導線を見る。
    - test / lint / typecheck / build は scope に応じて実行する。
 4. 問題を evidence と impact で整理する。
-5. 自動修正候補、plan 化候補、要ユーザー判断に分ける。
-6. すぐに実装しない場合も、次に再開できるよう `Next review action` を明示する。
+5. findings ごとに `Plan first` / `Execute small fix` / `Ask user` / `Accept risk` の next action を付ける。
+6. 自動修正候補、plan 化候補、要ユーザー判断、受け入れ可能なリスクに分ける。
+7. すぐに実装しない場合も、次に再開できるよう `Next review action` を明示する。
 
 Audit の目的は責めることではない。現在の実装をより良くするため、実害と改善順序を明確にする。
-

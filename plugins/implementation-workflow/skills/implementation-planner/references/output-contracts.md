@@ -12,6 +12,17 @@
 
 慣習も明示もない場合は `docs/implementation/current.md` を使い、単発の `implementation-plan-v2.md` や `final.md` を repo root に増やさない。
 
+## Lightweight output
+
+軽微で可逆な作業では、永続 plan を作らなくてよい。以下をチャット上で簡潔に示す:
+
+- 方針。
+- 変更対象。
+- 検証方法。
+- 永続 plan を作らない理由。
+
+軽量 route は、次セッションで迷うほどの判断、未解決リスク、複数領域の変更がない場合だけ使う。
+
 ## implementation-plan content
 
 実装担当 LLM / engineer 向け。必須:

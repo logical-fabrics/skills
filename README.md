@@ -58,7 +58,6 @@ plugins/
       implementation-auditor/
       implementation-planner/
       implementation-executor/
-    commands/
 docs/
 scripts/
 ```
@@ -67,11 +66,11 @@ scripts/
 
 - 共通の skill body は `plugins/<plugin>/skills/` に置く。
 - Codex 固有情報は `.codex-plugin/` に閉じ込める。
-- Claude Code 固有情報は `.claude-plugin/` と `commands/` に閉じ込める。
+- Claude Code 固有情報は `.claude-plugin/` に閉じ込める。
 - スキル本文は日本語を既定にする。
 - UI/UX を最上位価値にしつつ、過剰設計を避ける。
 - 既存プロジェクトの設計、命名、テスト、UI ルールを優先する。
-- Cloudflare、Drizzle、Better Auth、Hono、React、Vite、Vitest、Zod は、既存スタックが未確定のときの既定候補として扱う。
+- Cloudflare、Drizzle、Better Auth、Hono、React、Vite、Vitest、Biome、Knip、Zod、Sentry は、既存スタックが未確定のときの既定候補として扱う。
 
 ## 成果物運用
 
@@ -101,7 +100,7 @@ pnpm validate
 pnpm lint
 ```
 
-`pnpm validate` は、plugin manifest、skill frontmatter、reference link、Claude command frontmatter の最低限の静的構造を検証します。配布前には host 側の plugin discovery smoke test も行ってください。
+`pnpm validate` は、plugin manifest、skill frontmatter、reference link の最低限の静的構造を検証します。配布前には host 側の plugin discovery smoke test も行ってください。
 
 品質ゲートは [docs/quality-gates.md](docs/quality-gates.md) にまとめています。
 

@@ -28,12 +28,14 @@ Disallowed unless explicitly requested:
 
 - 日本語を既定にする。
 - 既存 repo の実態を最優先する。greenfield または未確定時だけ default stack を使う。
+- source of truth は、ユーザーの最新依頼と明示 plan / scope、現在の repo 実態、repo 既存慣習、`docs/implementation/current.md` の順に確認する。
 - ユーザーが plan ファイルを明示した場合、そのファイルをその依頼の source of truth として扱う。継続運用が必要な場合だけ `docs/implementation/current.md` への統合を提案する。
 - 計画は implementation LLM 向けに具体化する。対象ファイル、手順、検証、停止条件を書く。
 - 人間向けにはコード変数ではなく、目的、アーキテクチャ、判断、リスク、検証を説明する。
 - UI/UX を最上位価値にする。ただし短期 UX を理由に過剰設計を入れない。
+- 軽微で可逆な作業では、永続 plan や `abstract-plan.html` を作らず、短い方針と検証だけで終えてよい。
 - レビューは P0/P1 がゼロになるまで回す。P2 は修正、受け入れ、延期のいずれかを記録する。
-- material unknown は調査する。調査で解けない判断だけ AskUserTool または host equivalent を使う。
+- material unknown は調査する。repo や一次情報で解けず、product / business / rollout 判断が必要な場合だけ AskUserTool または host equivalent を使う。
 
 ## Workflow
 

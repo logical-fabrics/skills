@@ -8,7 +8,7 @@
 - `pnpm lint` が通る。
 - 新しい skill は `SKILL.md` に `Capability Boundary`、`Core Rules`、`Workflow`、`Required References` を持つ。
 - `SKILL.md` から参照する `references/*.md` が存在する。
-- Claude command は薄い alias に留める。
+- Claude Code では薄い slash command alias を増やさず、skill の自然文 trigger を優先する。
 - Codex / Claude Code 固有情報を共通本文に混ぜない。
 
 ## Review

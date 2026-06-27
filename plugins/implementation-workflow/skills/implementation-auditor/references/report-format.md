@@ -19,6 +19,7 @@ Recommended format:
 
 - Evidence:
 - Impact:
+- Recommended next action: Plan first / Execute small fix / Ask user / Accept risk
 - Recommended fix:
 - Verification:
 - Owner skill: implementation-planner / implementation-executor
@@ -40,4 +41,3 @@ Recommended format:
 ```
 
 永続化する場合は、上記を `docs/implementation/current.md` の `Quality Review Findings` または `Improvement Backlog` に統合する。
-

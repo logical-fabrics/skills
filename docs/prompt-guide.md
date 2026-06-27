@@ -2,13 +2,15 @@
 
 `implementation-workflow` は、主に 3 つの入口で使う。
 
-| やりたいこと | 期待する skill | Claude command | 自然文プロンプト例 |
-| --- | --- | --- | --- |
-| 既存実装を見直す | `implementation-auditor` | `/audit-implementation` | `現在の実装を見直して、UX・設計・テスト・過剰設計の問題を洗い出して` |
-| 実装計画を作る | `implementation-planner` | `/plan-implementation` | `この機能の実装計画を作って。docs/implementation/current.md にまとめて` |
-| 計画を実装する | `implementation-executor` | `/implement-plan` | `docs/implementation/current.md の次の slice を実装して、検証までやって` |
+| やりたいこと | 期待する skill | 自然文プロンプト例 |
+| --- | --- | --- |
+| 既存実装を見直す | `implementation-auditor` | `現在の実装を見直して、UX・設計・テスト・過剰設計の問題を洗い出して` |
+| 実装計画を作る | `implementation-planner` | `この機能の実装計画を作って。docs/implementation/current.md にまとめて` |
+| 計画を実装する | `implementation-executor` | `docs/implementation/current.md の次の slice を実装して、検証までやって` |
 
-Codex でも Claude Code でも、基本は自然文プロンプトで発火する想定。Claude Code では必要に応じて slash command も使える。
+Codex でも Claude Code でも、基本は自然文プロンプトで発火する想定。Claude Code では skill が 3 つだけ見えるよう、薄い slash command alias は配布しない。
+
+長時間・複数 slice・検証ループを前提にする実行作業では、Codex / Claude Code の `/goal` を使う。Goal には長い計画全文を貼らず、目的、成功条件、制約、検証条件だけを書く。詳細は明示 plan または `docs/implementation/current.md` に置く。
 
 ## 迷ったら
 
@@ -79,7 +81,7 @@ DB schema 変更を含むので、YAGNI と migration/rollback を厳しく見�
 
 期待する動き:
 
-- `docs/implementation/current.md` を active plan にする。
+- 明示 plan や repo 慣習がなければ、`docs/implementation/current.md` を active plan にする。
 - 人間向け合意形成が必要な場合だけ `abstract-plan.html` を作る。
 - P0/P1 がなくなるまで計画レビューする。
 - 不明点は調査し、調査で決められないことだけ選択肢付きで聞く。

@@ -10,6 +10,15 @@ Executor-only でよい:
 - 既存 plan の明確な 1 slice。
 - UI 判断、DB、認可、外部サービス、本番影響がない変更。
 
+Lightweight route でよい:
+
+- 可逆で、影響範囲が 1-2 ファイル程度に閉じる。
+- product、UX、DB、認可、外部サービス、production rollout の判断が不要。
+- ユーザーが永続 plan を求めていない。
+- 次セッションへの引き継ぎが、チャット上の要約と検証結果で足りる。
+
+この場合、`docs/implementation/current.md` や `abstract-plan.html` を作らない。短い方針、変更対象、検証だけを示す。
+
 Planner が必要:
 
 - UI/UX 判断が必要。
@@ -23,6 +32,8 @@ Research / AskUser が先:
 - 公式 docs や現在の code で解消できる unknown が残る。
 - product、cost、security、compatibility、long-term maintenance の判断が必要。
 - 現実的な選択肢を 2-3 個に絞れる。
+
+AskUser は最終手段にする。repo、一次情報、実行確認で解ける unknown は聞かずに調査する。
 
 ## Freshness
 

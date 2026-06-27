@@ -37,17 +37,11 @@ claude plugins install implementation-workflow@lf-skills
 claude plugins details implementation-workflow
 ```
 
-短い互換入口として、以下の command を同梱しています。
-
-- `/audit-implementation`
-- `/plan-implementation`
-- `/implement-plan`
-
 自然文プロンプトの例は [prompt-guide.md](prompt-guide.md) を参照してください。
 
 確認:
 
-- `implementation-workflow` の details に 3 skills と 3 commands が出る。
+- `implementation-workflow` の details に `implementation-planner`、`implementation-executor`、`implementation-auditor` の 3 skills が出る。
 - `claude plugins validate --strict` が warning なしで通る。
 - 自然文で `現在の実装を見直して`、`実装計画を作って`、`current.md の次を実装して` が期待通りに routing される。
 

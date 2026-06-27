@@ -8,7 +8,10 @@
 - Frontend: React
 - Build / dev server: Vite
 - Test: Vitest
+- Format / lint: Biome
+- Dependency / unused exports check: Knip
 - Runtime schema: Zod
+- Error monitoring: Sentry
 
 ルール:
 
@@ -16,6 +19,7 @@
 - 新規 dependency は Context7 または公式 docs で current install / config を確認する。
 - package は原則最新。ただし既存 repo の制約に合わせる。
 - raw SQL は原則禁止。例外は `data-modeling.md` に従う。
+- Sentry は local では発火させない。staging と production で有効化し、1 project の中で environment を `staging` / `production` として分ける。
 
 Auth:
 
@@ -23,4 +27,3 @@ Auth:
 - OAuth、Magic Link、Passkey を既定候補にする。
 - Better Auth では OAuth は `socialProviders`、Magic Link は plugin、Passkey は plugin を使う。
 - email/password を有効にする場合は例外扱いとし、理由、リスク、廃止条件を Decision Log に残す。
-

@@ -25,10 +25,12 @@ Disallowed unless explicitly requested:
 ## Core Rules
 
 - 既存 repo を source of truth とする。古い plan は検証対象であり、絶対視しない。
+- source of truth は、ユーザーの最新依頼と明示 plan / scope、現在の repo 実態、repo 既存慣習、`docs/implementation/current.md` の順に確認する。
 - ユーザーが plan ファイルを明示した場合、その plan を今回の source of truth とする。継続運用が必要な場合だけ `docs/implementation/current.md` への統合を提案する。
 - ユーザーや他エージェントの未コミット変更を戻さない。
 - 実装は最小の coherent slice にする。
 - 既存 stack、命名、format、test、UI pattern を優先する。
+- 軽微で可逆な修正は、計画成果物を増やさず、変更内容と検証を簡潔に報告する。
 - UI/UX を最上位価値にする。ただし過剰設計を避ける。
 - リファクタリングは重要。命名、責務、重複、記述差異が LLM の誤読を招く場合は同じ slice で直す。
 - Context7、公式 docs、web を使うべき不確実性があれば調査する。
