@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.14
+
+- Added a neutral UI copy principle: user-facing text should present decision material rather than instructing the user what to do.
+- Added guidance to avoid action-leading expressions such as `次に〜`、`〜したい`、`1問`、`深掘り`、`やること`、`できること` in UI copy.
+- Added preferred replacement patterns such as `確認ポイント`、`確認が必要な〜`、`判断が必要な〜`、`この後の流れ`、`復旧方法` across planning, execution, and audit references.
+- Migration: none for users; installed plugin users should update to refresh skill reference content.
+
 ## 0.1.13
 
 - Added the lane-boundary rule for `implementation-workflow`: Audit, Plan, and Execute stay separate, but each lane should proceed autonomously within its own boundary.
