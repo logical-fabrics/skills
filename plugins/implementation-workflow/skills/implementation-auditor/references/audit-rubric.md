@@ -14,6 +14,10 @@ UX:
 - 日常利用で操作が重くないか。
 - 日本語、モバイル、改行、loading、empty、error、permission が破綻していないか。
 - URL、戻る、リロード、直接アクセスが期待通りか。
+- planner `ui-ux.md` の canonical rubric に照らして、layout/action placement、result-centered copy、state/recovery、forms/accessibility が破綻していないか。
+- 特に、判断材料と CTA の距離、desktop の視線移動、導線ラベルの一貫性、操作後の結果説明、通知/共有/可逆性、不要な理由入力、操作後に仕事が進んだと分かるかを確認する。
+- キュー型 UI では、操作後に対象がキューから外れるか、次の対象に進むか、完了状態や戻り先が分かるかを確認する。
+- 「保留」など、押しても業務上の扱いが変わらない操作が選択肢になっていないか確認する。
 
 Architecture:
 
@@ -49,4 +53,3 @@ AI:
 - AI が入力負荷、言語化負荷、認知負荷を下げているか。
 - AI output がテキストだけに閉じず、比較、選択、修正しやすい形か。
 - Gateway、latency、cost、failure、retry、不可逆操作の確認が設計されているか。
-

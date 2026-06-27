@@ -2,6 +2,8 @@
 
 社内配布前に、以下を確認する。
 
+この手順は `lf-skills` marketplace 全体の release process です。現在の例は `implementation-workflow` ですが、plugin が増えた場合は変更対象 plugin ごとに同じ checks を行います。
+
 ## 1. Static checks
 
 ```bash
@@ -14,16 +16,20 @@ pnpm lint
 
 配布済み plugin の manifest、skills、references、description、component inventory、host exposure を変えた場合は、plugin version を bump する。
 
-対象:
+`<plugin-name>` の対象:
 
-- `plugins/implementation-workflow/.codex-plugin/plugin.json`
-- `plugins/implementation-workflow/.claude-plugin/plugin.json`
+- `plugins/<plugin-name>/.codex-plugin/plugin.json`
+- `plugins/<plugin-name>/.claude-plugin/plugin.json`
 
 両方の `version` は同じ値に揃える。version を変えないと、installed plugin が既存 version を最新と判断し、更新内容を再取得しないことがある。
 
+現在の配布 plugin:
+
+- `implementation-workflow`
+
 ## 3. Plugin smoke test
 
-Codex:
+Codex で `implementation-workflow` を確認する例:
 
 ```bash
 codex plugin marketplace add "$(pwd)"
@@ -35,7 +41,7 @@ codex plugin add implementation-workflow --marketplace <marketplace-name>
 - `implementation-planner`、`implementation-executor`、`implementation-auditor` が skill 一覧に出る。
 - 各 skill の description が意図した trigger を持つ。
 
-Claude Code:
+Claude Code で `implementation-workflow` を確認する例:
 
 ```bash
 claude plugins validate --strict plugins/implementation-workflow
@@ -47,7 +53,7 @@ claude --plugin-dir "$(pwd)/plugins/implementation-workflow"
 - thin slash command alias が増えておらず、Claude Code の入口が 3 skills に整理されている。
 - validate が warning なしで通る。
 
-Update smoke:
+Update smoke の例:
 
 ```bash
 claude plugins update implementation-workflow@lf-skills

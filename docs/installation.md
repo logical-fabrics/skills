@@ -1,23 +1,38 @@
 # Installation
 
-## Codex
+このドキュメントは、`lf-skills` repository を Codex / Claude Code の marketplace として登録し、必要な plugin を install する手順です。
 
-Codex は marketplace 経由で plugin を install します。
+現在この repository で配布している plugin は `implementation-workflow` です。plugin が増えた場合は、同じ marketplace 登録の上で install 対象の plugin 名を置き換えます。
 
-リポジトリを clone した場所で実行します。
+## Prerequisites
 
 ```bash
 cd <LF_SKILLS_DIR>
 pnpm install --frozen-lockfile
 pnpm validate
+```
+
+## Codex
+
+Codex は marketplace 経由で plugin を install します。
+
+Marketplace 登録:
+
+```bash
+cd <LF_SKILLS_DIR>
 codex plugin marketplace add "$(pwd)"
 codex plugin list
+```
+
+`implementation-workflow` の install:
+
+```bash
 codex plugin add implementation-workflow --marketplace lf-skills
 ```
 
 `codex plugin marketplace add` が返す marketplace 名が `lf-skills` ではない場合、`codex plugin list` で表示された名前を `--marketplace` に指定します。
 
-確認:
+`implementation-workflow` の確認:
 
 - `implementation-workflow` が installed plugins に出る。
 - 新しい Codex セッションで `implementation-planner`、`implementation-executor`、`implementation-auditor` が skill として見える。
@@ -27,12 +42,17 @@ codex plugin add implementation-workflow --marketplace lf-skills
 
 Claude Code は marketplace 経由で plugin を install します。
 
+Marketplace 登録:
+
 ```bash
 cd <LF_SKILLS_DIR>
-pnpm install --frozen-lockfile
-pnpm validate
-claude plugins validate --strict plugins/implementation-workflow
 claude plugins marketplace add "$(pwd)"
+```
+
+`implementation-workflow` の validate / install:
+
+```bash
+claude plugins validate --strict plugins/implementation-workflow
 claude plugins install implementation-workflow@lf-skills
 claude plugins details implementation-workflow
 ```
@@ -47,11 +67,19 @@ claude plugins details implementation-workflow
 
 ## 更新
 
+Repository 更新後、install 済み plugin を最新化します。
+
 ```bash
 cd <LF_SKILLS_DIR>
 git pull
 pnpm validate
 pnpm lint
+```
+
+`implementation-workflow` を更新する例:
+
+```bash
+claude plugins update implementation-workflow@lf-skills
 ```
 
 配布前には `pnpm validate`、`pnpm lint`、host smoke test を必ず通してください。

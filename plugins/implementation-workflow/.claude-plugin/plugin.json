@@ -1,7 +1,7 @@
 {
   "name": "implementation-workflow",
-  "version": "0.1.1",
-  "description": "Japanese implementation planning, auditing, and execution workflow shared with Codex.",
+  "version": "0.1.8",
+  "description": "Japanese implementation planning, auditing, and execution workflow with UX-first review loops shared with Codex.",
   "author": {
     "name": "Logical Fabrics"
   },

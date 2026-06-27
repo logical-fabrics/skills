@@ -62,13 +62,13 @@ Disallowed unless explicitly requested:
 - `references/output-contracts.md`: `current.md`、明示 plan、`abstract-plan.html` の成果物契約。
 - `references/review-rubric.md`: P0/P1/P2、reviewer roles、改善ループ。
 - `references/ask-user.md`: AskUser 条件と選択肢提示。
-- `references/ui-ux.md`: UI/UX、Tailwind、視覚検証、URL状態、改行品質。
+- `references/ui-ux.md`: UI/UX canonical rubric、視覚検証、URL状態、改行品質。
 - `references/ai-ux.md`: AI-first UX。
 - `references/ai-runtime.md`: Cloudflare AI Gateway、Workers AI、Gemma。
 - `references/default-stack.md`: greenfield または既存選定がない場合の Drizzle、Better Auth、Hono、React、Vite、Vitest、Zod。
 - `references/data-modeling.md`: schema、Drizzle、raw SQL、YAGNI。
 - `references/delivery.md`: CI/CD、Cloudflare、staging、production、OGP。
-- `references/accessibility.md`: WCAG 2.2 AA 実務基準。
+- `references/accessibility.md`: 実操作で確認する accessibility guardrails。
 - `references/performance.md`: Core Web Vitals と latency。
 - `references/observability.md`: monitoring、logs、traces、business events。
 - `references/ci-security.md`: GitHub Actions hardening、OIDC、dependency review。

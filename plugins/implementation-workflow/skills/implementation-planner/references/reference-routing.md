@@ -17,6 +17,8 @@ UI / Web app:
 - `performance.md`
 - `simplicity.md`
 
+UI / Web app では `ui-ux.md` を canonical UI/UX rubric として扱う。executor / auditor 側の UI checklist は、この file の実装・監査向け要約であり、基準が衝突した場合は `ui-ux.md` を優先する。
+
 AI feature:
 
 - `ai-ux.md`
@@ -55,4 +57,3 @@ Codex / Claude Code behavior:
 Ask user:
 
 - `ask-user.md` only when research cannot decide a material product, UX, cost, security, schema, compatibility, or production behavior decision.
-

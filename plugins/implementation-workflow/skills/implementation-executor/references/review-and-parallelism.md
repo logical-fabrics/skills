@@ -28,7 +28,7 @@ Implementation review:
 
 Reviewer roles:
 
-- UX reviewer: 実ユーザーの導線、モバイル、日本語、状態表示。
+- UX reviewer: planner `ui-ux.md` の canonical rubric に従い、実ユーザーの導線、mobile / desktop、日本語、状態表示、CTA 近接、result-centered copy、forms、accessibility を見る。
 - Simplicity reviewer: 抽象化、汎用化、独自基盤、状態管理が過剰でないか。
 - Schema reviewer: DB、migration、YAGNI、既存データ。
 - Security reviewer: auth、secret、permission、external input。
