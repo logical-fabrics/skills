@@ -30,6 +30,25 @@ active plan の section 契約は planner `output-contracts.md` の implementati
 - 次の最小 slice を `## Next actions` に反映する。
 - 通った verification と失敗した verification を `## Verification Plan` に更新する。
 - scope、UX、schema、infra、security、cost、production behavior が変わった場合は plan を更新する。
+- `## Implementation Handoff` に `Next Action Contract` を残す。
+
+`Next Action Contract`:
+
+```md
+### Next Action Contract
+
+- Recommended next lane: Audit / Plan / Execute / Ask user / Accept risk / Done
+- Reason:
+- Ready-to-run slice:
+- Human decision required: yes / no
+- Goal recommended: yes / no
+- Goal draft:
+- Suggested prompt:
+```
+
+executor は accepted slice 内ではやりきる。次の未承認 slice、audit への立ち返り、または product 判断が必要な場合は、この contract で明示して止める。
+
+長時間・複数 slice・検証ループを続ける場合は `Goal recommended: yes` にし、必要なら `/goal` 用の短い文面を `Goal draft` に残す。軽微な修正、通常 audit、ユーザー判断待ちでは `Goal recommended: no` にする。
 
 ## Archive / Cleanup
 

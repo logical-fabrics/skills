@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.13
+
+- Added the lane-boundary rule for `implementation-workflow`: Audit, Plan, and Execute stay separate, but each lane should proceed autonomously within its own boundary.
+- Added `Next Action Contract` guidance so audit, planning, and execution outputs identify the recommended next lane, reason, ready-to-run slice, human-decision requirement, and suggested prompt.
+- Added `/goal` recommendation fields to `Next Action Contract` so long-running planning review loops and multi-slice execution loops can use a short goal draft without blurring Plan into Execute.
+- Clarified executor handling for recoverable stale plans: repo/docs/execution-confirmable drift should be repaired before continuing, while real product/business/security/rollout decisions still block for the user.
+- Updated behavior smoke checks to verify AskUser minimization and next-lane handoff quality.
+- Migration: none for users; installed plugin users should update to refresh skill reference content.
+
 ## 0.1.12
 
 - Added Expo as the default mobile framework for greenfield JS/TS mobile apps when the repo has no existing mobile stack decision.

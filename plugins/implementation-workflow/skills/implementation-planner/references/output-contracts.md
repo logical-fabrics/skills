@@ -20,6 +20,7 @@
 - 変更対象。
 - 検証方法。
 - 永続 plan を作らない理由。
+- `Next Action Contract`: 次 lane、理由、実行可能 slice、人間判断の要否、推奨 prompt。
 
 軽量 route は、次セッションで迷うほどの判断、未解決リスク、複数領域の変更がない場合だけ使う。
 
@@ -43,6 +44,26 @@
 - `## Implementation Handoff`
 
 コードの細部まで伝える。ファイル、関数、schema、route、command、test、acceptance criteria を書く。
+
+`## Implementation Handoff` には `Next Action Contract` block を含める:
+
+```md
+### Next Action Contract
+
+- Recommended next lane: Audit / Plan / Execute / Ask user / Accept risk / Done
+- Reason:
+- Ready-to-run slice:
+- Human decision required: yes / no
+- Goal recommended: yes / no
+- Goal draft:
+- Suggested prompt:
+```
+
+Plan の成果物では、ユーザーが実行承認する前提のときは `Human decision required: yes` にする。AI は plan lane 内の調査と review は自律的に進めるが、Plan から Execute へはユーザーの明示依頼なしに移らない。
+
+長時間・複数 slice・複数 review rounds を前提にする Plan では `Goal recommended: yes` とし、`Goal draft` に計画完成用の短い `/goal` 文面を書く。Plan goal は、調査、計画作成、複数観点 review、P0/P1 closure、handoff 作成までに限定し、実装開始を含めない。
+
+長時間・複数 slice・検証ループを前提にする Execute handoff でも `Goal recommended: yes` とし、`Goal draft` に実行用の短い `/goal` 文面を書く。Goal draft は目的、成功条件、制約、検証条件だけに絞り、詳細な手順は active plan に置く。
 
 `current.md` を active plan として使う場合も、この section 契約をそのまま使う。`scripts/validate-plan-structure.mjs` はこの見出し集合を検証する。`Completed` / `Verification status` / `Open decisions` は独立 section にせず、上記の `Current State` / `Verification Plan` / `Review Findings` に畳む。
 

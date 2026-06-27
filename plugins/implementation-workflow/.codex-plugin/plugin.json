@@ -1,6 +1,6 @@
 {
   "name": "implementation-workflow",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Japanese implementation planning, auditing, and execution workflow for Codex and Claude Code, with UX-first review loops, simplicity review, and verification discipline.",
   "author": {
     "name": "Logical Fabrics"

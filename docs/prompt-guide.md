@@ -10,7 +10,9 @@
 
 Codex でも Claude Code でも、基本は自然文プロンプトで発火する想定。Claude Code では skill が 3 つだけ見えるよう、薄い slash command alias は配布しない。
 
-長時間・複数 slice・検証ループを前提にする実行作業では、Codex / Claude Code の `/goal` を使う。Goal には長い計画全文を貼らず、目的、成功条件、制約、検証条件だけを書く。詳細は明示 plan または `docs/implementation/current.md` に置く。
+基本思想は「lane 内では止まらない。lane 境界は勝手に越えない」。Audit は知るため、Plan は人間が方向性を確認するため、Execute は accepted slice をやりきるために分ける。各 lane の最後には `Next Action Contract` を出し、次に使う入口、理由、実行可能 slice、人間判断の要否、推奨 prompt を明示する。
+
+長時間・複数 slice・検証ループを前提にする Plan / Execute では、Codex / Claude Code の `/goal` を使う。Plan の goal は「レビュー指摘がなくなるまで計画を完成させる」ためであり、実装開始を意味しない。Execute の goal は accepted slice を実装・検証・handoff 更新までやりきるために使う。Goal には長い計画全文を貼らず、目的、成功条件、制約、検証条件だけを書く。詳細は明示 plan または `docs/implementation/current.md` に置く。
 
 ## 迷ったら
 
@@ -72,6 +74,7 @@ current.md の次を実装して
 - すぐ直せる小さなものは `Auto-fix candidates` に分けるが、audit 依頼だけでは編集しない。
 - 大きな変更は executor が扱える改善 slice に分ける。
 - 不要な audit ファイルを増やさない。
+- 最後に `Next Action Contract` を出し、Plan / Execute / Ask user / Accept risk / Done のどれに進むべきかを示す。
 
 ## Plan
 
@@ -113,6 +116,7 @@ DB schema 変更を含むので、YAGNI と migration/rollback を厳しく見�
 - 人間向け合意形成が必要な場合だけ `abstract-plan.html` を作る。
 - P0/P1 がなくなるまで計画レビューする。
 - 不明点は調査し、調査で決められないことだけ選択肢付きで聞く。
+- Plan から Execute へは自動遷移しない。最後に `Next Action Contract` で、実行承認が必要か、次の最小 slice は何かを示す。
 
 ## Execute
 
@@ -156,6 +160,22 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 - UI 変更は実ブラウザ、スクリーンショット、戻る/リロード/直接 URL を確認する。
 - UI 検証では、route、viewport、browser/tool、screenshot/trace path、確認した state、未確認 state、残リスクを報告する。
 - 完了時に `current.md` の handoff を必要に応じて更新する。
+- accepted slice 内では、局所的な stale plan 修正、実装、review、修正、再検証までやりきる。
+- 完了時に `Next Action Contract` を出し、続けるなら次の最小 slice、止めるなら人間判断が必要な理由を示す。
+
+共通の出口形式:
+
+```md
+## Next Action Contract
+
+- Recommended next lane: Audit / Plan / Execute / Ask user / Accept risk / Done
+- Reason:
+- Ready-to-run slice:
+- Human decision required: yes / no
+- Goal recommended: yes / no
+- Goal draft:
+- Suggested prompt:
+```
 
 ## Session Handoff
 
@@ -190,7 +210,19 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 とりあえず実装して
 ```
 
-代わりに、対象、目的、確認してほしい観点、実装してよい範囲を書く。
+代わりに、lane、対象、目的、確認してほしい観点、実装してよい範囲を書く。
+
+```text
+現在の実装を audit して。次に進むべき lane も Next Action Contract で示して。
+```
+
+```text
+この plan を作って。実装はまだしない。最後に Execute へ進める最小 slice と確認すべき判断を出して。
+```
+
+```text
+この accepted slice を実装して。検証と handoff 更新までやりきって。
+```
 
 良い例:
 

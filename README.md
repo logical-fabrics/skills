@@ -52,6 +52,9 @@ Design priorities:
 - 既存プロジェクトの設計、命名、テスト、UI ルールを優先する。
 - 過剰設計、不要な抽象化、見せかけの品質ゲートを避ける。
 - 実装計画、実装、レビュー、検証、修正の改善ループを回す。
+- audit / plan / execute の入口は分けたまま、各 lane 内では AI が調査、整理、修正案、検証、handoff までできる限り自律的に進める。
+- lane 境界は勝手に越えない。Audit から Plan / Execute、Plan から Execute へ進む場合は、ユーザーの明示依頼または承認済み active plan を必要とする。
+- 各 lane の最後に `Next Action Contract` を残し、次の入口、理由、実行可能 slice、人間判断の要否、推奨 prompt を明示する。
 - 古い会話履歴ではなく、現在の repo、明示された plan、active plan を source of truth にする。
 - UI 変更では、実ブラウザでハッピーパス、モバイル、デスクトップ、戻る、リロード、URL 状態、日本語の改行を確認する。
 - DB schema 変更では YAGNI、migration、rollback、既存データへの影響を厳しく見る。

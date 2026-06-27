@@ -35,6 +35,10 @@ Disallowed unless explicitly requested:
 - リファクタリングは重要。命名、責務、重複、記述差異が LLM の誤読を招く場合は同じ slice で直す。
 - Context7、公式 docs、web を使うべき不確実性があれば調査する。
 - accepted slice、touched surface、changed behavior に関する P0/P1 findings が残る状態で完了しない。scope 外の P1 は backlog 化して完了可能にする。
+- Execute lane 内では、accepted slice の実装、必要な局所 plan 更新、review、修正、検証、handoff 更新まで自律的にやりきる。
+- 古い plan は停止理由ではなく検証対象として扱う。repo / docs / 実行確認で安全に解消できる stale は直してから進む。
+- ただし未承認の別 slice、不可逆操作、production / billing / auth provider / cloud resource / secret / destructive DB 変更へは勝手に広げない。
+- 完了時は `Next Action Contract` を残し、次に続けるべきか、audit へ戻すべきか、完了か、人間判断が必要かを明示する。
 
 ## Workflow
 
@@ -48,7 +52,7 @@ Disallowed unless explicitly requested:
 8. `references/review-and-parallelism.md` に従って実装レビューを行う。
 9. `references/testing-verification.md` に従って検証する。
 10. P0/P1 がなくなるまで修正と再検証を行う。最大 5 review rounds。
-11. active plan の status / completed / next actions / verification を必要に応じて更新し、変更内容、検証、残リスク、未完了事項を簡潔に報告する。
+11. active plan の status / completed / next actions / verification / `Next Action Contract` を必要に応じて更新し、変更内容、検証、残リスク、未完了事項を簡潔に報告する。
 
 ## Required References
 

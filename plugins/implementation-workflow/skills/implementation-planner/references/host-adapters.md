@@ -7,6 +7,8 @@
 - `SKILL.md` と `references/` を正本にする。
 - 日本語を既定にする。
 - host 固有の tool 名は、必要な場合だけ明記する。
+- 長時間・複数 slice・複数 review rounds を前提にする Plan lane では `/goal` を使ってよい。scope は計画完成と review closure に限定し、実装開始を含めない。
+- 長時間・複数 slice・検証ループを前提にする Execute handoff では `/goal` 用の短い draft を残す。
 
 Codex:
 

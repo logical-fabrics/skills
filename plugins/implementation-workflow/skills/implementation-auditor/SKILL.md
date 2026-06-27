@@ -34,6 +34,9 @@ Disallowed unless explicitly requested:
 - auditor は候補提示が基本。実編集はユーザーが「修正して」と明示した狭い finding、または executor への handoff 後に限る。
 - 立ち返りレビュー自体が成果物を増殖させないようにする。
 - 永続化が必要な場合は `references/artifact-lifecycle.md` に従う。
+- Audit lane 内では、repo 調査、実挙動確認、findings の優先順位付け、次 action の整理まで自律的に進める。
+- ただし Audit から Plan / Execute へは勝手に移らない。実編集は明示依頼、または executor へ handoff された accepted slice の場合だけ行う。
+- audit 結果の最後に `Next Action Contract` を置き、次 lane、理由、実行可能 slice、人間判断の要否、推奨 prompt を明示する。
 
 ## Workflow
 
@@ -46,6 +49,7 @@ Disallowed unless explicitly requested:
 7. `references/auto-fix-policy.md` に従い、今すぐ安全に直せるものと plan 化すべきものを分ける。
 8. 必要なら `docs/implementation/current.md` の改善 backlog 更新案を作る。
 9. 実装が必要な場合は、executor が扱える最小 slice と verification を提示する。
+10. `Next Action Contract` で次に人間が選ぶべき入口を明示する。
 
 ## Required References
 

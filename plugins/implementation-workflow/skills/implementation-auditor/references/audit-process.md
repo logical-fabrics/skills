@@ -24,5 +24,6 @@
 5. findings ごとに `Plan first` / `Execute small fix` / `Ask user` / `Accept risk` の next action を付ける。
 6. 自動修正候補、plan 化候補、要ユーザー判断、受け入れ可能なリスクに分ける。
 7. すぐに実装しない場合も、次に再開できるよう `Next review action` を明示する。
+8. `Next Action Contract` で、次に使う入口、理由、実行可能 slice、人間判断の要否、推奨 prompt を明示する。
 
 Audit の目的は責めることではない。現在の実装をより良くするため、実害と改善順序を明確にする。

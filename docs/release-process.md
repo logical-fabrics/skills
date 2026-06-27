@@ -72,6 +72,8 @@ claude plugins details implementation-workflow
 - 複数領域の実装では、ユーザー明示 plan または repo 慣習がなければ `docs/implementation/current.md` が active plan になる。
 - audit は不要なファイルを増やさず、必要時だけ improvement backlog へ接続する。
 - executor は stale plan を検出できる。
+- executor は repo / docs / 実行確認で解ける recoverable stale を自己修復して、accepted slice を続行できる。
+- audit / plan / execute は `Next Action Contract` で次 lane、人間判断の要否、`/goal` 推奨有無、推奨 prompt を返す。
 - UI 変更では mobile / desktop screenshot と URL 状態確認が plan に入る。
 
 ## 5. Release notes

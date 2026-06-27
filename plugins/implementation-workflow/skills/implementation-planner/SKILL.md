@@ -36,6 +36,10 @@ Disallowed unless explicitly requested:
 - 軽微で可逆な作業では、永続 plan や `abstract-plan.html` を作らず、短い方針と検証だけで終えてよい。
 - レビューは P0/P1 がゼロになるまで回す。P2 は修正、受け入れ、延期のいずれかを記録する。
 - material unknown は調査する。repo や一次情報で解けず、product / business / rollout 判断が必要な場合だけ AskUserTool または host equivalent を使う。
+- Plan lane 内では、調査、unknown 解消、計画修正、review、handoff 整理まで自律的に進める。
+- 長時間・複数 slice・複数 review rounds を前提にする計画作業では `/goal` を使ってよい。Goal の scope は計画完成と review closure に限定し、実装開始を含めない。
+- ただし Plan から Execute へは勝手に移らない。実装は、ユーザーの明示依頼、または承認済み active plan に対する executor 依頼がある場合だけ行う。
+- 成果物の最後に `Next Action Contract` を置き、次 lane、理由、実行可能 slice、人間判断の要否、推奨 prompt を明示する。
 
 ## Workflow
 
@@ -49,7 +53,7 @@ Disallowed unless explicitly requested:
 8. `references/review-rubric.md` で adversarial、implementation、UX、simplicity などのレビューを行う。
 9. 関連 profile のレビュー観点を追加する。
 10. P0/P1 がなくなるまで修正する。最大 10 review rounds。
-11. `Implementation Handoff` で終える。
+11. `Next Action Contract` と `Implementation Handoff` で終える。
 
 ## Required References
 
