@@ -32,17 +32,11 @@ docs/implementation/
 
 ## Active Plan
 
-`current.md` を使う場合、それは次セッションの入口である。必ず以下を持つ:
+`current.md` を使う場合、それは次セッションの入口である。section 契約は `output-contracts.md` の implementation-plan content と同一にする。別テンプレートを増やさない。
 
-- Status: `draft` / `approved` / `in-progress` / `blocked` / `done` / `superseded`
-- Last updated
-- Goal
-- Current state
-- Completed
-- Next actions
-- Verification status
-- Open decisions
-- Implementation Handoff
+- 必須 section は `output-contracts.md` の `##` 見出し集合（`## Status` 〜 `## Implementation Handoff`）に従う。
+- `Status` は `draft` / `approved` / `in-progress` / `blocked` / `done` / `superseded` のいずれか。
+- 完了済み slice は `## Current State`、直近 verification は `## Verification Plan`、open decisions は `## Review Findings` に畳む。独立 section を増やさない。
 
 既定運用では、新しい plan を作るよりまず `current.md` を更新する。新計画が必要な場合は、古い `current.md` を `archive/` に移してから置き換える。
 

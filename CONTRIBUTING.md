@@ -6,6 +6,7 @@
 
 - 既存 plugin の skill body を直接重複させない。
 - Codex 固有情報は `.codex-plugin/`、Claude Code 固有情報は `.claude-plugin/` に閉じ込める。
+- manifest のメタ表現は host スキーマに合わせる（意図的な host 固有差分）。Codex は marketplace 提示用の `interface` ブロックを使う。Claude Code には `interface` 概念がないため、提示メタは top-level の `displayName` / `keywords` で表し、`interface` は入れない。Claude は未知フィールドを無視するが `claude plugin validate --strict` が警告にするため。`version` は両 manifest で常に同値。
 - 共通ルールは `skills/<skill>/references/` に分割する。
 - スキル本文は日本語を既定にする。
 - 社員が使い続けても成果物が散らからないよう、artifact lifecycle を壊さない。

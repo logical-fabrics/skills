@@ -20,6 +20,7 @@ const required = [
   "## Verification",
   "## Review Findings",
   "## Risks and Rollback",
+  "## Next actions",
   "## Implementation Handoff",
 ];
 

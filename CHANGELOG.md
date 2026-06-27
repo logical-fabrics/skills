@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.1.11
+
+- Unified the plan template: `current.md`（active plan）と implementation-plan content を 1 つの section 契約に統合し、`output-contracts.md` を単一の正本にした。`Completed` / `Verification status` / `Open decisions` は独立 section をやめ、`Current State` / `Verification Plan` / `Review Findings` に畳む。
+- Aligned `validate-plan-structure.mjs` with the unified contract（`## Next actions` を追加）。
+- Rewrote `check-plan-ready.mjs` to判定を構造ベースにし、rubric 引用などの `P0` / `P1` 文字列での誤検知（false positive）を解消。Status・open questions・未解決 findings・Handoff の有無で判定する。
+- Added reference-routing entries for backend / CLI / data pipeline / library と非 JS・非 Web 言語（Python / Go / Rust / Ruby / mobile / native）。これらでは UI references と `default-stack.md` を適用しない。
+- Strengthened `default-stack.md` のゲート: LF ハウス既定は greenfield かつ TS/JS Web に限定し、他言語・他領域には持ち込まない旨を明記。
+- Added before / after コピー例を `ui-ux.md`（result-centered copy）と `ai-ux.md`（生テキスト → 操作可能な結果）に追加。
+- Documented the intended manifest host difference: Codex は `interface` ブロック、Claude Code は top-level `displayName` / `keywords`（`interface` 概念なし、`--strict` 警告回避）。Claude manifest に `displayName` / `keywords` / `$schema` を追加。
+- Migration: none for users; installed plugin users should update to refresh skill reference content.
+
+## 0.1.10
+
+- Restored Tailwind CSS as a default-stack styling candidate when a repo has no existing design system, CSS stack, or component library.
+- Kept the canonical UI/UX rubric stack-agnostic: it requires visual and interaction quality, not a specific styling library.
+- Migration: none for users; installed plugin users should update to refresh skill reference content.
+
+## 0.1.9
+
+- Restored `nuqs` as a React-only default-stack candidate for URL query state when a repo has no existing routing/state policy.
+- Kept the canonical UI/UX rubric library-agnostic: it requires URL/back/reload/share behavior, not a specific library.
+- Migration: none for users; installed plugin users should update to refresh skill reference content.
+
 ## 0.1.8
 
 - Removed the standalone `Reference Policy` from the canonical UI/UX rubric to keep it focused on design and review criteria.

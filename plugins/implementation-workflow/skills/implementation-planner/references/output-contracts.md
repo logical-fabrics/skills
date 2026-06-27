@@ -25,23 +25,26 @@
 
 ## implementation-plan content
 
-実装担当 LLM / engineer 向け。必須:
+実装担当 LLM / engineer 向け。これは `current.md`（active plan）と同一の section 契約であり、別テンプレートを増やさない。必須 section（`##` 見出し）:
 
-- Status
-- Last updated
-- Goal
-- Source of Truth
-- Scope / Non-goals
-- Current State
-- Target Architecture
-- Step-by-step Implementation
-- Files to Change
-- Verification Plan
-- Review Findings
-- Risks and Rollback
-- Implementation Handoff
+- `## Status`: `draft` / `approved` / `in-progress` / `blocked` / `done` / `superseded`
+- `## Last updated`
+- `## Goal`
+- `## Source of Truth`
+- `## Scope / Non-goals`
+- `## Current State`: 現状と、完了済み slice の記録（completed）を含める。
+- `## Target Architecture`
+- `## Step-by-step Implementation`: 各 step は checkbox で完了管理する。
+- `## Files to Change`
+- `## Verification Plan`: 直近の verification status（通った / 失敗した / 未実行）を含める。
+- `## Review Findings`: P0/P1/P2 ledger と open decisions を含める。
+- `## Risks and Rollback`
+- `## Next actions`: 次に実行する最小 slice。
+- `## Implementation Handoff`
 
 コードの細部まで伝える。ファイル、関数、schema、route、command、test、acceptance criteria を書く。
+
+`current.md` を active plan として使う場合も、この section 契約をそのまま使う。`scripts/validate-plan-structure.mjs` はこの見出し集合を検証する。`Completed` / `Verification status` / `Open decisions` は独立 section にせず、上記の `Current State` / `Verification Plan` / `Review Findings` に畳む。
 
 ## abstract-plan.html
 

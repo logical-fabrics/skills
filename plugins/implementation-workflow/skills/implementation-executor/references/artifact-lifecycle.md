@@ -16,17 +16,19 @@
 docs/implementation/current.md
 ```
 
+active plan の section 契約は planner `output-contracts.md` の implementation-plan content と同一（`## Status` 〜 `## Implementation Handoff`）。executor もこの 1 テンプレートだけを更新し、別形式を作らない。
+
 実装開始時:
 
 - ユーザー明示 plan、repo 慣習上の active plan、または `docs/implementation/current.md` があるか確認する。
-- `Status`、`Last updated`、`Current state`、`Next actions`、`Implementation Handoff` を読む。
+- `## Status`、`## Last updated`、`## Current State`、`## Next actions`、`## Implementation Handoff` を読む。
 - 古い計画、別名 plan、archive を source of truth にしない。ただしユーザーが明示した plan は今回の source of truth とする。
 
 実装終了時:
 
-- 完了した slice を `Completed` に反映する。
-- 次の最小 slice を `Next actions` に反映する。
-- 通った verification と失敗した verification を更新する。
+- 完了した slice を `## Current State`（completed）と `## Step-by-step Implementation` の checkbox に反映する。
+- 次の最小 slice を `## Next actions` に反映する。
+- 通った verification と失敗した verification を `## Verification Plan` に更新する。
 - scope、UX、schema、infra、security、cost、production behavior が変わった場合は plan を更新する。
 
 ## Archive / Cleanup
