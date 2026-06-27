@@ -2,7 +2,7 @@
 
 社内配布前に、以下を確認する。
 
-この手順は `lf-skills` marketplace 全体の release process です。現在の例は `implementation-workflow` ですが、plugin が増えた場合は変更対象 plugin ごとに同じ checks を行います。
+この手順は `logical-fabrics/skills` marketplace 全体の release process です。現在の例は `implementation-workflow` ですが、plugin が増えた場合は変更対象 plugin ごとに同じ checks を行います。
 
 ## 1. Static checks
 
@@ -56,13 +56,13 @@ claude --plugin-dir "$(pwd)/plugins/implementation-workflow"
 Update smoke の例:
 
 ```bash
-claude plugins update implementation-workflow@lf-skills
+claude plugins update implementation-workflow@skills
 claude plugins details implementation-workflow
 ```
 
 - update 後は Claude Code を再起動する。
 - update が最新扱いなのに挙動が古い場合は、version bump 漏れを疑う。
-- local 検証で version を変えない場合だけ、`claude plugins uninstall implementation-workflow@lf-skills` からの再 install で cache を捨てる。
+- local 検証で version を変えない場合だけ、`claude plugins uninstall implementation-workflow@skills` からの再 install で cache を捨てる。
 
 ## 4. Behavior smoke test
 

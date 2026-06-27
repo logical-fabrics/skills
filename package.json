@@ -1,5 +1,5 @@
 {
-  "name": "lf-skills",
+  "name": "@logical-fabrics/skills",
   "version": "0.1.0",
   "private": true,
   "description": "Logical Fabrics shared agent skills and plugins for Codex and Claude Code.",

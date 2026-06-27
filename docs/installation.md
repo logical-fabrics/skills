@@ -1,6 +1,6 @@
 # Installation
 
-このドキュメントは、`lf-skills` repository を Codex / Claude Code の marketplace として登録し、必要な plugin を install する手順です。
+このドキュメントは、`logical-fabrics/skills` repository を Codex / Claude Code の marketplace として登録し、必要な plugin を install する手順です。
 
 現在この repository で配布している plugin は `implementation-workflow` です。plugin が増えた場合は、同じ marketplace 登録の上で install 対象の plugin 名を置き換えます。
 
@@ -27,10 +27,10 @@ codex plugin list
 `implementation-workflow` の install:
 
 ```bash
-codex plugin add implementation-workflow --marketplace lf-skills
+codex plugin add implementation-workflow --marketplace skills
 ```
 
-`codex plugin marketplace add` が返す marketplace 名が `lf-skills` ではない場合、`codex plugin list` で表示された名前を `--marketplace` に指定します。
+`codex plugin marketplace add` が返す marketplace 名が `skills` ではない場合、`codex plugin list` で表示された名前を `--marketplace` に指定します。
 
 `implementation-workflow` の確認:
 
@@ -53,7 +53,7 @@ claude plugins marketplace add "$(pwd)"
 
 ```bash
 claude plugins validate --strict plugins/implementation-workflow
-claude plugins install implementation-workflow@lf-skills
+claude plugins install implementation-workflow@skills
 claude plugins details implementation-workflow
 ```
 
@@ -79,7 +79,7 @@ pnpm lint
 `implementation-workflow` を更新する例:
 
 ```bash
-claude plugins update implementation-workflow@lf-skills
+claude plugins update implementation-workflow@skills
 ```
 
 配布前には `pnpm validate`、`pnpm lint`、host smoke test を必ず通してください。

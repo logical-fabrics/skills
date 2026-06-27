@@ -1,4 +1,4 @@
-# LF Skills
+# Logical Fabrics Skills
 
 Logical Fabrics のエンジニア向けに配布する Codex / Claude Code 共通プラグイン集です。
 
@@ -6,7 +6,7 @@ Logical Fabrics のエンジニア向けに配布する Codex / Claude Code 共�
 
 このリポジトリは、Logical Fabrics のエンジニアが Codex と Claude Code で共通の agent plugin / skill を使うための社内 marketplace です。
 
-リポジトリ名は `lf-skills` です。複数の plugin を同じリポジトリで配布できる前提で、共通の skill body、host 固有 manifest、導入手順、release checks を管理します。
+リポジトリ名は `logical-fabrics/skills` です。複数の plugin を同じリポジトリで配布できる前提で、共通の skill body、host 固有 manifest、導入手順、release checks を管理します。
 
 現在配布している plugin は `implementation-workflow` の 1 つです。今後 plugin が増えても、README は repo / marketplace 全体の入口として保ち、各 plugin の詳細は plugin catalog と個別 docs に分けます。
 
@@ -144,8 +144,8 @@ pnpm lint
 このリポジトリを clone した上で、Codex / Claude Code の marketplace として登録します。
 
 ```bash
-git clone https://github.com/logical-fabrics/lf-skills.git
-cd lf-skills
+git clone https://github.com/logical-fabrics/skills.git
+cd skills
 pnpm install --frozen-lockfile
 pnpm validate
 ```
@@ -154,17 +154,17 @@ Codex で `implementation-workflow` を install する例:
 
 ```bash
 codex plugin marketplace add "$(pwd)"
-codex plugin add implementation-workflow --marketplace lf-skills
+codex plugin add implementation-workflow --marketplace skills
 ```
 
 Claude Code で `implementation-workflow` を install する例:
 
 ```bash
 claude plugins marketplace add "$(pwd)"
-claude plugins install implementation-workflow@lf-skills
+claude plugins install implementation-workflow@skills
 ```
 
-この環境では、`implementation-workflow@lf-skills` が Codex と Claude Code の両方に install されることを確認済みです。
+この環境では、`implementation-workflow@skills` が Codex と Claude Code の両方に install されることを確認済みです。
 
 導入手順は [docs/installation.md](docs/installation.md) を参照してください。
 
