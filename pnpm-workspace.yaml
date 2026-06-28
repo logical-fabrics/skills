@@ -2,4 +2,4 @@ packages:
   - plugins/*
 
 minimumReleaseAgeExclude:
-  - knip@6.21.0
+  - knip@6.23.0

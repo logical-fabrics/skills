@@ -42,6 +42,7 @@ AskUser は最終手段にする。repo、一次情報、実行確認で解け�
 - 最新のユーザー依頼と矛盾していないか。
 - 現在の code、schema、routes、UI、tests と一致しているか。
 - 使用 library / cloud / API の仕様が古くないか。
+- plan 内の package / library / SDK / CLI version が latest 原則に沿っているか。既存 version より上げられる dependency がある場合、upgrade を実装 step と検証に含めているか。
 - plan 内の TODO / unknown / assumption が残っていないか。
 - 議論履歴、途中案、解消済み reviewer memo、古い差分説明が残り、実装者が現在の実行内容を読み取りにくくなっていないか。
 - 人間向け `abstract-plan.html` と実装向け `implementation-plan.md` が矛盾していないか。

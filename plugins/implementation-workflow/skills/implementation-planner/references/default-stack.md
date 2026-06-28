@@ -34,8 +34,9 @@ Mobile app の既定:
 ルール:
 
 - 既存 stack、設計判断、互換性要件を優先する。
-- 新規 dependency は Context7 または公式 docs で current install / config を確認する。
-- package は原則最新。ただし既存 repo の制約に合わせる。
+- 新規 dependency、更新する dependency、設定を変える SDK / CLI は Context7 または公式 docs で current install / config を確認する。
+- package は原則 latest。既存 version が latest より古く、repo の互換性制約に反しないなら、version upgrade を plan の実装 step と verification に含める。
+- latest を使わない場合だけ、具体的な互換性制約、既知の不具合、pin / downgrade の解除条件を `Target Architecture` または `Risks and Rollback` に残す。
 - raw SQL は原則禁止。例外は `data-modeling.md` に従う。
 - Sentry は local では発火させない。staging と production で有効化し、1 project の中で environment を `staging` / `production` として分ける。
 

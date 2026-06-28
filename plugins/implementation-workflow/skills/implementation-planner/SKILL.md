@@ -31,6 +31,7 @@ Disallowed unless explicitly requested:
 - 既存 repo の実態を最優先する。greenfield または未確定時だけ default stack を使う。
 - source of truth は、ユーザーの最新依頼と明示 plan / scope、現在の repo 実態、repo 既存慣習、`docs/implementation/current.md` の順に確認する。
 - ユーザーが plan ファイルを明示した場合、そのファイルをその依頼の source of truth として扱う。継続運用が必要な場合だけ `docs/implementation/current.md` への統合を提案する。
+- package / library / SDK / CLI は原則 latest を採用する。設計時に current docs と registry / package manager の latest を確認し、既存 version から上げられるなら upgrade step と検証を plan に入れる。latest を使わない場合だけ、互換性制約、リスク、解除条件を明記する。
 - 計画は implementation LLM 向けに具体化する。対象ファイル、手順、検証、停止条件を書く。
 - active plan は実装者の入口であり、議論ログではない。採用した判断、実装手順、検証、未解決判断だけを残し、経緯、途中案、解消済み reviewer メモ、差分説明、会話履歴由来のノイズは削る。
 - 「何を変えるか」は書く。「なぜその判断か」は実装判断に必要な範囲だけ書く。「どの議論を経たか」は、実装者の判断や安全性に直接効かない限り書かない。
@@ -55,15 +56,16 @@ Disallowed unless explicitly requested:
 2. `references/source-of-truth.md` で source of truth を列挙する。
 3. 既存 plan があれば `references/planning-process.md` で freshness check を行う。
 4. `references/reference-routing.md` で必要な references を選ぶ。
-5. material unknown を Research / AskUser / Blocked に分類する。
-6. `references/artifact-lifecycle.md` で保存場所、active plan、archive 方針を決める。
-7. `references/output-contracts.md` に従って計画成果物を作る。
-8. `references/review-rubric.md` で adversarial、implementation、UX、simplicity などのレビューを行う。
-9. 関連 profile のレビュー観点を追加する。
-10. P0/P1 がなくなるまで修正する。最大 10 review rounds。
-11. review 結果を plan に畳み込み、active plan から経緯・途中案・解消済みメモを削る。未解決 findings と実装者が必要な判断理由だけを残す。
-12. final response 前に `abstract-plan.html` 要否を判定する。必要なら作成/更新し、不要なら理由を `Next Action Contract` に残す。
-13. `Next Action Contract` と `Implementation Handoff` で終える。
+5. 追加・更新・設定変更する package / library / SDK / CLI の latest と current docs を確認する。既存 version が latest より古く、上げられるなら plan に upgrade step を含める。
+6. material unknown を Research / AskUser / Blocked に分類する。
+7. `references/artifact-lifecycle.md` で保存場所、active plan、archive 方針を決める。
+8. `references/output-contracts.md` に従って計画成果物を作る。
+9. `references/review-rubric.md` で adversarial、implementation、UX、simplicity などのレビューを行う。
+10. 関連 profile のレビュー観点を追加する。
+11. P0/P1 がなくなるまで修正する。最大 10 review rounds。
+12. review 結果を plan に畳み込み、active plan から経緯・途中案・解消済みメモを削る。未解決 findings と実装者が必要な判断理由だけを残す。
+13. final response 前に `abstract-plan.html` 要否を判定する。必要なら作成/更新し、不要なら理由を `Next Action Contract` に残す。
+14. `Next Action Contract` と `Implementation Handoff` で終える。
 
 ## Required References
 

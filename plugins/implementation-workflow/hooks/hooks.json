@@ -1,0 +1,30 @@
+{
+  "description": "Implementation workflow quality hooks for Codex and Claude Code.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/hooks/scripts/post-edit-biome.mjs\"",
+            "timeout": 30,
+            "statusMessage": "Running Biome on edited files"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/hooks/scripts/stop-knip-gate.mjs\"",
+            "timeout": 120,
+            "statusMessage": "Checking Knip when dependency graph changed"
+          }
+        ]
+      }
+    ]
+  }
+}

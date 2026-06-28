@@ -78,6 +78,8 @@ Section hygiene:
 
 Plan の成果物では、ユーザーが実行承認する前提のときは `Human decision required: yes` にする。AI は plan lane 内の調査と review は自律的に進めるが、Plan から Execute へはユーザーの明示依頼なしに移らない。
 
+package / library / SDK / CLI を追加・更新・設定変更する plan では、`## Target Architecture` または `## Step-by-step Implementation` に latest 確認結果を書く。既存 version より上げられるものは upgrade step として扱い、latest を使わないものは `## Risks and Rollback` に pin / downgrade 理由、互換性制約、解除条件を書く。
+
 長時間・複数 slice・複数 review rounds を前提にする Plan では `Goal recommended: yes` とし、`Goal draft` に計画完成用の短い `/goal` 文面を書く。Plan goal は、調査、計画作成、複数観点 review、P0/P1 closure、handoff 作成までに限定し、実装開始を含めない。
 
 長時間・複数 slice・検証ループを前提にする Execute handoff でも `Goal recommended: yes` とし、`Goal draft` に実行用の短い `/goal` 文面を書く。Goal draft は目的、成功条件、制約、検証条件だけに絞り、詳細な手順は active plan に置く。

@@ -36,6 +36,7 @@ codex plugin add implementation-workflow --marketplace skills
 
 - `implementation-workflow` が installed plugins に出る。
 - 新しい Codex セッションで `implementation-planner`、`implementation-executor`、`implementation-auditor` が skill として見える。
+- Hooks が有効な host では、PostToolUse / Stop hook が component inventory に出る。
 - `現在の実装を見直して`、`実装計画を作って`、`current.md の次を実装して` の自然文で期待する skill が発火する。
 
 ## Claude Code
@@ -61,7 +62,7 @@ claude plugins details implementation-workflow
 
 確認:
 
-- `implementation-workflow` の details に `implementation-planner`、`implementation-executor`、`implementation-auditor` の 3 skills が出る。
+- `implementation-workflow` の details に `implementation-planner`、`implementation-executor`、`implementation-auditor` の 3 skills と hooks が出る。
 - `claude plugins validate --strict` が warning なしで通る。
 - 自然文で `現在の実装を見直して`、`実装計画を作って`、`current.md の次を実装して` が期待通りに routing される。
 

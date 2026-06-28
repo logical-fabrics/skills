@@ -4,6 +4,8 @@
 
 - 近いテストから実行する。
 - typecheck、lint、unit、integration、E2E、build のうち関係するものを選ぶ。
+- Biome などの高速な format / lint は編集後または completion 前の近い quality gate として優先して走らせる。
+- Knip などの dependency / unused exports / unused files 解析は、package / exports / entrypoint / config / build graph を触ったとき、または複数ファイル slice の handoff 前に走らせる。every-edit hook にしてノイズが増える場合は CI / pre-handoff gate に寄せる。
 - 失敗した verification は、原因、対応、残リスクを記録する。
 - mock-only の成功を本番導線の成功として扱わない。
 

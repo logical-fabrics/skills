@@ -5,6 +5,8 @@
 - 最小の coherent slice を決める。
 - 編集前に影響範囲を確認する。
 - 変更後は近いテストから走らせる。
+- format / lint の post-edit hook が利用できる repo では、編集後に Biome などの高速で局所的な整形・lint を走らせる。自動修正後は差分を確認する。
+- Knip のような dependency / unused exports / unused files の全体解析は every-edit hook にしない。package、exports、entrypoint、config、build graph を触った slice の完了時、または handoff 前の quality gate として走らせる。
 - 失敗したら原因を読む。安易な fallback、skip、mock、snapshot 更新で成功扱いしない。
 - plan に seed / sample / demo asset でユーザーの主成果物を代替する設計が含まれていたら、そのまま実装しない。失敗表示と復旧導線へ直すか、plan lane / audit lane に戻す。
 - scope を広げる必要がある場合は理由を明示し、必要ならユーザー確認する。

@@ -39,6 +39,7 @@ codex plugin add implementation-workflow --marketplace <marketplace-name>
 
 - `implementation-workflow` が marketplace から install できる。
 - `implementation-planner`、`implementation-executor`、`implementation-auditor` が skill 一覧に出る。
+- hooks がある plugin では、component inventory に hook 数が出る。
 - 各 skill の description が意図した trigger を持つ。
 
 Claude Code で `implementation-workflow` を確認する例:
@@ -50,6 +51,7 @@ claude --plugin-dir "$(pwd)/plugins/implementation-workflow"
 ```
 
 - plugin skill が namespace 付きで見える。
+- hooks がある plugin では、component inventory に hook 数が出る。
 - thin slash command alias が増えておらず、Claude Code の入口が 3 skills に整理されている。
 - validate が warning なしで通る。
 

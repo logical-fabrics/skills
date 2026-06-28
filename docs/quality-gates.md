@@ -8,6 +8,7 @@
 - `pnpm lint` が通る。
 - 新しい skill は `SKILL.md` に `Capability Boundary`、`Core Rules`、`Workflow`、`Required References` を持つ。
 - `SKILL.md` から参照する `references/*.md` が存在する。
+- plugin に `hooks/hooks.json` がある場合、JSON 構造と参照 script が `pnpm validate` で検証される。
 - Claude Code では薄い slash command alias を増やさず、skill の自然文 trigger を優先する。
 - Codex / Claude Code 固有情報を共通本文に混ぜない。
 
@@ -27,5 +28,6 @@
 - plugin manifest が壊れている。
 - skill discovery を阻害する frontmatter 不備がある。
 - reference link が欠けている。
+- hook command が存在しない script を参照している。
 - 成果物 lifecycle に反する指示がある。
 - hidden fallback、mock-only success、production 変更の無断実行を許す記述がある。

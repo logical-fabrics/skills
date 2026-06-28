@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.1.20
+
+- Strengthened `implementation-executor` so the main agent defaults to orchestration instead of direct coding for non-trivial implementation slices.
+- Added explicit delegation guidance for implementation, review, and verification workers, with a narrow exception for tiny reversible changes or hosts without worker tools.
+- Updated the prompt guide to set the same orchestration expectation for Execute prompts.
+- Migration: none for users; installed plugin users should update to refresh executor behavior.
+
+## 0.1.19
+
+- Added actual plugin lifecycle hooks for Codex and Claude Code under `hooks/hooks.json`.
+- Added a `PostToolUse` hook that runs Biome on edited files when the target repo has Biome configured.
+- Added a `Stop` hook that runs Knip only when dependency graph inputs changed, such as package manifests, lockfiles, tsconfig, build config, or index entrypoints.
+- Extended plugin validation to check bundled hook definitions and referenced hook scripts.
+- Migration: installed plugin users should update and review the new hook component before enabling it in trusted workspaces.
+
+## 0.1.18
+
+- Strengthened package currency rules for `implementation-planner` and `implementation-executor`: package / library / SDK / CLI choices should default to latest, include upgrade steps when current repo versions can move forward, and document any pin / downgrade with constraints and removal conditions.
+- Added quality-gate guidance for hooks: run fast Biome-style format / lint after edits or before completion, while keeping Knip-style whole-project dependency / export analysis for slice completion, handoff, CI, or package/export/build-graph changes rather than every edit.
+- Migration: none for users; installed plugin users should update to refresh skill reference content.
+
 ## 0.1.17
 
 - Added implementation-plan formatting hygiene for `implementation-planner`: Markdown plans should stay plain, structured, and execution-oriented for LLM implementers.

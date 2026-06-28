@@ -7,6 +7,7 @@ Ready:
 - Goal、scope、non-goals、対象ファイル、手順、検証が明確。
 - Status、Last updated、Current state、Next actions、Implementation Handoff がある。
 - 現在の repo、schema、routes、UI、tests と矛盾していない。
+- package / library / SDK / CLI version が latest 原則と矛盾していない。古い version を使う場合は互換性制約と解除条件が書かれている。
 - accepted slice、touched surface、changed behavior に関する P0/P1 findings が残っていない。
 - AskUser が必要な判断が残っていない。
 

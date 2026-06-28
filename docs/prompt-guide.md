@@ -157,6 +157,7 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 - 最初に plan freshness を確認する。
 - 古い plan をそのまま信じない。
 - 実装は最小 slice にする。
+- 小さすぎる修正を除き、メインエージェントは orchestration に集中し、実装 worker、review worker、verification worker を分ける。
 - UI 変更は実ブラウザ、スクリーンショット、戻る/リロード/直接 URL を確認する。
 - UI 検証では、route、viewport、browser/tool、screenshot/trace path、確認した state、未確認 state、残リスクを報告する。
 - 完了時に `current.md` の handoff を必要に応じて更新する。

@@ -30,10 +30,13 @@ Disallowed unless explicitly requested:
 - ユーザーが plan ファイルを明示した場合、その plan を今回の source of truth とする。継続運用が必要な場合だけ `docs/implementation/current.md` への統合を提案する。
 - ユーザーや他エージェントの未コミット変更を戻さない。
 - 実装は最小の coherent slice にする。
+- 軽微な単一ファイル修正、文言修正、設定値変更など明らかに小さく可逆な作業を除き、メインエージェントは直接の実装担当にならない。メインエージェントは plan / repo 読解、slice 分割、worker / reviewer / verifier への委任、進捗判断、最終統合、検証結果の説明に集中する。
+- subagent / worker tool が利用できる host では、実装 worker と review / verification worker を分ける。host に委任手段がない、または委任 overhead が作業自体より大きい場合だけ、メインエージェントが直接実装してよい。
 - 既存 stack、命名、format、test、UI pattern を優先する。
 - 軽微で可逆な修正は、計画成果物を増やさず、変更内容と検証を簡潔に報告する。
 - UI/UX を最上位価値にする。ただし過剰設計を避ける。
 - plan に fallback / degraded mode が書かれていても、それがユーザーの期待する主成果物を別素材で置き換える設計なら実装せず、P1 として plan / audit へ戻す。失敗は失敗として表示し、再試行、入力変更、既存の本物候補選択、後で再開の導線にする。
+- package / library / SDK / CLI を追加・更新・設定変更する場合は、current docs と package manager の latest を確認する。latest より古い version に固定するのは互換性制約がある場合だけにし、理由と解除条件を残す。
 - リファクタリングは重要。命名、責務、重複、記述差異が LLM の誤読を招く場合は同じ slice で直す。
 - Context7、公式 docs、web を使うべき不確実性があれば調査する。
 - accepted slice、touched surface、changed behavior に関する P0/P1 findings が残る状態で完了しない。scope 外の P1 は backlog 化して完了可能にする。
@@ -48,13 +51,14 @@ Disallowed unless explicitly requested:
 2. `references/plan-readiness.md` で freshness check を行う。
 3. `references/artifact-lifecycle.md` で active plan と session handoff の更新方針を確認する。
 4. 次の実装 slice を狭く決める。
-5. 現在の code path、tests、UI、schema、config を確認する。
-6. `references/execution-process.md` に従って実装する。
-7. 変更領域に応じて relevant references を読む。
-8. `references/review-and-parallelism.md` に従って実装レビューを行う。
-9. `references/testing-verification.md` に従って検証する。
-10. P0/P1 がなくなるまで修正と再検証を行う。最大 5 review rounds。
-11. active plan の status / completed / next actions / verification / `Next Action Contract` を必要に応じて更新し、変更内容、検証、残リスク、未完了事項を簡潔に報告する。
+5. `references/review-and-parallelism.md` で orchestration / delegation plan を決める。
+6. 現在の code path、tests、UI、schema、config を確認する。
+7. `references/execution-process.md` に従って実装する。小さすぎる例外を除き、実装作業は worker に委任し、メインエージェントは統合と判断を担う。
+8. 変更領域に応じて relevant references を読む。
+9. `references/review-and-parallelism.md` に従って実装レビューを行う。
+10. `references/testing-verification.md` に従って検証する。
+11. P0/P1 がなくなるまで修正と再検証を行う。最大 5 review rounds。
+12. active plan の status / completed / next actions / verification / `Next Action Contract` を必要に応じて更新し、変更内容、検証、残リスク、未完了事項を簡潔に報告する。
 
 ## Required References
 

@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -110,6 +111,8 @@ async function validatePlugin(pluginName) {
   );
   const skillsDir = path.join(pluginRoot, "skills");
   const commandsDir = path.join(pluginRoot, "commands");
+  const hooksDir = path.join(pluginRoot, "hooks");
+  const hooksPath = path.join(hooksDir, "hooks.json");
 
   for (const filePath of [codexManifestPath, claudeManifestPath]) {
     if (!(await exists(filePath))) {
@@ -158,6 +161,77 @@ async function validatePlugin(pluginName) {
       }
     }
   }
+
+  if (await exists(hooksPath)) {
+    const hooksConfig = validateJson(
+      hooksPath,
+      await readFile(hooksPath, "utf8"),
+    );
+    if (!hooksConfig?.hooks || typeof hooksConfig.hooks !== "object") {
+      errors.push(`${hooksPath}: missing hooks object`);
+    } else {
+      validateHookCommands(pluginRoot, hooksPath, hooksConfig.hooks);
+    }
+  }
+}
+
+function validateHookCommands(pluginRoot, hooksPath, hooks) {
+  for (const [eventName, entries] of Object.entries(hooks)) {
+    if (!Array.isArray(entries)) {
+      errors.push(`${hooksPath}: hooks.${eventName} must be an array`);
+      continue;
+    }
+    for (const [entryIndex, entry] of entries.entries()) {
+      if (!Array.isArray(entry?.hooks)) {
+        errors.push(
+          `${hooksPath}: hooks.${eventName}[${entryIndex}].hooks must be an array`,
+        );
+        continue;
+      }
+      for (const [hookIndex, hook] of entry.hooks.entries()) {
+        if (hook?.type !== "command") continue;
+        if (typeof hook.command !== "string" || hook.command.trim() === "") {
+          errors.push(
+            `${hooksPath}: hooks.${eventName}[${entryIndex}].hooks[${hookIndex}] missing command`,
+          );
+          continue;
+        }
+        for (const referencedPath of pluginRootCommandPaths(hook.command)) {
+          const absolute = path.join(pluginRoot, referencedPath);
+          if (!absolute.startsWith(`${pluginRoot}${path.sep}`)) {
+            errors.push(
+              `${hooksPath}: hook command path escapes plugin root: ${referencedPath}`,
+            );
+            continue;
+          }
+          if (!existsSyncSafe(absolute)) {
+            errors.push(
+              `${hooksPath}: hook command references missing file ${referencedPath}`,
+            );
+          }
+        }
+      }
+    }
+  }
+}
+
+function existsSyncSafe(filePath) {
+  return existsSync(filePath);
+}
+
+function pluginRootCommandPaths(command) {
+  const paths = [];
+  const patterns = [
+    /\$\{CLAUDE_PLUGIN_ROOT:-\$PLUGIN_ROOT\}\/([^"'\s]+)/g,
+    /\$\{CLAUDE_PLUGIN_ROOT\}\/([^"'\s]+)/g,
+    /\$\{PLUGIN_ROOT\}\/([^"'\s]+)/g,
+  ];
+  for (const pattern of patterns) {
+    for (const match of command.matchAll(pattern)) {
+      paths.push(match[1]);
+    }
+  }
+  return paths;
 }
 
 async function validateMarketplace(filePath, pluginNames, label) {
