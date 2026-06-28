@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.1.17
+
+- Added implementation-plan formatting hygiene for `implementation-planner`: Markdown plans should stay plain, structured, and execution-oriented for LLM implementers.
+- Discouraged decorative bolding, emoji, visual separators, cosmetic callouts, and verbose title styling in active plans unless the formatting directly protects implementation safety.
+- Clarified that `abstract-plan.html` may use visual hierarchy and design because it is the human-facing artifact, but it does not replace the concise implementation plan.
+- Migration: none for users; installed plugin users should update to refresh skill reference content.
+
+## 0.1.16
+
+- Strengthened `implementation-planner` so active plans are explicitly for implementers, not records of the planning discussion.
+- Added plan hygiene rules to remove discussion history, interim options, resolved reviewer notes, stale TODOs, and diff-style recap text from `current.md` unless they directly prevent implementation mistakes.
+- Clarified that plan updates should rewrite the active plan as the current source of truth rather than appending chronology.
+- Migration: none for users; installed plugin users should update to refresh skill reference content.
+
+## 0.1.15
+
+- Hardened planning, execution, and audit rules so seed, sample, mock, or demo assets cannot be treated as successful user-generated output.
+- Clarified truthful fallback behavior: failures should remain failures with recovery paths instead of silently substituting unrelated assets.
+- Strengthened `abstract-plan.html` lifecycle guidance for multi-area plans that need human alignment.
+- Migration: none for users; installed plugin users should update to refresh skill reference content.
+
 ## 0.1.14
 
 - Added a neutral UI copy principle: user-facing text should present decision material rather than instructing the user what to do.

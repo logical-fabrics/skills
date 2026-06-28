@@ -37,6 +37,8 @@ docs/implementation/
 - 必須 section は `output-contracts.md` の `##` 見出し集合（`## Status` 〜 `## Implementation Handoff`）に従う。
 - `Status` は `draft` / `approved` / `in-progress` / `blocked` / `done` / `superseded` のいずれか。
 - 完了済み slice は `## Current State`、直近 verification は `## Verification Plan`、open decisions は `## Review Findings` に畳む。独立 section を増やさない。
+- `current.md` は議論履歴ではなく、実装者が今読む source of truth である。plan 更新時は session recap、変更経緯、解消済み指摘、古い案を積み増さず、現在の実行内容として読み直せるように rewrite する。
+- 判断理由は、実装者が誤った設計に戻らないために必要な範囲だけ残す。会話でどう合意したか、どの reviewer が何を言ったかは、実装に必要でなければ削る。
 
 既定運用では、新しい plan を作るよりまず `current.md` を更新する。新計画が必要な場合は、古い `current.md` を `archive/` に移してから置き換える。
 
@@ -80,5 +82,7 @@ Plan lane の終了前に、`abstract-plan.html` の要否を必ず明示的に�
 
 - 作業に使わない一時ファイルは残さない。
 - 古い plan を source of truth として残さない。`superseded` と `replaced by` を明記する。
+- active plan から、経緯説明、差分メモ、解消済み review、古い TODO、実装者に不要な判断ログを削る。
+- active plan から、過剰な強調、絵文字、装飾罫線、見た目だけの callout、冗長な見出し装飾を削る。Markdown は実装者が構造を読むために使う。
 - `abstract-plan.html` は人間の合意形成に効く場合だけ維持する。実装が完了したら archive するか削除候補にする。
 - docs を更新したら、計画内の status と handoff も合わせる。

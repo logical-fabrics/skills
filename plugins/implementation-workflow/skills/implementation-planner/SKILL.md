@@ -5,7 +5,7 @@ description: Create, review, and improve Japanese implementation plans for anoth
 
 # Implementation Planner
 
-日本語で、別の LLM またはエンジニアが迷わず実装できる計画を作る。目的は、最良の UI/UX と安全な実装を、過剰設計なしで実現すること。
+日本語で、別の LLM またはエンジニアが迷わず実装できる計画を作る。目的は plan 自体を作ることではなく、実装者が現在の repo で安全に実装を始め、完了条件まで進められる状態を作ること。最良の UI/UX と安全な実装を、過剰設計なしで実現する。
 
 ## Capability Boundary
 
@@ -32,6 +32,9 @@ Disallowed unless explicitly requested:
 - source of truth は、ユーザーの最新依頼と明示 plan / scope、現在の repo 実態、repo 既存慣習、`docs/implementation/current.md` の順に確認する。
 - ユーザーが plan ファイルを明示した場合、そのファイルをその依頼の source of truth として扱う。継続運用が必要な場合だけ `docs/implementation/current.md` への統合を提案する。
 - 計画は implementation LLM 向けに具体化する。対象ファイル、手順、検証、停止条件を書く。
+- active plan は実装者の入口であり、議論ログではない。採用した判断、実装手順、検証、未解決判断だけを残し、経緯、途中案、解消済み reviewer メモ、差分説明、会話履歴由来のノイズは削る。
+- 「何を変えるか」は書く。「なぜその判断か」は実装判断に必要な範囲だけ書く。「どの議論を経たか」は、実装者の判断や安全性に直接効かない限り書かない。
+- 実装者向け Markdown plan は装飾文書ではない。過剰な強調、全見出しの bold 化、絵文字、装飾罫線、見た目だけの callout、冗長なタイトル表現を避け、見出し、箇条書き、表、コードブロックを実行性のためだけに使う。
 - 人間向けにはコード変数ではなく、目的、アーキテクチャ、判断、リスク、検証を説明する。
 - `abstract-plan.html` は任意の飾りではない。計画が複数領域や複数ユーザーフローにまたがる、DB/schema、API 境界、auth/security、外部サービス、課金/コスト、deploy/production、または非自明な product/UX 判断を含む場合は、人間の合意形成が必要とみなし、ユーザーが明示的に不要と言わない限り作成または更新する。
 - `abstract-plan.html` を作らない場合は、final response と `Next Action Contract` で「なぜ不要か」を明記する。
@@ -58,8 +61,9 @@ Disallowed unless explicitly requested:
 8. `references/review-rubric.md` で adversarial、implementation、UX、simplicity などのレビューを行う。
 9. 関連 profile のレビュー観点を追加する。
 10. P0/P1 がなくなるまで修正する。最大 10 review rounds。
-11. final response 前に `abstract-plan.html` 要否を判定する。必要なら作成/更新し、不要なら理由を `Next Action Contract` に残す。
-12. `Next Action Contract` と `Implementation Handoff` で終える。
+11. review 結果を plan に畳み込み、active plan から経緯・途中案・解消済みメモを削る。未解決 findings と実装者が必要な判断理由だけを残す。
+12. final response 前に `abstract-plan.html` 要否を判定する。必要なら作成/更新し、不要なら理由を `Next Action Contract` に残す。
+13. `Next Action Contract` と `Implementation Handoff` で終える。
 
 ## Required References
 

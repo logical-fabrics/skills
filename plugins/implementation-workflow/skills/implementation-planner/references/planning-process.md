@@ -43,6 +43,7 @@ AskUser は最終手段にする。repo、一次情報、実行確認で解け�
 - 現在の code、schema、routes、UI、tests と一致しているか。
 - 使用 library / cloud / API の仕様が古くないか。
 - plan 内の TODO / unknown / assumption が残っていないか。
+- 議論履歴、途中案、解消済み reviewer memo、古い差分説明が残り、実装者が現在の実行内容を読み取りにくくなっていないか。
 - 人間向け `abstract-plan.html` と実装向け `implementation-plan.md` が矛盾していないか。
 - 複数の active-looking plan が残っておらず、`docs/implementation/current.md` または repo 慣習上の active plan が明確か。
 

@@ -45,6 +45,23 @@
 
 コードの細部まで伝える。ファイル、関数、schema、route、command、test、acceptance criteria を書く。
 
+Active plan は実装者が読むための作業入口であり、planning session の記録ではない。必須:
+
+- 現在採用する方針と、実装者が迷わないだけの判断理由を残す。
+- 履歴、会話の経緯、途中案、差分説明、解消済み review メモ、古い TODO は削る。
+- 過剰な装飾、全見出しや重要語の bold 化、絵文字、装飾罫線、見た目だけの callout、長い前口上は削る。
+- 棄却案は、誤実装を防ぐ重要な非採用理由がある場合だけ `Scope / Non-goals`、`Review Findings`、`Risks and Rollback` のいずれかに短く残す。
+- plan 更新時は追記で履歴を積むのではなく、現在の truth として読み直せる形に rewrite する。
+- 「この計画で何を変えるか」は具体的に書く。「どの議論でそこに至ったか」は実装判断に効かない限り書かない。
+- Markdown formatting は構造化のために使う。`##` 見出し、checkbox、短い箇条書き、必要な表、コードブロックはよい。強調は P0/P1、停止条件、破壊的操作、未解決判断など、実装安全性に効く場合だけ最小限にする。
+
+Section hygiene:
+
+- `## Current State`: 現在の実装状態、完了済み slice、最後に確認した事実だけを書く。時系列ログや session recap にしない。
+- `## Review Findings`: 未解決 findings、受け入れる残リスク、誤実装を防ぐ重要判断だけを書く。解消済み findings は、修正後の計画本文に反映したら原則削る。
+- `## Step-by-step Implementation`: 実行順、対象ファイル、acceptance criteria に集中する。検討過程や reviewer ごとの発言を混ぜない。
+- `## Implementation Handoff`: 次に読むファイル、実行する最小 slice、直近 verification、残リスクに絞る。会話履歴を読ませる前提にしない。
+
 `## Implementation Handoff` には `Next Action Contract` block を含める:
 
 ```md
@@ -86,6 +103,8 @@ Plan の成果物では、ユーザーが実行承認する前提のときは `H
 - 人間がコードを読まない前提で、アーキテクチャ、判断、リスク、検証を説明する。
 - コード変数名や細かい関数名を露出しすぎない。
 - active plan またはユーザー明示 plan と内容が矛盾しない。
+
+`abstract-plan.html` は人間向けなので、視覚的な階層、余白、色、図、カード表現を使ってよい。ただし装飾は理解を速くするために限り、実装者向け Markdown plan の簡潔さを置き換えない。
 
 軽微な修正では作らない。過剰な成果物は workflow 自体の UX を悪くする。ただし「軽微」と言えるのは、次セッションで迷うほどの判断、未解決リスク、複数領域の変更、ユーザー向け体験の分岐がない場合に限る。
 
