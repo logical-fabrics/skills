@@ -58,7 +58,7 @@ Disallowed unless explicitly requested:
 8. 変更領域に応じて relevant references を読む。
 9. `references/review-and-parallelism.md` に従って実装レビューを行う。
 10. `references/testing-verification.md` に従って検証する。
-11. `references/review-and-parallelism.md` の stop conditions に従い、全 reviewer roles が新規 P0/P1 をゼロ件で報告するまで修正と再検証を行う。最大 5 review rounds。round を使い切っても新規 P0/P1 が出続けている場合は完了扱いにせず、`Next Action Contract` で残課題とユーザー判断の要否を明示する。
+11. `references/review-and-parallelism.md` の stop conditions に従い、全 reviewer roles が新規 P0/P1 をゼロ件で報告するまで修正と再検証を行う。最大 10 review rounds。round を使い切っても新規 P0/P1 が出続けている場合は完了扱いにせず、`Next Action Contract` で残課題とユーザー判断の要否を明示する。
 12. active plan の status / completed / next actions / verification / `Next Action Contract` を必要に応じて更新し、変更内容、検証、残リスク、未完了事項を簡潔に報告する。
 
 ## Required References

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.23
+
+- Raised `implementation-executor`'s review loop round cap from 5 to 10, matching `implementation-planner`, after observing 5 rounds was sometimes too few to reach a clean round (zero new P0/P1 across all reviewer roles) before escalating.
+- Migration: none for users; installed plugin users should update to refresh executor review behavior.
+
 ## 0.1.22
 
 - Fixed `implementation-planner` and `implementation-executor` review loop convergence (manual re-review kept surfacing new findings even though the review loop had already ended). Defined a "round" as a full pass where every required reviewer (and every triggered conditional reviewer) reports zero new P0/P1, instead of letting partial coverage or a subjective "looks roughly fine" call end the loop.
