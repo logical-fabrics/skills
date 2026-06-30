@@ -55,12 +55,19 @@ Implementation review:
 - accepted slice、touched surface、changed behavior に関する P0/P1 が残っていれば修正する。
 - scope 外の P0/P1 は隠さず backlog 化し、今回の完了条件とは分ける。
 - P2 は今回の slice を広げすぎない範囲で修正、受け入れ、延期を記録する。
-- 最大 5 rounds。
 
-1 round は、findings list、fix / accept / defer / blocked 判断、verification delta の 3 点を含む。
+Stop conditions:
+
+- 1 round は「全 reviewer roles が、その時点の touched surface に対して新規 P0/P1 をゼロ件で報告した round」と定義する。reviewer の一部だけが通った状態、または 1 人の reviewer が軽微と言っただけの状態を round 完了として扱わない。
+- 直近 round で 1 件でも新規 P0/P1 が出た場合、修正後にもう一度全 reviewer roles を回す。findings を出した reviewer だけ再確認して打ち切らない。前 round で findings がなかった reviewer も、今回の修正で touched surface が変わっていれば再度見る。
+- 「だいたい直った」「軽微な指摘しか残っていない」という主観的な収束判断で round を打ち切らない。打ち切れるのは、全 reviewer roles が当該 round で新規 P0/P1 ゼロを明示的に報告したときだけ。
+- 最大 5 rounds。5 round を使い切っても新規 P0/P1 が出続けている場合は、これを完了として報告しない。残 findings、再現手順、次にすべき判断を `Next Action Contract` に明示し、`Recommended next lane` を `Execute`（続行が必要）または `Ask user`（方針判断が必要）にしてユーザーに確認する。round 数を使い切ったことだけを理由に完了扱いにしない。
+
+1 round は、findings list、fix / accept / defer / blocked 判断、verification delta の 3 点を含む。「レビューした」とだけ書いて終わらせない。
 
 Reviewer roles:
 
+- Adversarial reviewer: 実装者自身の完了報告や前 round の fix 内容を信用せず、diff を他人の PR として読む。隠れた失敗、エッジケース、楽観的な「動作確認済み」表記、verification で実際には踏んでいない経路を積極的に探す。
 - UX reviewer: planner `ui-ux.md` の canonical rubric に従い、実ユーザーの導線、mobile / desktop、日本語、状態表示、CTA 近接、result-centered copy、forms、accessibility を見る。
 - Simplicity reviewer: 抽象化、汎用化、独自基盤、状態管理が過剰でないか。
 - Schema reviewer: DB、migration、YAGNI、既存データ。

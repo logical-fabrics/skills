@@ -40,6 +40,7 @@ Disallowed unless explicitly requested:
 - リファクタリングは重要。命名、責務、重複、記述差異が LLM の誤読を招く場合は同じ slice で直す。
 - Context7、公式 docs、web を使うべき不確実性があれば調査する。
 - accepted slice、touched surface、changed behavior に関する P0/P1 findings が残る状態で完了しない。scope 外の P1 は backlog 化して完了可能にする。
+- review round の上限を使い切ったことは「findings が残っていない」ことの代わりにならない。新規 P0/P1 が出続けたまま round 上限に達した場合は未完了として扱う。
 - Execute lane 内では、accepted slice の実装、必要な局所 plan 更新、review、修正、検証、handoff 更新まで自律的にやりきる。
 - 古い plan は停止理由ではなく検証対象として扱う。repo / docs / 実行確認で安全に解消できる stale は直してから進む。
 - ただし未承認の別 slice、不可逆操作、production / billing / auth provider / cloud resource / secret / destructive DB 変更へは勝手に広げない。
@@ -57,7 +58,7 @@ Disallowed unless explicitly requested:
 8. 変更領域に応じて relevant references を読む。
 9. `references/review-and-parallelism.md` に従って実装レビューを行う。
 10. `references/testing-verification.md` に従って検証する。
-11. P0/P1 がなくなるまで修正と再検証を行う。最大 5 review rounds。
+11. `references/review-and-parallelism.md` の stop conditions に従い、全 reviewer roles が新規 P0/P1 をゼロ件で報告するまで修正と再検証を行う。最大 5 review rounds。round を使い切っても新規 P0/P1 が出続けている場合は完了扱いにせず、`Next Action Contract` で残課題とユーザー判断の要否を明示する。
 12. active plan の status / completed / next actions / verification / `Next Action Contract` を必要に応じて更新し、変更内容、検証、残リスク、未完了事項を簡潔に報告する。
 
 ## Required References

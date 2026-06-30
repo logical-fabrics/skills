@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.22
+
+- Fixed `implementation-planner` and `implementation-executor` review loop convergence (manual re-review kept surfacing new findings even though the review loop had already ended). Defined a "round" as a full pass where every required reviewer (and every triggered conditional reviewer) reports zero new P0/P1, instead of letting partial coverage or a subjective "looks roughly fine" call end the loop.
+- Required re-running all required/triggered reviewers after any fix, not just the reviewer that raised the finding, and re-checking any section whose content changed even if that reviewer had no prior findings there.
+- Added an `Adversarial reviewer` role to the `implementation-executor` review loop, mirroring the planner's adversarial reviewer, to actively hunt for hidden failures and optimistic "verified" claims rather than rubber-stamping.
+- Required explicit non-completion and escalation via `Next Action Contract` when the round cap (5 for executor, 10 for planner) is reached while new P0/P1 findings are still appearing, instead of silently reporting completion once rounds run out.
+- Migration: none for users; installed plugin users should update to refresh planner/executor review behavior.
+
 ## 0.1.21
 
 - Added planning guidance for Cloudflare Workers / Vite-style full-stack apps: prefer platform-supported integrated dev servers over split frontend/runtime proxy setups.
