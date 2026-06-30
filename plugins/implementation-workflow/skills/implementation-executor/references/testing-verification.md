@@ -8,6 +8,9 @@
 - Knip などの dependency / unused exports / unused files 解析は、package / exports / entrypoint / config / build graph を触ったとき、または複数ファイル slice の handoff 前に走らせる。every-edit hook にしてノイズが増える場合は CI / pre-handoff gate に寄せる。
 - 失敗した verification は、原因、対応、残リスクを記録する。
 - mock-only の成功を本番導線の成功として扱わない。
+- platform runtime / bindings を使う app では、標準の `dev` command で API、assets、database、storage、media、AI、queue などの実際の binding contract を通す。
+- frontend dev server と backend/runtime dev server の分離、proxy port、local-only binding は、production 形と異なる verification として扱う。分離が必要な場合は限界を report に残し、統合 dev / live binding の確認を別 gate にする。
+- 機能成立に必要な外部 service が remote binding / 実接続でないと動かない場合、その接続確認なしに feature-ready と報告しない。
 
 UI:
 

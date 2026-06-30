@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.21
+
+- Added planning guidance for Cloudflare Workers / Vite-style full-stack apps: prefer platform-supported integrated dev servers over split frontend/runtime proxy setups.
+- Strengthened execution and verification rules so the standard `dev` command must exercise the runtime and binding contract needed for the real feature.
+- Added audit checks for local-only or mock-only dev paths that hide required external service, media, AI, storage, or platform binding failures.
+- Migration: installed plugin users should update to refresh skill reference content.
+
 ## 0.1.20
 
 - Strengthened `implementation-executor` so the main agent defaults to orchestration instead of direct coding for non-trivial implementation slices.

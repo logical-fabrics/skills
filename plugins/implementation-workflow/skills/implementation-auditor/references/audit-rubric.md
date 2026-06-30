@@ -37,6 +37,8 @@ Verification:
 
 - 重要導線に test または実ブラウザ確認があるか。
 - mock-only 成功を real path 成功として扱っていないか。
+- 標準の `dev` command が production に近い runtime / binding contract を通っているか。frontend と backend/runtime の分離 proxy や local-only binding で、本来必要な接続失敗を隠していないか。
+- 外部 service / media / AI / storage など、機能成立に必要な binding が remote / live 接続なしでは動かない場合、その未確認を feature-ready として扱っていないか。
 - regression を防ぐ最低限の coverage があるか。
 
 Data / Auth / Security:
@@ -49,6 +51,7 @@ Delivery / Operations:
 
 - CI/CD、staging、production、OGP、monitoring、analytics、Sentry、robots が必要に応じて整っているか。
 - logs、metrics、trace、business events で問題追跡できるか。
+- local dev、staging、production の起動経路が不必要に分岐していないか。platform 公式の統合 dev path があるのに、古い split dev server / proxy を標準にしていないか。
 
 AI:
 

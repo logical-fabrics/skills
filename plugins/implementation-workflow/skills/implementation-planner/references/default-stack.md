@@ -27,6 +27,13 @@ Web frontend の既定:
 - Styling: Tailwind CSS
 - Build / dev server: Vite
 
+Cloudflare Workers で Web frontend と API / bindings を同じ app として動かす場合:
+
+- Vite と Workers runtime / bindings を別プロセスに分け、frontend dev server から `/api` proxy する構成を既定にしない。
+- 公式 docs と current package を確認し、`@cloudflare/vite-plugin` など platform 公式の統合 dev server が使えるなら、それを標準の `dev` entrypoint にする。
+- production が Worker + assets + bindings の同一 origin で動くなら、local dev / browser verification も同じ形を標準にする。
+- 外部 service binding に local simulator がない場合でも、開発にその接続が必要なら標準 `dev` で remote binding / 実接続を使う。local-only の別 entrypoint を既定にして feature-ready と扱わない。
+
 Mobile app の既定:
 
 - Mobile framework: Expo
