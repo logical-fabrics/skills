@@ -43,7 +43,7 @@ Disallowed unless explicitly requested:
 - fallback / degraded mode は「真実を保つ」場合だけ許可する。失敗は失敗として見せ、再試行、入力変更、既存の本物の候補選択、後で再開などの回復導線にする。ユーザーが期待する「自分の入力から生まれた結果」を、関係ない素材で置き換える設計は、明示表示しても UX 破綻として扱う。
 - seed / sample / demo asset は初期状態、説明、テスト、セーフモードには使えるが、ユーザー生成物や本人素材の結果として混ぜない。計画に fallback を入れる場合は、誰の何を何で代替しているのか、ユーザーが誤認しないか、成功条件を偽っていないかを必ず書く。
 - 軽微で可逆な作業では、永続 plan や `abstract-plan.html` を作らず、短い方針と検証だけで終えてよい。
-- レビューは P0/P1 がゼロになるまで回す。P2 は修正、受け入れ、延期のいずれかを記録する。review round の上限を使い切ったことは「findings が残っていない」ことの代わりにならない。新規 P0/P1 が出続けたまま round 上限に達した場合は review 未完了として扱う。
+- `references/review-rubric.md` に従って plan の risk と変更領域に必要な reviewer だけを選ぶ。未解決 P0/P1 がゼロで、実装者が迷わない acceptance / verification evidence が揃うまで改善する。P2 は修正、受け入れ、延期のいずれかを記録する。
 - material unknown は調査する。repo や一次情報で解けず、product / business / rollout 判断が必要な場合だけ AskUserTool または host equivalent を使う。
 - Plan lane 内では、調査、unknown 解消、計画修正、review、handoff 整理まで自律的に進める。
 - 長時間・複数 slice・複数 review rounds を前提にする計画作業では `/goal` を使ってよい。Goal の scope は計画完成と review closure に限定し、実装開始を含めない。
@@ -60,9 +60,9 @@ Disallowed unless explicitly requested:
 6. material unknown を Research / AskUser / Blocked に分類する。
 7. `references/artifact-lifecycle.md` で保存場所、active plan、archive 方針を決める。
 8. `references/output-contracts.md` に従って計画成果物を作る。
-9. `references/review-rubric.md` で adversarial、implementation、UX、simplicity などのレビューを行う。
-10. 関連 profile のレビュー観点を追加する。
-11. `references/review-rubric.md` の stop conditions に従い、Required Reviewers と発火した Conditional reviewers 全員が新規 P0/P1 をゼロ件で報告するまで修正する。最大 10 review rounds。round を使い切っても新規 P0/P1 が出続けている場合は review closure 扱いにせず、`Next Action Contract` で残課題とユーザー判断の要否を明示する。
+9. `references/review-rubric.md` で low / medium / high risk を選び、plan の変更領域に必要な reviewer を決める。
+10. implementation / adversarial と、発火した UX、simplicity、schema、security、delivery、AI の観点だけをレビューする。
+11. `references/review-rubric.md` の closure 条件に従い、未解決 P0/P1 がないことと、実装手順・acceptance criteria・verification evidence が揃ったことを確認する。finding 修正後は変わった section に関係する reviewer だけを再実行し、同じ原因で進展しない場合は model / role / scope を escalation する。
 12. review 結果を plan に畳み込み、active plan から経緯・途中案・解消済みメモを削る。未解決 findings と実装者が必要な判断理由だけを残す。
 13. final response 前に `abstract-plan.html` 要否を判定する。必要なら作成/更新し、不要なら理由を `Next Action Contract` に残す。
 14. `Next Action Contract` と `Implementation Handoff` で終える。

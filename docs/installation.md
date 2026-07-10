@@ -62,7 +62,7 @@ claude plugins details implementation-workflow
 
 確認:
 
-- `implementation-workflow` の details に `implementation-planner`、`implementation-executor`、`implementation-auditor` の 3 skills と hooks が出る。
+- `implementation-workflow` の details に `implementation-planner`、`implementation-executor`、`implementation-auditor` の 3 skills、`implementation-worker`、`adversarial-reviewer`、`verification-worker` の 3 agents、hooks が出る。
 - `claude plugins validate --strict` が warning なしで通る。
 - 自然文で `現在の実装を見直して`、`実装計画を作って`、`current.md の次を実装して` が期待通りに routing される。
 

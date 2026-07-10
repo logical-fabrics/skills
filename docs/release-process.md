@@ -9,6 +9,7 @@
 ```bash
 pnpm install --frozen-lockfile
 pnpm validate
+pnpm test:hooks
 pnpm lint
 ```
 
@@ -51,6 +52,7 @@ claude --plugin-dir "$(pwd)/plugins/implementation-workflow"
 ```
 
 - plugin skill が namespace 付きで見える。
+- Claude Code plugin agent を追加・変更した場合、期待する agent 名、model / effort、tool restriction が component inventory と定義ファイルで確認できる。
 - hooks がある plugin では、component inventory に hook 数が出る。
 - thin slash command alias が増えておらず、Claude Code の入口が 3 skills に整理されている。
 - validate が warning なしで通る。
@@ -69,6 +71,8 @@ claude plugins details implementation-workflow
 ## 4. Behavior smoke test
 
 小さな fixture repo または実プロジェクトで、以下を確認する。
+
+model routing の能力、価格、availability、retention、effort は vendor の公式一次情報を正とする。ローカル smoke は plugin の routing、lane 境界、component discovery、決定的な hook behavior の退行確認に限定し、model 間の品質・cost-performance benchmark は要求しない。
 
 - 軽微な修正では planner が重くなりすぎない。
 - 複数領域の実装では、ユーザー明示 plan または repo 慣習がなければ `docs/implementation/current.md` が active plan になる。

@@ -5,12 +5,15 @@
 ## Required
 
 - `pnpm validate` が通る。
+- `pnpm test:hooks` が通る。
 - `pnpm lint` が通る。
 - 新しい skill は `SKILL.md` に `Capability Boundary`、`Core Rules`、`Workflow`、`Required References` を持つ。
 - `SKILL.md` から参照する `references/*.md` が存在する。
 - plugin に `hooks/hooks.json` がある場合、JSON 構造と参照 script が `pnpm validate` で検証される。
+- plugin に `agents/` がある場合、frontmatter、agent 名の一意性、参照 skill、plugin agent で未対応の field が `pnpm validate` で検証される。
 - Claude Code では薄い slash command alias を増やさず、skill の自然文 trigger を優先する。
 - Codex / Claude Code 固有情報を共通本文に混ぜない。
+- model routing の能力、価格、availability、retention、effort は vendor の公式一次情報を正とする。手元の小規模 fixture で model 品質や cost-performance を再評価することは release 条件にしない。
 
 ## Review
 

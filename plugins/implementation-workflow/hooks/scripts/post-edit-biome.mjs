@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { recordEditedFiles } from "./edit-state.mjs";
 import {
   BIOME_EXTENSIONS,
+  collectDependencyGraphFiles,
+  collectEditedFiles,
   fail,
   findProjectRoot,
   gitChangedFiles,
@@ -16,12 +19,25 @@ import {
 const input = readHookInput();
 const root = findProjectRoot(input);
 const packageJson = loadPackageJson(root);
+const observedFiles = collectEditedFiles(input);
+const dependencyGraphFiles = collectDependencyGraphFiles(input);
+const trackedFiles = [...observedFiles, ...dependencyGraphFiles]
+  .map((file) => normalizeRelative(root, file))
+  .filter(Boolean)
+  .filter((file) => !file.split(path.sep).includes("node_modules"));
+
+recordEditedFiles(input, root, trackedFiles);
 
 if (!packageJson || !hasBiome(root, packageJson)) {
   process.exit(0);
 }
 
-const files = collectEditedFiles(input, root);
+const files =
+  observedFiles.length > 0
+    ? observedFiles
+    : input.tool_name === "Bash"
+      ? []
+      : gitChangedFiles(root);
 const biomeFiles = files
   .map((file) => normalizeRelative(root, file))
   .filter(Boolean)
@@ -49,48 +65,3 @@ if (result.status !== 0) {
 }
 
 process.exit(0);
-
-function collectEditedFiles(hookInput, projectRoot) {
-  const toolInput = hookInput.tool_input ?? {};
-  const directPaths = [
-    toolInput.file_path,
-    toolInput.path,
-    toolInput.filename,
-    toolInput.target_file,
-  ].filter(Boolean);
-
-  const patchText = [
-    typeof toolInput === "string" ? toolInput : "",
-    typeof toolInput.patch === "string" ? toolInput.patch : "",
-    typeof toolInput.cmd === "string" ? toolInput.cmd : "",
-    typeof toolInput.command === "string" ? toolInput.command : "",
-  ].join("\n");
-
-  const patchPaths = extractPatchPaths(patchText);
-  const collected = [...directPaths, ...patchPaths];
-
-  if (collected.length > 0) {
-    return [...new Set(collected.map(String))];
-  }
-
-  return gitChangedFiles(projectRoot);
-}
-
-function extractPatchPaths(text) {
-  const paths = [];
-  for (const line of text.split(/\r?\n/)) {
-    const applyPatchMatch = line.match(
-      /^\*\*\* (?:Add|Update|Delete) File: (.+)$/,
-    );
-    if (applyPatchMatch) {
-      paths.push(applyPatchMatch[1].trim());
-      continue;
-    }
-
-    const diffMatch = line.match(/^(?:\+\+\+|---) [ab]\/(.+)$/);
-    if (diffMatch && diffMatch[1] !== "/dev/null") {
-      paths.push(diffMatch[1].trim());
-    }
-  }
-  return paths;
-}

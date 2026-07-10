@@ -21,6 +21,14 @@ const requiredSkillSections = [
   "## Workflow",
   "## Required References",
 ];
+const unsupportedPluginAgentFields = ["hooks", "mcpServers", "permissionMode"];
+const supportedAgentEfforts = new Set([
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+  "max",
+]);
 
 const errors = [];
 
@@ -83,6 +91,135 @@ function validateMarkdownFrontmatter(filePath, text, requiredKeys) {
   }
 }
 
+function parseAgentFrontmatter(filePath, text) {
+  if (!text.startsWith("---\n")) {
+    errors.push(`${filePath}: missing YAML frontmatter`);
+    return null;
+  }
+  const end = text.indexOf("\n---\n", 4);
+  if (end === -1) {
+    errors.push(`${filePath}: unterminated YAML frontmatter`);
+    return null;
+  }
+
+  const fields = new Map();
+  let currentKey = null;
+  for (const line of text.slice(4, end).split("\n")) {
+    const field = line.match(/^([A-Za-z][A-Za-z0-9-]*):(?:\s*(.*))?$/);
+    if (field) {
+      const [, key, value = ""] = field;
+      if (fields.has(key)) {
+        errors.push(`${filePath}: duplicate ${key}: in frontmatter`);
+      }
+      fields.set(key, value.trim());
+      currentKey = key;
+      continue;
+    }
+
+    const listItem = line.match(/^\s+-\s+(.+)$/);
+    if (listItem && currentKey) {
+      const currentValue = fields.get(currentKey);
+      const values = Array.isArray(currentValue) ? currentValue : [];
+      values.push(listItem[1].trim());
+      fields.set(currentKey, values);
+    }
+  }
+  return fields;
+}
+
+function frontmatterList(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string" || value.trim() === "") return [];
+  const normalized = value.replace(/^\[/, "").replace(/\]$/, "");
+  return normalized
+    .split(",")
+    .map((item) => item.trim().replace(/^['"]|['"]$/g, ""))
+    .filter(Boolean);
+}
+
+function validateAgentFrontmatter(
+  pluginName,
+  filePath,
+  text,
+  skillNames,
+  agentNames,
+) {
+  const fields = parseAgentFrontmatter(filePath, text);
+  if (!fields) return;
+
+  for (const key of [
+    "name",
+    "description",
+    "model",
+    "effort",
+    "maxTurns",
+    "skills",
+  ]) {
+    if (!fields.get(key) || fields.get(key).length === 0) {
+      errors.push(`${filePath}: missing ${key}: in frontmatter`);
+    }
+  }
+  if (!fields.has("tools") && !fields.has("disallowedTools")) {
+    errors.push(
+      `${filePath}: frontmatter must define tools: or disallowedTools:`,
+    );
+  }
+  for (const key of unsupportedPluginAgentFields) {
+    if (fields.has(key)) {
+      errors.push(
+        `${filePath}: ${key}: is not supported for plugin-shipped agents`,
+      );
+    }
+  }
+
+  const name = fields.get("name");
+  if (typeof name === "string" && name !== "") {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
+      errors.push(`${filePath}: agent name must use kebab-case`);
+    }
+    if (agentNames.has(name)) {
+      errors.push(`${filePath}: duplicate agent name ${name}`);
+    }
+    agentNames.add(name);
+    if (path.basename(filePath, ".md") !== name) {
+      errors.push(`${filePath}: filename must match agent name ${name}`);
+    }
+  }
+
+  const effort = fields.get("effort");
+  if (typeof effort === "string" && !supportedAgentEfforts.has(effort)) {
+    errors.push(
+      `${filePath}: effort must be one of ${[...supportedAgentEfforts].join(", ")}`,
+    );
+  }
+
+  const maxTurns = Number(fields.get("maxTurns"));
+  if (!Number.isInteger(maxTurns) || maxTurns <= 0) {
+    errors.push(`${filePath}: maxTurns must be a positive integer`);
+  }
+
+  for (const field of ["tools", "disallowedTools"]) {
+    if (fields.has(field) && frontmatterList(fields.get(field)).length === 0) {
+      errors.push(`${filePath}: ${field}: must not be empty`);
+    }
+  }
+
+  for (const skillReference of frontmatterList(fields.get("skills"))) {
+    const [namespace, skillName] = skillReference.includes(":")
+      ? skillReference.split(":", 2)
+      : [null, skillReference];
+    if (namespace && namespace !== pluginName) {
+      errors.push(
+        `${filePath}: referenced skill ${skillReference} belongs to another plugin`,
+      );
+      continue;
+    }
+    if (!skillNames.includes(skillName)) {
+      errors.push(`${filePath}: missing referenced skill ${skillReference}`);
+    }
+  }
+}
+
 async function validateReferences(skillDir, skillText) {
   const refs = [...skillText.matchAll(/`(references\/[^`]+\.md)`/g)].map(
     (match) => match[1],
@@ -111,6 +248,7 @@ async function validatePlugin(pluginName) {
   );
   const skillsDir = path.join(pluginRoot, "skills");
   const commandsDir = path.join(pluginRoot, "commands");
+  const agentsDir = path.join(pluginRoot, "agents");
   const hooksDir = path.join(pluginRoot, "hooks");
   const hooksPath = path.join(hooksDir, "hooks.json");
 
@@ -141,6 +279,23 @@ async function validatePlugin(pluginName) {
     const skillText = await readFile(skillPath, "utf8");
     validateSkillFrontmatter(skillPath, skillText);
     await validateReferences(skillDir, skillText);
+  }
+
+  if (await exists(agentsDir)) {
+    const agentNames = new Set();
+    const agentFiles = (await readdir(agentsDir)).filter((name) =>
+      name.endsWith(".md"),
+    );
+    for (const agentFile of agentFiles) {
+      const agentPath = path.join(agentsDir, agentFile);
+      validateAgentFrontmatter(
+        pluginName,
+        agentPath,
+        await readFile(agentPath, "utf8"),
+        skillNames,
+        agentNames,
+      );
+    }
   }
 
   if (await exists(commandsDir)) {

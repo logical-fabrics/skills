@@ -30,9 +30,9 @@ Disallowed unless explicitly requested:
 - ユーザーが plan ファイルを明示した場合、その plan を今回の source of truth とする。継続運用が必要な場合だけ `docs/implementation/current.md` への統合を提案する。
 - ユーザーや他エージェントの未コミット変更を戻さない。
 - 実装は最小の coherent slice にする。
-- 軽微な単一ファイル修正、文言修正、設定値変更など明らかに小さく可逆な作業を除き、メインエージェントは直接の実装担当にならない。メインエージェントは plan / repo 読解、slice 分割、worker / reviewer / verifier への委任、進捗判断、最終統合、検証結果の説明に集中する。
-- subagent / worker tool が利用できる host では、実装 worker と review / verification worker を分ける。host に委任手段がない、または委任 overhead が作業自体より大きい場合だけ、メインエージェントが直接実装してよい。
-- model を選択できる host では `references/model-routing.md` に従い、frontier model を orchestration と高難度判断に集中させ、通常 coding は balanced worker、境界の明確な単純作業は fast worker へ委任する。model 名ではなく task 難度と失敗コストで tier を決める。
+- `references/review-and-parallelism.md` に従って low / medium / high risk を選び、必要な role だけ分ける。low-risk の小さく可逆な変更はメインエージェントが直接実装してよい。medium / high risk では implementation と独立 review を分け、高リスク時だけ domain reviewer / verifier を追加する。
+- orchestration の既定形は flat な main → leaf workers とする。host の concurrency / depth cap を尊重し、Codex `ultra` または Claude Code `ultracode` / dynamic workflow と manual fan-out を同じ workstream に重ねない。
+- model を選択できる host では `references/model-routing.md` に従う。Codex は迷う一般 main を Sol `medium` から始め、境界の明確な通常 worker は Terra、反復可能な leaf は Luna を使う。Claude Code は Sonnet 5 `high` を daily coding / main の既定にし、長時間・高難度の調査や architecture 判断だけ Fable 5 へ上げ、単純 leaf は Haiku を使う。vendor 間で tier を無理に対称化しない。
 - 既存 stack、命名、format、test、UI pattern を優先する。
 - 軽微で可逆な修正は、計画成果物を増やさず、変更内容と検証を簡潔に報告する。
 - UI/UX を最上位価値にする。ただし過剰設計を避ける。
@@ -40,8 +40,7 @@ Disallowed unless explicitly requested:
 - package / library / SDK / CLI を追加・更新・設定変更する場合は、current docs と package manager の latest を確認する。latest より古い version に固定するのは互換性制約がある場合だけにし、理由と解除条件を残す。
 - リファクタリングは重要。命名、責務、重複、記述差異が LLM の誤読を招く場合は同じ slice で直す。
 - Context7、公式 docs、web を使うべき不確実性があれば調査する。
-- accepted slice、touched surface、changed behavior に関する P0/P1 findings が残る状態で完了しない。scope 外の P1 は backlog 化して完了可能にする。
-- review round の上限を使い切ったことは「findings が残っていない」ことの代わりにならない。新規 P0/P1 が出続けたまま round 上限に達した場合は未完了として扱う。
+- accepted slice、touched surface、changed behavior に関する未解決 P0/P1 が残る状態、または acceptance criteria に対応する evidence が揃っていない状態で完了しない。scope 外の P1 は backlog 化して完了可能にする。
 - Execute lane 内では、accepted slice の実装、必要な局所 plan 更新、review、修正、検証、handoff 更新まで自律的にやりきる。
 - 古い plan は停止理由ではなく検証対象として扱う。repo / docs / 実行確認で安全に解消できる stale は直してから進む。
 - ただし未承認の別 slice、不可逆操作、production / billing / auth provider / cloud resource / secret / destructive DB 変更へは勝手に広げない。
@@ -55,11 +54,11 @@ Disallowed unless explicitly requested:
 4. 次の実装 slice を狭く決める。
 5. `references/review-and-parallelism.md` と `references/model-routing.md` で orchestration / delegation plan、model tier、effort、escalation 条件を決める。
 6. 現在の code path、tests、UI、schema、config を確認する。
-7. `references/execution-process.md` に従って実装する。小さすぎる例外を除き、実装作業は worker に委任し、メインエージェントは統合と判断を担う。
+7. `references/execution-process.md` に従って実装する。risk に応じて直接実装または worker 委任を選び、メインエージェントは統合と acceptance 判断を担う。
 8. 変更領域に応じて relevant references を読む。
 9. `references/review-and-parallelism.md` に従って実装レビューを行う。
 10. `references/testing-verification.md` に従って検証する。
-11. `references/review-and-parallelism.md` の stop conditions に従い、全 reviewer roles が新規 P0/P1 をゼロ件で報告するまで修正と再検証を行う。最大 10 review rounds。round を使い切っても新規 P0/P1 が出続けている場合は完了扱いにせず、`Next Action Contract` で残課題とユーザー判断の要否を明示する。
+11. `references/review-and-parallelism.md` の closure 条件に従い、risk 上必要な reviewer / check で未解決 P0/P1 がないことと、acceptance evidence が揃ったことを確認する。finding 修正後は changed surface に関係する role / check だけを再実行し、同じ原因で進展しない場合は escalation する。
 12. active plan の status / completed / next actions / verification / `Next Action Contract` を必要に応じて更新し、変更内容、検証、残リスク、未完了事項を簡潔に報告する。
 
 ## Required References

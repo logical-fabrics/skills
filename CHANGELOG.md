@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.1
+
+- Corrected model routing to follow each vendor's official defaults without forcing symmetric tiers: Codex now starts an uncertain general task on GPT-5.6 Sol at medium effort, while Claude Code keeps Sonnet 5 at its default high effort for daily coding and reserves Fable 5 for the hardest and longest-running work.
+- Kept GPT-5.6 Terra for bounded everyday workers, GPT-5.6 Luna / Claude Haiku 4.5 for clear repeatable leaf tasks, and raised the bundled Claude implementation worker from medium to Sonnet 5's official default high effort.
+
+## 0.2.0
+
+- Reworked model routing around current official OpenAI and Anthropic guidance: GPT-5.6 is no longer treated as limited preview, routine implementation defaults to GPT-5.6 Terra / Claude Sonnet 5, and GPT-5.6 Sol / Claude Fable 5 are reserved for difficult synthesis, high-risk decisions, and long-running work.
+- Replaced the custom two-level, 8-10-agent fan-out prescription with a flat host-native default. Codex Ultra and Claude Code ultracode / dynamic workflows are used only for work that divides cleanly, and are not stacked with manual fan-out.
+- Changed implementation review from a mandatory three-worker, all-reviewers-for-up-to-ten-rounds loop to low / medium / high risk profiles with closure based on zero unresolved P0/P1 findings and complete acceptance evidence.
+- Added Claude Code plugin subagents for implementation, adversarial review, and verification with bounded model, effort, turn, and tool policies. Codex continues to use its built-in or project-configured subagents because Codex plugins do not distribute the same agent component format.
+- Made model capability, pricing, availability, retention, and effort guidance depend on current vendor primary sources; local release checks do not attempt small-sample model quality or cost-performance benchmarking.
+- Made the Knip Stop hook session-edit-aware so pre-existing dirty worktree changes do not trigger it, tracked successful pnpm / npm / yarn / bun changes through Bash wrappers such as `rtk`, and added a non-blocking Knip recheck after continuation edits without creating a Stop loop.
+- Updated `@biomejs/biome` to 2.5.3 and Knip to 6.26.0.
+- Migration: update the installed plugin and restart Codex / Claude Code so the new skills, agents, hooks, and routing guidance are loaded.
+
 ## 0.1.26
 
 - Replaced blanket UI verification with risk-based levels that distinguish targeted browser smoke, targeted E2E, and full E2E.

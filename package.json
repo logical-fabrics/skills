@@ -7,11 +7,12 @@
   "packageManager": "pnpm@11.9.0",
   "scripts": {
     "validate": "node scripts/validate-plugins.mjs",
+    "test:hooks": "node --test plugins/implementation-workflow/hooks/tests/*.test.mjs",
     "format": "biome format --write .",
     "lint": "biome check . && knip"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.1",
-    "knip": "6.23.0"
+    "@biomejs/biome": "2.5.3",
+    "knip": "6.26.0"
   }
 }

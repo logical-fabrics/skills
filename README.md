@@ -92,6 +92,10 @@ scripts/
 ```text
 plugins/
   implementation-workflow/
+    agents/
+      implementation-worker.md
+      adversarial-reviewer.md
+      verification-worker.md
     skills/
       implementation-auditor/
       implementation-planner/
@@ -103,6 +107,7 @@ plugins/
 - 共通の skill body は `plugins/<plugin>/skills/` に置く。
 - Codex 固有情報は `.codex-plugin/` に閉じ込める。
 - Claude Code 固有情報は `.claude-plugin/` に閉じ込める。
+- host が plugin root の固定 directory を要求する component はその配置に従い、host 固有差分を docs と host adapter に明記する。現在の `agents/` は Claude Code が読み込む plugin subagents。
 - スキル本文は日本語を既定にする。
 - Claude Code では薄い slash command alias を増やさず、skill の自然文 trigger と description を優先する。
 - 配布済み plugin の manifest、skills、references、description、component inventory、host exposure を変えたら version を bump する。

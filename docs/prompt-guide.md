@@ -157,12 +157,13 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 - 最初に plan freshness を確認する。
 - 古い plan をそのまま信じない。
 - 実装は最小 slice にする。
-- 小さすぎる修正を除き、メインエージェントは orchestration に集中し、実装 worker、review worker、verification worker を分ける。
-- model を選択できる場合、Fable 5 / GPT-5.6 Sol 級は orchestration と高難度判断、Sonnet 5 / GPT-5.6 Terra 級は通常 coding、Haiku 4.5 / GPT-5.6 Luna 級は境界の明確な単純 task に使う。利用不能な preview model は同じ能力 tier の利用可能な最新 model に置き換える。
+- low / medium / high risk を選び、low risk は main の直接実装も許可し、medium risk は implementation と独立 review、high risk は必要な domain review / verification を分ける。role 数を固定しない。
+- model を選択できる場合、Codex は迷う一般 main を GPT-5.6 Sol `medium` から始め、境界の明確な通常 worker は Terra、反復可能な leaf は Luna を使う。Claude Code は Sonnet 5 `high` を daily coding / main の既定にし、単一の sitting を超える長時間・高難度 task だけ Fable 5、単純 leaf は Haiku 4.5 を使う。vendor 間で tier を無理に対称化せず、公式情報と host で実際に選択可能な model を正とする。
+- orchestration は flat な main → workers を既定にする。Codex `max`（単独推論）と `ultra`（自動 subagents）、Claude Code の通常 subagents と `ultracode` / dynamic workflow を区別し、host-native orchestration と manual fan-out を同じ workstream に重ねない。
 - UI 変更は changed behavior と risk に応じて、affected route の browser smoke、responsive screenshot、route / auth / persistence の targeted E2E、release 時の full E2E を使い分ける。
 - UI 検証を実行した場合は、確認した route、viewport、browser/tool、state、未確認 state、残リスクと、価値がある場合だけ screenshot/trace path を報告する。
 - 完了時に `current.md` の handoff を必要に応じて更新する。
-- accepted slice 内では、局所的な stale plan 修正、実装、review、修正、再検証までやりきる。
+- accepted slice 内では、局所的な stale plan 修正、実装、risk-based review、修正、再検証までやりきる。未解決 P0/P1 がなく、acceptance criteria の evidence が揃った時だけ完了する。
 - 完了時に `Next Action Contract` を出し、続けるなら次の最小 slice、止めるなら人間判断が必要な理由を示す。
 
 共通の出口形式:
