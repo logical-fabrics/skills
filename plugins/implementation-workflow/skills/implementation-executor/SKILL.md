@@ -12,7 +12,7 @@ description: Execute an existing Japanese implementation plan safely and increme
 Allowed:
 - 実装計画、現在の repo、docs、schema、routes、UI、tests、package、設定を読む。
 - accepted scope に必要なファイルを編集する。
-- local の lint、typecheck、test、build、E2E、UI 検証を実行する。
+- accepted scope と risk に関係する local の lint、typecheck、test、build、targeted E2E、UI 検証を実行する。full E2E は repo / user / release gate または高リスク変更で必要な場合に限る。
 - plan が古い場合、実装前に差分と判断点を明示する。
 
 Disallowed unless explicitly requested:
@@ -32,6 +32,7 @@ Disallowed unless explicitly requested:
 - 実装は最小の coherent slice にする。
 - 軽微な単一ファイル修正、文言修正、設定値変更など明らかに小さく可逆な作業を除き、メインエージェントは直接の実装担当にならない。メインエージェントは plan / repo 読解、slice 分割、worker / reviewer / verifier への委任、進捗判断、最終統合、検証結果の説明に集中する。
 - subagent / worker tool が利用できる host では、実装 worker と review / verification worker を分ける。host に委任手段がない、または委任 overhead が作業自体より大きい場合だけ、メインエージェントが直接実装してよい。
+- model を選択できる host では `references/model-routing.md` に従い、frontier model を orchestration と高難度判断に集中させ、通常 coding は balanced worker、境界の明確な単純作業は fast worker へ委任する。model 名ではなく task 難度と失敗コストで tier を決める。
 - 既存 stack、命名、format、test、UI pattern を優先する。
 - 軽微で可逆な修正は、計画成果物を増やさず、変更内容と検証を簡潔に報告する。
 - UI/UX を最上位価値にする。ただし過剰設計を避ける。
@@ -52,7 +53,7 @@ Disallowed unless explicitly requested:
 2. `references/plan-readiness.md` で freshness check を行う。
 3. `references/artifact-lifecycle.md` で active plan と session handoff の更新方針を確認する。
 4. 次の実装 slice を狭く決める。
-5. `references/review-and-parallelism.md` で orchestration / delegation plan を決める。
+5. `references/review-and-parallelism.md` と `references/model-routing.md` で orchestration / delegation plan、model tier、effort、escalation 条件を決める。
 6. 現在の code path、tests、UI、schema、config を確認する。
 7. `references/execution-process.md` に従って実装する。小さすぎる例外を除き、実装作業は worker に委任し、メインエージェントは統合と判断を担う。
 8. 変更領域に応じて relevant references を読む。
@@ -69,6 +70,7 @@ Disallowed unless explicitly requested:
 - `references/artifact-lifecycle.md`: active plan、archive、session handoff、古い成果物の扱い。
 - `references/execution-process.md`: 実装手順、dirty worktree、scope control。
 - `references/review-and-parallelism.md`: 並列化、review loop、reviewer roles。
+- `references/model-routing.md`: Fable 5 / Sonnet 5 / Haiku 4.5 と GPT-5.6 Sol / Terra / Luna の役割分担、availability、effort、escalation。
 - `references/testing-verification.md`: local checks、UI verification、失敗時の扱い。
 - `references/safety-guardrails.md`: destructive operation、fallback、secret、production、git。
 - `references/ui-implementation.md`: UI 実装、responsive、screenshot、routing、改行。

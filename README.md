@@ -56,7 +56,7 @@ Design priorities:
 - lane 境界は勝手に越えない。Audit から Plan / Execute、Plan から Execute へ進む場合は、ユーザーの明示依頼または承認済み active plan を必要とする。
 - 各 lane の最後に `Next Action Contract` を残し、次の入口、理由、実行可能 slice、人間判断の要否、推奨 prompt を明示する。
 - 古い会話履歴ではなく、現在の repo、明示された plan、active plan を source of truth にする。
-- UI 変更では、実ブラウザでハッピーパス、モバイル、デスクトップ、戻る、リロード、URL 状態、日本語の改行を確認する。
+- UI 変更の検証は changed behavior と risk に比例させる。軽微な copy / style は affected route の局所確認、responsive 変更は mobile / desktop、route / auth / persistence は targeted E2E、release や横断的な高リスク変更は full E2E を使う。
 - DB schema 変更では YAGNI、migration、rollback、既存データへの影響を厳しく見る。
 - 不明点は調査し、調査で決められない判断だけユーザーに確認する。
 

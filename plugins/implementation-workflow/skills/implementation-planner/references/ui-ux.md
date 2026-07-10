@@ -22,6 +22,16 @@ Evidence priority:
 - 規格、政府サイト、platform guideline は、法令・契約・accessibility baseline・host platform 制約が必要な場合の guardrail として使う。良い UX の主根拠にはしない。
 - NN/g などの heuristic は、状態の可視化、ユーザーの言葉、ユーザー制御、一貫性、エラー予防、回復可能性を見落とさないための補助線として使う。
 
+## URL And Navigation State
+
+- ユーザーがページ、タブ、詳細画面、管理画面の対象、検索結果、絞り込み結果、workflow step と認識する状態は URL に載せる。local component state だけで画面を切り替えない。
+- local state に閉じてよいのは、hover、tooltip、開閉中の一時 menu、未送信の入力途中、確認 dialog など、共有・復帰・戻る操作の対象にならない一時状態に限る。
+- 一覧から詳細へ進む、管理対象を選ぶ、設定カテゴリを開く、検索・sort・pagination を変える、step を進める導線では、reload、direct URL、URL share、browser back / forward でユーザーの予想通り復帰できるようにする。
+- 認証、権限、onboarding、tenant selection などの gate は、ユーザーが開こうとした URL を保持する。権限不足や未設定状態を、関係のない default 画面への強制 redirect で隠さない。
+- redirect は、ユーザーの現在地を失わせない場合だけ使う。失敗、権限不足、対象なし、設定不足は、その route 上で回復方法や戻り先を示すことを優先する。
+- reload、direct URL、browser back / forward、login 後復帰で対象喪失、誤った対象への操作、入力消失が起きる設計は P0/P1 として扱う。今回変更する route / query / work state に残っていれば plan / implementation を完了扱いしない。
+- 「画面は変わったのに URL が変わらない」「戻ると想定外の場所へ行く」「直接開くと同じ状態にならない」は P1 UX finding 候補として扱う。ただし無関係な既存 route の問題は backlog 化し、accepted scope を自動的に広げない。
+
 ## Layout And Responsiveness
 
 - モバイル / デスクトップ両対応を必須にする。
@@ -109,9 +119,10 @@ Before / After 例（内部都合・行動指示 → 結果中心・中立提示
 
 ## Verification
 
-- Web UI はハッピーパスを実ブラウザで操作する。
-- 画面上の主要 component と文言を一つずつ見て、存在理由、理解可能性、ユーザー価値、削除可否を確認する。
-- screenshot で desktop / mobile、長い日本語、狭いコンテナを確認する。
+- Verification Plan は changed behavior と risk に比例させる。実装時の具体的な level、targeted browser smoke、targeted E2E、full E2E の区別は executor `testing-verification.md` を canonical policy とする。
+- Web UI は affected route の changed flow を実ブラウザまたは targeted E2E で確認する。無関係なハッピーパスを毎回追加しない。
+- 変更した component と文言を見て、存在理由、理解可能性、ユーザー価値、削除可否を確認する。画面全体の棚卸しは UI audit または redesign scope の場合だけ行う。
+- screenshot は視覚判断が必要な変更に使う。desktop / mobile の両方は responsive behavior、breakpoint、touch interaction、長い日本語、狭い container に影響する場合だけ plan に入れる。
 - 不自然な改行、単語分断、助詞だけの行、句読点だけの行、文字切れ、重なり、ボタン内テキストの窮屈さを見る。
 - 判断材料と主要アクションが近いか、読了後に自然な位置へ CTA があるかを見る。
 - UI 文言が `次に〜`、`〜したい`、`1問`、`深掘り`、`やること`、`できること` でユーザーの行動を誘導していないかを見る。必要なら `確認ポイント`、`確認が必要な〜`、`判断が必要な〜`、`この後の流れ`、`復旧方法` などの中立表現へ直す。
@@ -122,4 +133,4 @@ Before / After 例（内部都合・行動指示 → 結果中心・中立提示
 - ユーザーが何を決めているか、操作後に何が変わるか、誰に見えるか、通知されるか、戻せるかが必要十分に分かるかを見る。
 - 内部状態、保存先、分類名、バックエンド処理、データ再利用、必須理由入力が UI copy の主役になっていないかを見る。
 - 10 回目の操作でも説明がノイズにならないか、初回や高リスク操作で説明が不足していないかを見る。
-- URL と画面状態を合わせる。browser back、reload、direct URL、URL share を確認する。
+- route / query、navigation、work state を変更する場合は URL と画面状態を合わせ、関係する browser back、reload、direct URL、URL share を確認する。対象喪失、誤対象、入力消失は P0/P1 gate とするが、copy や isolated style の変更へ URL-state matrix を持ち込まない。

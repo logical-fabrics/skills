@@ -20,6 +20,7 @@
 - audit / plan / execute の lane 境界を勝手に越えず、各 lane の最後に次 action が明確か。
 - repo / docs / 実行確認で解ける unknown をユーザーに戻しすぎていないか。
 - UI/UX 価値を守れているか。
+- verification が changed behavior と risk に比例し、軽微な変更へ full E2E や無関係な viewport / state matrix を要求していないか。
 - 過剰設計になっていないか。
 - 既存プロジェクトの慣習を壊さないか。
 

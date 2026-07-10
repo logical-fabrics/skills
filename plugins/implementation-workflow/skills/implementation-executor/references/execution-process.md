@@ -1,6 +1,7 @@
 # Execution Process
 
 - dirty worktree を確認する。ユーザーや他エージェントの変更を戻さない。
+- git worktree を新規作成したら、.gitignore された自動生成ファイル（型定義、ルートツリー生成物など）や worktree ローカルの DB state を再生成するステップを踏む。忘れると検証（tsc / e2e）が失敗して初めて発覚する。
 - 既存の命名、format、test、UI pattern を読む。
 - 最小の coherent slice を決める。
 - 編集前に影響範囲を確認する。
@@ -10,6 +11,6 @@
 - 失敗したら原因を読む。安易な fallback、skip、mock、snapshot 更新で成功扱いしない。
 - plan に seed / sample / demo asset でユーザーの主成果物を代替する設計が含まれていたら、そのまま実装しない。失敗表示と復旧導線へ直すか、plan lane / audit lane に戻す。
 - dev server / platform runtime / binding 設定を触る場合は、標準の `dev` command を production に近い統合入口に寄せる。frontend と runtime を別起動にする古い proxy 構成や、外部 binding を外した local-only path を既定として残さない。
-- external service / media / AI / storage など、機能成立に必要な binding に local simulator がない場合は、標準 dev で remote binding / 実接続を使うか、未接続時は feature-ready と報告しない。
+- 今回変更した feature が external service / media / AI / storage などに依存し、その binding に local simulator がない場合は、標準 dev で remote binding / 実接続を使うか、未接続時は feature-ready と報告しない。依存しない slice へ実接続 gate を追加しない。
 - scope を広げる必要がある場合は理由を明示し、必要ならユーザー確認する。
 - コミットは定期的に行う方針を推奨するが、実際の `git commit` はユーザーの明示依頼がある場合だけ行う。

@@ -76,7 +76,7 @@ claude plugins details implementation-workflow
 - executor は stale plan を検出できる。
 - executor は repo / docs / 実行確認で解ける recoverable stale を自己修復して、accepted slice を続行できる。
 - audit / plan / execute は `Next Action Contract` で次 lane、人間判断の要否、`/goal` 推奨有無、推奨 prompt を返す。
-- UI 変更では mobile / desktop screenshot と URL 状態確認が plan に入る。
+- 軽微な UI copy / style fixture では full E2E を要求せず、responsive fixture では mobile / desktop screenshot、route / auth / persistence fixture では targeted E2E、release fixture では full gate が plan に入る。
 
 ## 5. Release notes
 

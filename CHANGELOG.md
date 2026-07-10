@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.1.26
+
+- Replaced blanket UI verification with risk-based levels that distinguish targeted browser smoke, targeted E2E, and full E2E.
+- Limited desktop/mobile screenshots, URL-state matrices, auth/permission checks, and UI state permutations to changes that can affect those behaviors.
+- Clarified that review rounds rerun the closest verification delta, while full E2E or release gates normally run once at closure unless a later fix affects their surface.
+- Prevented unrelated route-state findings from automatically expanding an accepted implementation slice, while retaining P0/P1 treatment for target loss, wrong-target actions, and input loss.
+- Migration: none for users; installed plugin users should update to refresh verification behavior.
+
+## 0.1.25
+
+- Updated multi-agent model routing for the July 2026 model generation: Claude Fable 5 / GPT-5.6 Sol now anchor orchestration and hardest judgment, Claude Sonnet 5 / GPT-5.6 Terra are the default implementation workers, and Claude Haiku 4.5 / GPT-5.6 Luna handle bounded mechanical leaf tasks.
+- Added task-risk-based escalation, explicit model / effort delegation prompts, GPT-5.6 limited-preview fallback rules, and a guard against multiplying Codex `ultra` built-in subagents with manual fan-out.
+- Documented current host-specific model IDs, GPT-5.6 `max` versus `ultra`, and Claude Fable 5's 30-day retention constraint, based on current OpenAI and Anthropic primary sources.
+- Migration: none for users; installed plugin users should update to refresh model routing behavior.
+
+## 0.1.24
+
+- Added cross-project execution learnings to `implementation-executor` references: delegation prompts must forbid worker `git add` / `commit` / `stash` / `reset` / `checkout --` / worktree operations (baseline comparison via `git show HEAD:<path>` or a separate worktree, not stash), and the same prohibition was added to the safety guardrail list, after rogue commits from unprompted `git add -A` / `git stash` occurred in multiple projects.
+- Strengthened URL state UX rules across planner and executor references: reload, direct URL, browser back / forward, or post-login return showing a different user-recognized work state, workflow step, or target is now a P0 blocker rather than a generic P1 UX concern.
+- Added fan-out control to the parallelization rules: depth capped at 2 levels (main→child→grandchild, no great-grandchildren; grandchildren are leaves with no spawn tools), width capped at 4 children each spawning 2-3 grandchildren, a global in-flight cap of 8-10 agents, a 429 circuit breaker with Retry-After + jitter backoff, and the rule that only leaf agents do real work.
+- Strengthened verification discipline: do not treat a tool's self-reported success message as the sole proof of success; verify framework/library bug claims against official docs + Context7 + web before concluding; check reference implementations and environment (PATH / setup) before deep-diving internals or declaring a command uninstalled; and wait on CI with the tool's watch command instead of `sleep`-polling.
+- Added a Codex-only rule to `implementation-executor` host adapters: external Codex calls must state the model and effort in the prompt, since omitting them can make the backend fall back to a retired model and fail.
+- Added a worktree hygiene step: after creating a new git worktree, regenerate gitignored generated artifacts (type defs, route-tree output) and worktree-local DB state so verification does not fail only at tsc / e2e time.
+- Documented the `SKILL.md` frontmatter convention in `CONTRIBUTING.md`: the `---` delimiter must be on line 1 (a leading HTML comment breaks frontmatter validation).
+- Migration: none for users; installed plugin users should update to refresh executor behavior.
+
 ## 0.1.23
 
 - Raised `implementation-executor`'s review loop round cap from 5 to 10, matching `implementation-planner`, after observing 5 rounds was sometimes too few to reach a clean round (zero new P0/P1 across all reviewer roles) before escalating.

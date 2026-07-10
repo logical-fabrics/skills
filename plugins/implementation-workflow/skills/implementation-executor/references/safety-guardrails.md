@@ -8,6 +8,7 @@
 - billing / auth provider / cloud resource / production DB / secret の変更。
 - destructive git operation。
 - user changes の revert。
+- 委任した worker による git add / commit / stash / reset / checkout -- / worktree 操作。委任プロンプトで明示的に禁止する。ベースライン比較は stash ではなく `git show HEAD:<path>` か別 worktree で行わせる。
 - secret、認証情報、支払い情報の log / artifact / AI prompt 混入。
 
 許可:

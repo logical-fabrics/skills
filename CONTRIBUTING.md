@@ -9,6 +9,7 @@
 - manifest のメタ表現は host スキーマに合わせる（意図的な host 固有差分）。Codex は marketplace 提示用の `interface` ブロックを使う。Claude Code には `interface` 概念がないため、提示メタは top-level の `displayName` / `keywords` で表し、`interface` は入れない。Claude は未知フィールドを無視するが `claude plugin validate --strict` が警告にするため。`version` は両 manifest で常に同値。
 - 共通ルールは `skills/<skill>/references/` に分割する。
 - スキル本文は日本語を既定にする。
+- `SKILL.md` の frontmatter デリミタ `---` は必ずファイル 1 行目に置く。先頭に HTML コメント等を置くと frontmatter バリデーションが壊れる。
 - 社員が使い続けても成果物が散らからないよう、artifact lifecycle を壊さない。
 - 過剰設計を避ける。新しい仕組みを足す前に、既存の references / scripts / docs で足りるか確認する。
 - この repo の運用で再利用すべきルールは memory ではなく、`AGENTS.md`、`CLAUDE.md`、`CONTRIBUTING.md`、`docs/` に残す。

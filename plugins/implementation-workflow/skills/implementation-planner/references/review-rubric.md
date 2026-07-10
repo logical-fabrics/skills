@@ -8,6 +8,8 @@
 
 ## Required Reviewers
 
+reviewer を subagent / worker に委任し model を選択できる場合は、`../../implementation-executor/references/model-routing.md` を canonical policy とする。通常 review は balanced tier、security、cross-slice architecture、収束しない P0/P1 の判断は frontier tier、定型確認だけなら fast tier を使う。
+
 - Implementation reviewer: 実装手順、scope、検証可能性。
 - Adversarial reviewer: 隠れた失敗、矛盾、曖昧さ。
 - UX reviewer: `ui-ux.md` の canonical rubric に従い、初見/日常利用、mobile/desktop、状態表示、各 component / 文言のユーザー価値、判断材料と CTA の近接、導線ラベル、result-centered copy、中立的な判断材料提示、forms、accessibility、視線移動とマウス移動を見る。

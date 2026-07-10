@@ -158,8 +158,9 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 - 古い plan をそのまま信じない。
 - 実装は最小 slice にする。
 - 小さすぎる修正を除き、メインエージェントは orchestration に集中し、実装 worker、review worker、verification worker を分ける。
-- UI 変更は実ブラウザ、スクリーンショット、戻る/リロード/直接 URL を確認する。
-- UI 検証では、route、viewport、browser/tool、screenshot/trace path、確認した state、未確認 state、残リスクを報告する。
+- model を選択できる場合、Fable 5 / GPT-5.6 Sol 級は orchestration と高難度判断、Sonnet 5 / GPT-5.6 Terra 級は通常 coding、Haiku 4.5 / GPT-5.6 Luna 級は境界の明確な単純 task に使う。利用不能な preview model は同じ能力 tier の利用可能な最新 model に置き換える。
+- UI 変更は changed behavior と risk に応じて、affected route の browser smoke、responsive screenshot、route / auth / persistence の targeted E2E、release 時の full E2E を使い分ける。
+- UI 検証を実行した場合は、確認した route、viewport、browser/tool、state、未確認 state、残リスクと、価値がある場合だけ screenshot/trace path を報告する。
 - 完了時に `current.md` の handoff を必要に応じて更新する。
 - accepted slice 内では、局所的な stale plan 修正、実装、review、修正、再検証までやりきる。
 - 完了時に `Next Action Contract` を出し、続けるなら次の最小 slice、止めるなら人間判断が必要な理由を示す。

@@ -13,7 +13,8 @@ UX:
 - 初見ユーザーが迷わないか。
 - 日常利用で操作が重くないか。
 - 日本語、モバイル、改行、loading、empty、error、permission が破綻していないか。
-- URL、戻る、リロード、直接アクセスが期待通りか。
+- ユーザーがページ、タブ、詳細画面、検索結果、管理対象、workflow step と認識する状態が URL に載っているか。local state だけで画面が切り替わり、戻る、リロード、直接アクセス、共有 URL が期待とずれる場合は P1 候補にする。
+- 認証、権限、onboarding、tenant selection などの gate で、開こうとした URL が保持されているか。権限不足や対象なしを無関係な default 画面への redirect で隠していないか。
 - planner `ui-ux.md` の canonical rubric に照らして、layout/action placement、result-centered copy、state/recovery、forms/accessibility が破綻していないか。
 - ユーザーの入力、本人素材、ライブ生成、AI 生成結果などの主成果物が、別素材、seed、sample、mock、demo asset で代替されて成功扱いされていないか。明示表示されていても、ユーザー期待と異なる成果物を preview / published / sent / success に進めるなら finding にする。
 - 特に、判断材料と CTA の距離、desktop の視線移動、導線ラベルの一貫性、操作後の結果説明、通知/共有/可逆性、不要な理由入力、操作後に仕事が進んだと分かるかを確認する。
