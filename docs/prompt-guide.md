@@ -158,8 +158,8 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 - 古い plan をそのまま信じない。
 - 実装は最小 slice にする。
 - low / medium / high risk を選び、low risk は main の直接実装も許可し、medium risk は implementation と独立 review、high risk は必要な domain review / verification を分ける。role 数を固定しない。
-- model を選択できる場合、Codex は迷う一般 main を GPT-5.6 Sol `medium` から始め、境界の明確な通常 worker は Terra、反復可能な leaf は Luna を使う。Claude Code は Sonnet 5 `high` を daily coding / main の既定にし、単一の sitting を超える長時間・高難度 task だけ Fable 5、単純 leaf は Haiku 4.5 を使う。vendor 間で tier を無理に対称化せず、公式情報と host で実際に選択可能な model を正とする。
-- orchestration は flat な main → workers を既定にする。Codex `max`（単独推論）と `ultra`（自動 subagents）、Claude Code の通常 subagents と `ultracode` / dynamic workflow を区別し、host-native orchestration と manual fan-out を同じ workstream に重ねない。
+- model を選択できる場合、Codex は迷う一般 main を GPT-5.6 Sol `medium`、明確な bounded coding worker を Luna `xhigh`、長い context / 複雑 debugging を含む coding worker を Terra `xhigh`、単独の高難度判断を Sol `xhigh` で行う。`low` / `medium` は決定的な verification に限定し、Codex で選択不能な `max` を要求しない。委任時は `quality` / `balanced` / `throughput` と retry cost も指定する。Claude Code は Sonnet 5 `high` を daily coding / main の既定にし、単一の sitting を超える長時間・高難度 task だけ Fable 5、単純 leaf は Haiku 4.5 を使う。vendor 間で tier を無理に対称化せず、公式情報と host で実際に選択可能な model を正とする。
+- orchestration は flat な main → workers を既定にする。Codex `xhigh`（単独推論）と `ultra`（自動 subagents）、Claude Code の通常 subagents と `ultracode` / dynamic workflow を区別し、host-native orchestration と manual fan-out を同じ workstream に重ねない。
 - UI 変更は changed behavior と risk に応じて、affected route の browser smoke、responsive screenshot、route / auth / persistence の targeted E2E、release 時の full E2E を使い分ける。
 - UI 検証を実行した場合は、確認した route、viewport、browser/tool、state、未確認 state、残リスクと、価値がある場合だけ screenshot/trace path を報告する。
 - 完了時に `current.md` の handoff を必要に応じて更新する。

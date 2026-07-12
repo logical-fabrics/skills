@@ -32,7 +32,7 @@ Disallowed unless explicitly requested:
 - 実装は最小の coherent slice にする。
 - `references/review-and-parallelism.md` に従って low / medium / high risk を選び、必要な role だけ分ける。low-risk の小さく可逆な変更はメインエージェントが直接実装してよい。medium / high risk では implementation と独立 review を分け、高リスク時だけ domain reviewer / verifier を追加する。
 - orchestration の既定形は flat な main → leaf workers とする。host の concurrency / depth cap を尊重し、Codex `ultra` または Claude Code `ultracode` / dynamic workflow と manual fan-out を同じ workstream に重ねない。
-- model を選択できる host では `references/model-routing.md` に従う。Codex は迷う一般 main を Sol `medium` から始め、境界の明確な通常 worker は Terra、反復可能な leaf は Luna を使う。Claude Code は Sonnet 5 `high` を daily coding / main の既定にし、長時間・高難度の調査や architecture 判断だけ Fable 5 へ上げ、単純 leaf は Haiku を使う。vendor 間で tier を無理に対称化しない。
+- model を選択できる host では `references/model-routing.md` に従う。Codex は迷う一般 main を Sol `medium`、明確な bounded coding worker を Luna `xhigh`、長い context / 複雑 debugging を含む coding worker を Terra `xhigh`、単独の高難度判断を Sol `xhigh` で行う。`low` / `medium` は決定的な verification に限定し、Codex で選択不能な `max` を要求しない。分離可能な複数 workstream だけ `ultra` を使う。Claude Code は Sonnet 5 `high` を daily coding / main の既定にし、長時間・高難度の調査や architecture 判断だけ Fable 5 へ上げ、単純 leaf は Haiku を使う。vendor 間で tier を無理に対称化しない。
 - 既存 stack、命名、format、test、UI pattern を優先する。
 - 軽微で可逆な修正は、計画成果物を増やさず、変更内容と検証を簡潔に報告する。
 - UI/UX を最上位価値にする。ただし過剰設計を避ける。

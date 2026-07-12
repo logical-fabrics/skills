@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.2
+
+- Made Codex routing follow the settings actually selectable in the host: bounded coding workers use GPT-5.6 Luna xhigh, context-heavy or complex-debugging workers use Terra xhigh, and high-difficulty judgment uses Sol xhigh.
+- Removed Codex max from the routing contract. Public API max evaluations remain cost-performance evidence, while Codex ultra is treated only as multi-agent orchestration for separable workstreams, not as a single-agent max substitute.
+- Limited Luna low / medium to deterministic verification, excluded low / medium from code-generating workers and review, and added optimization priority plus retry cost to the delegation prompt contract.
+- Refreshed GPT-5.6 primary sources to the general-availability launch and current model catalog. Claude Code agent model and effort defaults are unchanged.
+- Migration: installed plugin users should update and restart Codex / Claude Code to refresh model-routing behavior.
+
 ## 0.2.1
 
 - Corrected model routing to follow each vendor's official defaults without forcing symmetric tiers: Codex now starts an uncertain general task on GPT-5.6 Sol at medium effort, while Claude Code keeps Sonnet 5 at its default high effort for daily coding and reserves Fable 5 for the hardest and longest-running work.
