@@ -19,10 +19,11 @@ model は agent の肩書きではなく、その task の判断難度、scope�
 - Terra は、大量の既存 code / log、複数ファイルの因果関係、複雑な debugging、継続的な自己修正を含むが、architecture と product 判断は親に残る bounded implementation に `xhigh` で使う。Codex coding worker では Terra の `low` / `medium` を使わず、`high` は latency 制約を明示された場合だけにする。
 - Luna は、入力、編集範囲、期待出力、verification command が明確な反復可能 task に使う。read-only verification は `low` / `medium`、code を生成・編集する bounded worker は `xhigh` にする。architecture 判断、未知の root cause、auth / billing / migration / production / security 判断は渡さない。
 - Claude Code は Opus 5 を一般 main と daily coding の既定にする。公式の推奨も「迷ったら Opus 5 から始め、最も高い能力が要る workload だけ Fable 5」である。coding / agentic work は `xhigh` から始め、それ以外の判断中心 task は既定の `high` を使う。
-- Sonnet 5 は speed と intelligence を両立させる worker tier に使う。境界と acceptance criteria が明確な実装、局所 debugging、通常 review が対象で、既定 `high`、最難関の bounded coding だけ `xhigh` にする。
+- Sonnet 5 は speed と intelligence を両立させる worker tier に使う。境界と acceptance criteria が明確な実装、局所 debugging、evidence 確認中心の review が対象で、既定 `high`、最難関の bounded coding だけ `xhigh` にする。
 - Haiku 4.5 は effort parameter に対応しない。低 effort で軽くする制御ができないため、渡す task 自体を狭く決定的にする。長い context、未知の root cause、判断を含む review には使わない。
 - Fable 5 は default にせず、単一の sitting を超える長時間作業、曖昧な root-cause 調査、outage debugging、architecture 判断、大きな自律実行に使う。細かな手順ではなく達成すべき outcome を渡し、長時間継続させる場合は `/goal` を使う。
-- review model も host 別に選ぶ。Codex の bounded code review は Terra `xhigh`、複雑な logic / edge-case review は Sol `xhigh`、Claude Code の通常 review は Sonnet 5 `high` を基準にする。security、data loss、cross-slice architecture、収束しない P0/P1 は Sol `xhigh` または Opus 5 `xhigh` / Fable 5 へ上げる。定型的な evidence 確認だけなら Luna / Haiku を使える。
+- review model も host 別に選ぶ。Codex の bounded code review は Terra `xhigh`、複雑な logic / edge-case review は Sol `xhigh`、Claude Code の bug-finding を目的とする adversarial review は Opus 5 `medium` を基準にする。Anthropic は Opus 5 の code review を precision と recall の両方が高い強みとして名指しし、かつ低 effort でも精度が落ちないと明記しているため、review lane では effort ではなく model tier を先に上げる。security、data loss、cross-slice architecture、収束しない P0/P1 は Sol `xhigh` または Opus 5 `xhigh` / Fable 5 へ上げる。定型的な evidence 確認だけなら Luna / Haiku / Sonnet 5 を使える。
+- review lane の prompt に「高確度だけ」「重大なものだけ」「保守的に」といった自己フィルタを書かない。現行 model はこれを literally に従い、bug は同じように見つけていても報告を自分で落とすため recall が下がる。reviewer には severity と confidence を付けて全件報告させ、取捨は親エージェント側で行う。
 - 同じ task を複数 model に無差別 fan-out しない。独立 workstream、異なる reviewer role、または不確実性を減らす明確な目的がある時だけ並列化する。
 - worker が失敗したら、同じ設定で再試行する前に `depth 不足` と `tier 不足` を分ける。scope と方針が正しく推論の深さだけが不足しているなら同一 model の effort を 1 段上げる。未知の root cause、cross-slice 判断、長い context、高リスク判断が必要なら model tier を上げる。相反する evidence または高リスクの P0/P1 は直ちに frontier main へ返す。
 - 同じ model / effort / prompt で同じ原因の失敗を 2 回繰り返さない。escalation prompt には試行内容、diff、log、未解決判断を渡す。

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.2
+
+- Moved `adversarial-reviewer` from Sonnet 5 `high` to Opus 5 `medium`. Anthropic names code review and bug-finding as an Opus 5 strength with both high precision and high recall, and states it stays accurate at lower effort, so the review lane raises the model tier before the effort level. The agent holds no delegation tool, so the Claude 5 generation's stronger tendency to spawn subagents does not apply to it.
+- Removed the reviewer's own confidence filter. Asking for "high-confidence P0/P1 only" is followed literally by current models, which drop findings they already identified and lower measured recall. The reviewer now reports every finding outside style preference and out-of-scope idealism with a `confidence` field beside `severity`, and the parent agent keeps the filtering and final acceptance it already owned.
+- Added the matching rule to `model-routing.md`: the Claude Code adversarial review baseline is Opus 5 `medium`, Sonnet 5 stays the tier for evidence-confirmation review, and review-lane prompts must not carry self-filtering language.
+- Migration: update the installed plugin and restart Claude Code. Expect the reviewer to return more findings per pass, including low-severity and low-confidence ones; treat `confidence` as the field to sort on rather than reintroducing a filter in the prompt.
+
 ## 0.3.1
 
 - Restored the `Next Action Contract` block in the executor's `artifact-lifecycle.md`. Pointing at the canonical definition in another skill's reference was one hop too far: a behavior smoke showed the executor writing a free-prose `## Next Action Contract` section instead of filling the seven contract fields inside `## Implementation Handoff`. The block is an output skeleton, not duplicated instruction prose, so each lane keeps a copy and the canonical definition governs its fields.
