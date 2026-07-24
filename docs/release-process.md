@@ -34,13 +34,13 @@ Codex で `implementation-workflow` を確認する例:
 
 ```bash
 codex plugin marketplace add "$(pwd)"
-codex plugin list
-codex plugin add implementation-workflow --marketplace <marketplace-name>
+codex plugin list --marketplace lf-skills
+codex plugin add implementation-workflow --marketplace lf-skills
 ```
 
-- `implementation-workflow` が marketplace から install できる。
+- `implementation-workflow` が marketplace から install でき、`codex plugin list` に `installed, enabled` と期待する version が出る。
+- Codex CLI には component inventory を出すサブコマンドがない（`plugin list` のみ）。skill と hook の discovery は Codex セッションを開いて確認する。
 - `implementation-planner`、`implementation-executor`、`implementation-auditor`、`learning-curator` が skill 一覧に出る。
-- hooks がある plugin では、component inventory に hook 数が出る。
 - 各 skill の description が意図した trigger を持つ。
 
 Claude Code で `implementation-workflow` を確認する例:
@@ -60,13 +60,14 @@ claude --plugin-dir "$(pwd)/plugins/implementation-workflow"
 Update smoke の例:
 
 ```bash
-claude plugins update implementation-workflow@skills
-claude plugins details implementation-workflow
+claude plugin marketplace update lf-skills
+claude plugin update implementation-workflow@lf-skills
+claude plugin details implementation-workflow
 ```
 
 - update 後は Claude Code を再起動する。
 - update が最新扱いなのに挙動が古い場合は、version bump 漏れを疑う。
-- local 検証で version を変えない場合だけ、`claude plugins uninstall implementation-workflow@skills` からの再 install で cache を捨てる。
+- local 検証で version を変えない場合だけ、`claude plugin remove implementation-workflow@lf-skills` からの再 install で cache を捨てる。version が同じままだと `already at the latest version` と判定され、変更が反映されない。
 
 ## 4. Behavior smoke test
 

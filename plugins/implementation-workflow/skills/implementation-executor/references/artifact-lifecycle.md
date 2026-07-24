@@ -16,7 +16,21 @@
 - 次の最小 slice を `## Next actions` に反映する。
 - 通った verification と失敗した verification を `## Verification Plan` に更新する。
 - scope、UX、schema、infra、security、cost、production behavior が変わった場合は plan を更新する。
-- `## Implementation Handoff` に `Next Action Contract` を残す。block の項目定義は `output-contracts.md` に従い、ここでは再掲しない。
+- `## Implementation Handoff` の中に `Next Action Contract` を残す。独立した `##` section にせず、以下の block をそのまま埋める。散文で要約しない。
+
+```md
+### Next Action Contract
+
+- Recommended next lane: Audit / Plan / Execute / Ask user / Accept risk / Done
+- Reason:
+- Ready-to-run slice:
+- Human decision required: yes / no
+- Goal recommended: yes / no
+- Goal draft:
+- Suggested prompt:
+```
+
+項目定義の正本は `../../implementation-planner/references/output-contracts.md`。上は Execute lane 向けの写しなので、項目を増減する場合は正本を先に変える。
 
 executor は accepted slice 内ではやりきる。次の未承認 slice、audit への立ち返り、または product 判断が必要な場合は、この contract で明示して止める。
 

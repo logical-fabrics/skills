@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- Restored the `Next Action Contract` block in the executor's `artifact-lifecycle.md`. Pointing at the canonical definition in another skill's reference was one hop too far: a behavior smoke showed the executor writing a free-prose `## Next Action Contract` section instead of filling the seven contract fields inside `## Implementation Handoff`. The block is an output skeleton, not duplicated instruction prose, so each lane keeps a copy and the canonical definition governs its fields.
+- Migration: none for users; installed plugin users should update to restore the handoff contract format.
+
 ## 0.3.0
 
 - Refreshed Claude Code model routing for the Claude 5 generation: Claude Opus 5 is now the default general main and daily coding model (xhigh for coding / agentic work, high otherwise), Claude Sonnet 5 is the bounded worker tier, Claude Fable 5 is reserved for the highest-capability and longest-running work, and Claude Haiku 4.5 is documented as not supporting the effort parameter.
