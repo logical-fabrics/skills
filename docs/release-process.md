@@ -97,6 +97,11 @@ model routing の能力、価格、availability、retention、effort は vendor 
 
 ```bash
 git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
+
+installed plugin の更新判定を動かすのは manifest の `version` であり、tag ではない。tag は「どのコミットがどの配布版か」を後から辿るための marker として使う。
+
+tag 運用は `v0.3.0` から始めた。それ以前の版に tag はない。過去のコミットへ後付けすると版の境界を誤る可能性があるため、backfill はしない。0.3.0 より前を辿る場合は `CHANGELOG.md` の該当エントリと、`version` を bump したコミットを見る。
 
 push や tag 作成は、配布担当者が明示的に行う。

@@ -32,6 +32,9 @@ jobs:
       - name: Validate plugin structure
         run: pnpm validate
 
+      - name: Test hooks
+        run: pnpm test:hooks
+
       - name: Lint
         run: pnpm lint
 
