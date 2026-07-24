@@ -39,7 +39,7 @@ codex plugin add implementation-workflow --marketplace <marketplace-name>
 ```
 
 - `implementation-workflow` が marketplace から install できる。
-- `implementation-planner`、`implementation-executor`、`implementation-auditor` が skill 一覧に出る。
+- `implementation-planner`、`implementation-executor`、`implementation-auditor`、`learning-curator` が skill 一覧に出る。
 - hooks がある plugin では、component inventory に hook 数が出る。
 - 各 skill の description が意図した trigger を持つ。
 
@@ -52,9 +52,9 @@ claude --plugin-dir "$(pwd)/plugins/implementation-workflow"
 ```
 
 - plugin skill が namespace 付きで見える。
-- Claude Code plugin agent を追加・変更した場合、期待する agent 名、model / effort、tool restriction が component inventory と定義ファイルで確認できる。
+- Claude Code plugin agent を追加・変更した場合、期待する agent 名、model、effort（effort parameter に対応する model の場合のみ）、tool restriction が component inventory と定義ファイルで確認できる。
 - hooks がある plugin では、component inventory に hook 数が出る。
-- thin slash command alias が増えておらず、Claude Code の入口が 3 skills に整理されている。
+- thin slash command alias が増えておらず、Claude Code の入口が 4 skills に整理されている。
 - validate が warning なしで通る。
 
 Update smoke の例:

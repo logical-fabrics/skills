@@ -20,10 +20,11 @@ Allowed:
 
 Disallowed unless explicitly requested:
 - 実装ファイルを編集する。
-- production、billing、auth provider、cloud resource、database、secret を変更する。
 - 推測を確定事実として扱う。
-- hidden fallback を成功扱いする。
-- ユーザーの入力、本人素材、ライブ生成、外部送信、課金、削除、公開などの主成果物を、別素材、seed、sample、mock、demo asset で代替して成功または準成功として扱う。
+- production / billing / auth provider / cloud resource / database / secret を変更する。
+- hidden fallback、および主成果物を seed / sample / mock / demo asset で代替して成功扱いする設計。
+
+禁止と許可の完全な定義は `../implementation-executor/references/safety-guardrails.md`。
 
 ## Core Rules
 
@@ -69,28 +70,15 @@ Disallowed unless explicitly requested:
 
 ## Required References
 
-必要なものだけ読む:
+常に読むのは次の 5 つ:
 
 - `references/source-of-truth.md`: 判断の優先順位。
 - `references/planning-process.md`: 計画ループ、freshness、route selection。
-- `references/reference-routing.md`: 依頼内容から読む references を選ぶ routing table。
 - `references/artifact-lifecycle.md`: 成果物の置き場所、active plan、archive、session handoff。
-- `references/output-contracts.md`: `current.md`、明示 plan、`abstract-plan.html` の成果物契約。
+- `references/output-contracts.md`: `current.md`、明示 plan、`abstract-plan.html` の成果物契約と `Next Action Contract` の正本。
 - `references/review-rubric.md`: P0/P1/P2、reviewer roles、改善ループ。
-- `references/ask-user.md`: AskUser 条件と選択肢提示。
-- `references/ui-ux.md`: UI/UX canonical rubric、視覚検証、URL状態、改行品質。
-- `references/ai-ux.md`: AI-first UX。
-- `references/ai-runtime.md`: Cloudflare AI Gateway、Workers AI、Gemma。
-- `references/default-stack.md`: greenfield または既存選定がない場合の Drizzle、Better Auth、Hono（typed RPC）、React、Vite、Vitest、Zod、Expo。
-- `references/data-modeling.md`: schema、Drizzle、raw SQL、YAGNI。
-- `references/delivery.md`: CI/CD、Cloudflare、staging、production、OGP。
-- `references/accessibility.md`: 実操作で確認する accessibility guardrails。
-- `references/performance.md`: Core Web Vitals と latency。
-- `references/observability.md`: monitoring、logs、traces、business events。
-- `references/ci-security.md`: GitHub Actions hardening、OIDC、dependency review。
-- `references/simplicity.md`: overengineering review。
-- `references/refactoring.md`: LLM が読みやすい構造。
-- `references/host-adapters.md`: Codex / Claude Code 固有差分。
+
+残りは `references/reference-routing.md` で依頼内容から選ぶ。全 reference の一覧と用途もその file にある。
 
 ## Optional Scripts
 

@@ -28,7 +28,7 @@ slice 開始時に low / medium / high のいずれかを選び、理由を作�
 | --- | --- | --- |
 | Low | copy / docs / isolated config、機械的で可逆、決定的 check がある | main または implementation worker。独立 reviewer は任意。relevant deterministic gate と diff self-review は必須 |
 | Medium | 通常の複数ファイル変更、共有ロジック、ユーザー可視 behavior、局所 API / state 変更 | implementation role と独立 review role を分ける。verification は review role と兼任可能だが、acceptance evidence を独立に確認する |
-| High | auth、billing、migration、data loss、security、production / infra、cross-slice architecture、広い UX / persistence、収束しない P0/P1 | implementation、domain-specific review、verification を分ける。必要な domain（security / schema / UX 等）だけ追加し、高難度の統合判断は Fable / Sol へ escalation する |
+| High | auth、billing、migration、data loss、security、production / infra、cross-slice architecture、広い UX / persistence、収束しない P0/P1 | implementation と独立 review を分け、必要な domain（security / schema / UX 等）だけ追加する。verification role を別に立てるのは、acceptance evidence を独立に再現する必要がある場合に限る。高難度の統合判断は Opus 5 `xhigh` / Fable 5 / Sol へ escalation する |
 
 role は agent 数と同義ではない。low risk に 3 worker を強制せず、medium risk の reviewer が verification evidence も確認できるなら別 verifier を増やさない。high risk でも関係のない reviewer role を全列挙しない。
 
@@ -37,6 +37,8 @@ reviewer は worker の自己申告を信用せず、diff、changed behavior、a
 ## Parallelization Rules
 
 既定形は flat な main → leaf workers とする。並列化するのは独立した workstream または独立した read-only review / verification だけで、依存する task は順番に進める。
+
+この既定はコスト都合ではない。Claude Opus 5 世代の main agent は前世代より subagent へ委任しやすく、放置すると必要のない fan-out が増える。委任してよい場面を先に決め、同時に走らせる worker 数の上限を持ってから fan-out する。詳細は `model-routing.md` の委任 guardrail に従う。
 
 並列化に向く例:
 

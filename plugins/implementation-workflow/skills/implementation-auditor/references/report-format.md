@@ -50,6 +50,8 @@ Recommended format:
 - Open decisions:
 ```
 
+`Next Action Contract` の項目定義は `../../implementation-planner/references/output-contracts.md` が正本。上のブロックは Audit lane 向けの写しで、next lane から Audit を除いてある。項目を増やす場合は正本を先に変える。
+
 永続化する場合は、上記を `docs/implementation/current.md` の `Quality Review Findings` または `Improvement Backlog` に統合する。
 
 Audit は知るための lane なので、`Next Action Contract` は次に選ぶ入口を明確にするだけで、Plan / Execute へ自動遷移しない。

@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.3.0
+
+- Refreshed Claude Code model routing for the Claude 5 generation: Claude Opus 5 is now the default general main and daily coding model (xhigh for coding / agentic work, high otherwise), Claude Sonnet 5 is the bounded worker tier, Claude Fable 5 is reserved for the highest-capability and longest-running work, and Claude Haiku 4.5 is documented as not supporting the effort parameter.
+- Rewrote the effort guidance as a swept axis rather than fixed values: carried-over effort settings should be re-measured, Opus 5 low / medium are usable as the primary cost and latency control where quality holds, and response length is controlled by the prompt because effort only changes thinking volume.
+- Reframed the flat orchestration default as a guardrail against the Claude 5 generation's stronger tendency to delegate, added explicit delegation-scenario and worker-cap rules, and stopped requiring a separate verification role at high risk unless acceptance evidence needs independent reproduction.
+- Told delegation prompts not to carry generic self-verification instructions, which cause over-verification on current models, while keeping the evidence-quality rules (do not accept a worker's self-report, do not treat a CLI success message as the sole proof).
+- Removed the retention-constrained default escalation path: Opus 5 has no 30-day data retention requirement, so it is now the escalation target when Fable 5 conflicts with organization policy.
+- Collapsed duplicated guidance to single canonical locations: model routing to `model-routing.md`, the `Next Action Contract` block to `output-contracts.md`, prohibited operations to `safety-guardrails.md`, and artifact placement / archive / cleanup to the planner `artifact-lifecycle.md` with lane-specific deltas only.
+- Replaced the planner `SKILL.md` twenty-item reference list with the five always-read references plus the routing table, and moved the full reference index into `reference-routing.md`.
+- Made `verification-worker` a real leaf: it no longer loads the whole `implementation-executor` skill, and its unsupported `effort` setting was removed.
+- Downgraded the `ui-ux.md` banned-word rule from three repeated lists to one principle plus the Before / After examples, and added a missing example.
+- Added host sharing channels for `abstract-plan.html`: Claude Code can publish it as an artifact from the skill, and Codex users can share it through Sites in the app. The repository file stays the source of truth, publishing requires an explicit request, and the published URL is recorded in `## Implementation Handoff`.
+- Documented the intended host difference (Claude publishes from the skill, Codex is started by a person in the app) together with the conditions that block publishing regardless of plan: zero data retention / CMEK / HIPAA organizations, Bedrock / Vertex / Foundry, API-key or gateway-token sessions, and CI runs. A published artifact is private to its author on every plan; the Pro / Max limitation applies to sharing, where a public link is the only available audience.
+- Added a guardrail against publishing repository content to external hosting without an explicit request, and a separate one against widening a published page's audience, including not sharing pages with customer or non-public design when the audience cannot be restricted to the organization.
+- Made plugin agent `effort` and `skills` optional in validation so leaf agents can run without loading a whole skill, and added a deterministic check that rejects `effort` on models that do not accept it.
+- Added the cross-lane `learning-curator` skill to convert accepted human corrections and recurring review feedback into deduplicated target-repository instructions, reusable skills, or deterministic guardrails.
+- Added a cross-host `UserPromptSubmit` command hook that detects likely correction signals and injects the curation workflow without treating regex matches as proof of a durable learning.
+- Added a one-shot `Stop` outcome gate only for high-precision, explicit persistence requests such as `覚えて`, `次から`, and direct AGENTS.md / CLAUDE.md update requests.
+- Added `今の訂正、再発防止して` as the recommended short natural-language trigger for the learning workflow and explicit persistence gate.
+- Kept hook state ephemeral and metadata-only: raw prompts, transcripts, secrets, and generated Codex memory state are not persisted or edited.
+- Documented promotion thresholds, ADD / REFINE / MERGE / NOOP delta updates, canonical destination routing, false-positive fixtures, behavior replay, and the methodology derived from Codex / Claude Code guidance, Anthropic Hookify, OpenHands agent-memory, accumulated behavioral rules, Reflexion, ExpeL, and ACE.
+- Migration: update the installed plugin, review and trust the changed hooks in Codex, then restart Codex / Claude Code so the new skill and hook definitions are loaded.
+
 ## 0.2.2
 
 - Made Codex routing follow the settings actually selectable in the host: bounded coding workers use GPT-5.6 Luna xhigh, context-heavy or complex-debugging workers use Terra xhigh, and high-difficulty judgment uses Sol xhigh.

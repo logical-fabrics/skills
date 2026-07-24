@@ -19,9 +19,11 @@ Allowed:
 Disallowed unless explicitly requested:
 - 広範囲の実装修正。
 - audit 依頼だけで実際にファイル編集すること。
-- production、billing、auth provider、cloud resource、secret、production database の変更。
+- production / billing / auth provider / cloud resource / production database / secret の変更。
 - active plan を無視した大きな scope expansion。
 - 古い plan や会話履歴だけを source of truth にすること。
+
+禁止と許可の完全な定義は `../implementation-executor/references/safety-guardrails.md`。
 
 ## Core Rules
 

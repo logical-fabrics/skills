@@ -35,9 +35,9 @@ codex plugin add implementation-workflow --marketplace skills
 `implementation-workflow` の確認:
 
 - `implementation-workflow` が installed plugins に出る。
-- 新しい Codex セッションで `implementation-planner`、`implementation-executor`、`implementation-auditor` が skill として見える。
-- Hooks が有効な host では、PostToolUse / Stop hook が component inventory に出る。
-- `現在の実装を見直して`、`実装計画を作って`、`current.md の次を実装して` の自然文で期待する skill が発火する。
+- 新しい Codex セッションで `implementation-planner`、`implementation-executor`、`implementation-auditor`、`learning-curator` が skill として見える。
+- Hooks が有効な host では、UserPromptSubmit / PostToolUse / Stop hook が component inventory に出る。
+- `現在の実装を見直して`、`実装計画を作って`、`current.md の次を実装して`、`今の訂正を次からも守れるように学びを残して` の自然文で期待する skill が発火する。
 
 ## Claude Code
 
@@ -62,9 +62,9 @@ claude plugins details implementation-workflow
 
 確認:
 
-- `implementation-workflow` の details に `implementation-planner`、`implementation-executor`、`implementation-auditor` の 3 skills、`implementation-worker`、`adversarial-reviewer`、`verification-worker` の 3 agents、hooks が出る。
+- `implementation-workflow` の details に `implementation-planner`、`implementation-executor`、`implementation-auditor`、`learning-curator` の 4 skills、`implementation-worker`、`adversarial-reviewer`、`verification-worker` の 3 agents、hooks が出る。
 - `claude plugins validate --strict` が warning なしで通る。
-- 自然文で `現在の実装を見直して`、`実装計画を作って`、`current.md の次を実装して` が期待通りに routing される。
+- 自然文で `現在の実装を見直して`、`実装計画を作って`、`current.md の次を実装して`、`今の訂正を次からも守れるように学びを残して` が期待通りに routing される。
 
 ## 更新
 

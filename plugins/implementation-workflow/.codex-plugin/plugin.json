@@ -1,7 +1,7 @@
 {
   "name": "implementation-workflow",
-  "version": "0.2.2",
-  "description": "Japanese implementation planning, auditing, and execution workflow for Codex and Claude Code, with UX-first review loops, simplicity review, and verification discipline.",
+  "version": "0.3.0",
+  "description": "Japanese implementation planning, auditing, execution, and correction-learning workflow for Codex and Claude Code, with curated persistent guidance and deterministic guardrails.",
   "author": {
     "name": "Logical Fabrics"
   },
@@ -13,6 +13,8 @@
     "execution",
     "audit",
     "review",
+    "learning",
+    "memory",
     "ux",
     "agent-skills",
     "codex",
@@ -21,8 +23,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Implementation Workflow",
-    "shortDescription": "Plan, audit, implement, and verify engineering work in Japanese",
-    "longDescription": "A shared implementation workflow for Codex and Claude Code. It audits existing implementations, creates executable Japanese implementation plans, reviews them from UX, simplicity, schema, security, delivery, and adversarial perspectives, then executes accepted plans with verification and learning persistence.",
+    "shortDescription": "Plan, audit, implement, verify, and retain accepted corrections",
+    "longDescription": "A shared implementation workflow for Codex and Claude Code. It audits existing implementations, creates executable Japanese implementation plans, executes accepted plans with verification, and converts accepted human corrections into deduplicated repository guidance, reusable skills, or deterministic guardrails without persisting raw conversations.",
     "developerName": "Logical Fabrics",
     "category": "Developer Tools",
     "capabilities": ["Interactive", "Read", "Write"],
@@ -34,6 +36,8 @@
       "現在の実装を見直して改善点を出して",
       "この implementation-plan.md を実装して",
       "この計画をレビューして改善して",
+      "今の訂正、再発防止して",
+      "同じ間違いを繰り返さないよう、適切な AGENTS.md、skill、hook に学びを残して",
       "この画面の UI/UX を ui-ux.md の rubric に沿って audit して",
       "判断材料と CTA、操作後の結果、通知、戻せるかまで含めて UI 計画を作って"
     ],

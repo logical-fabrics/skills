@@ -80,3 +80,29 @@ Codex / Claude Code behavior:
 Ask user:
 
 - `ask-user.md` only when research cannot decide a material product, UX, cost, security, schema, compatibility, or production behavior decision.
+
+## Reference Index
+
+上の routing で選んだ file が何を持っているか:
+
+- `source-of-truth.md`: 判断の優先順位。
+- `planning-process.md`: 計画ループ、freshness、route selection。
+- `artifact-lifecycle.md`: 成果物の置き場所、active plan、archive、session handoff。
+- `output-contracts.md`: 成果物契約と `Next Action Contract` の正本。
+- `review-rubric.md`: P0/P1/P2、reviewer roles、改善ループ。
+- `ask-user.md`: AskUser 条件と選択肢提示。
+- `ui-ux.md`: UI/UX canonical rubric、視覚検証、URL 状態、改行品質。
+- `ai-ux.md`: AI-first UX。
+- `ai-runtime.md`: Cloudflare AI Gateway、Workers AI、Gemma。
+- `default-stack.md`: greenfield または既存選定がない場合の Drizzle、Better Auth、Hono（typed RPC）、React、Vite、Vitest、Zod、Expo。
+- `data-modeling.md`: schema、Drizzle、raw SQL、YAGNI。
+- `delivery.md`: CI/CD、Cloudflare、staging、production、OGP。
+- `accessibility.md`: 実操作で確認する accessibility guardrails。
+- `performance.md`: Core Web Vitals と latency。
+- `observability.md`: monitoring、logs、traces、business events。
+- `ci-security.md`: GitHub Actions hardening、OIDC、dependency review。
+- `simplicity.md`: overengineering review。
+- `refactoring.md`: LLM が読みやすい構造。
+- `host-adapters.md`: Codex / Claude Code 固有差分。
+- `../../implementation-executor/references/safety-guardrails.md`: 禁止・許可される操作の正本。
+- `../../implementation-executor/references/model-routing.md`: model / effort / 委任 guardrail の正本。

@@ -16,12 +16,12 @@ Allowed:
 - plan が古い場合、実装前に差分と判断点を明示する。
 
 Disallowed unless explicitly requested:
-- production deploy。
+- production deploy と、production / billing / auth provider / cloud resource / production database / secret の変更。
 - git push、commit、merge、rebase、reset。
-- billing、auth provider、cloud resource、production database、secret の変更。
 - plan を超える scope expansion。
-- hidden fallback。
-- ユーザーの入力、本人素材、ライブ生成、外部送信、課金、削除、公開などの主成果物を、別素材、seed、sample、mock、demo asset で代替して成功または準成功として扱う実装。
+- hidden fallback と、主成果物を seed / sample / mock / demo asset で代替して成功扱いすること。
+
+禁止と許可の完全な定義は `references/safety-guardrails.md`。
 
 ## Core Rules
 
@@ -32,7 +32,7 @@ Disallowed unless explicitly requested:
 - 実装は最小の coherent slice にする。
 - `references/review-and-parallelism.md` に従って low / medium / high risk を選び、必要な role だけ分ける。low-risk の小さく可逆な変更はメインエージェントが直接実装してよい。medium / high risk では implementation と独立 review を分け、高リスク時だけ domain reviewer / verifier を追加する。
 - orchestration の既定形は flat な main → leaf workers とする。host の concurrency / depth cap を尊重し、Codex `ultra` または Claude Code `ultracode` / dynamic workflow と manual fan-out を同じ workstream に重ねない。
-- model を選択できる host では `references/model-routing.md` に従う。Codex は迷う一般 main を Sol `medium`、明確な bounded coding worker を Luna `xhigh`、長い context / 複雑 debugging を含む coding worker を Terra `xhigh`、単独の高難度判断を Sol `xhigh` で行う。`low` / `medium` は決定的な verification に限定し、Codex で選択不能な `max` を要求しない。分離可能な複数 workstream だけ `ultra` を使う。Claude Code は Sonnet 5 `high` を daily coding / main の既定にし、長時間・高難度の調査や architecture 判断だけ Fable 5 へ上げ、単純 leaf は Haiku を使う。vendor 間で tier を無理に対称化しない。
+- model / effort / escalation を選択できる host では `references/model-routing.md` を canonical policy とする。ここでは再掲しない。
 - 既存 stack、命名、format、test、UI pattern を優先する。
 - 軽微で可逆な修正は、計画成果物を増やさず、変更内容と検証を簡潔に報告する。
 - UI/UX を最上位価値にする。ただし過剰設計を避ける。
@@ -66,10 +66,10 @@ Disallowed unless explicitly requested:
 必要なものだけ読む:
 
 - `references/plan-readiness.md`: stale plan、slice selection、blocked 条件。
-- `references/artifact-lifecycle.md`: active plan、archive、session handoff、古い成果物の扱い。
+- `references/artifact-lifecycle.md`: Execute lane での active plan 更新と handoff。置き場所と archive の正本は planner 側。
 - `references/execution-process.md`: 実装手順、dirty worktree、scope control。
 - `references/review-and-parallelism.md`: 並列化、review loop、reviewer roles。
-- `references/model-routing.md`: Fable 5 / Sonnet 5 / Haiku 4.5 と GPT-5.6 Sol / Terra / Luna の役割分担、availability、effort、escalation。
+- `references/model-routing.md`: Opus 5 / Fable 5 / Sonnet 5 / Haiku 4.5 と GPT-5.6 Sol / Terra / Luna の役割分担、availability、effort、委任 guardrail、escalation。
 - `references/testing-verification.md`: local checks、UI verification、失敗時の扱い。
 - `references/safety-guardrails.md`: destructive operation、fallback、secret、production、git。
 - `references/ui-implementation.md`: UI 実装、responsive、screenshot、routing、改行。

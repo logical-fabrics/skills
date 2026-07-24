@@ -10,6 +10,22 @@
 - 長時間・複数 slice・複数 review rounds を前提にする Plan lane では `/goal` を使ってよい。scope は計画完成と review closure に限定し、実装開始を含めない。
 - 長時間・複数 slice・検証ループを前提にする Execute handoff では `/goal` 用の短い draft を残す。
 
+## abstract-plan.html の共有チャネル
+
+正本は repo の `docs/implementation/abstract-plan.html`。以下は publish できる環境でだけ使う追加経路で、file を置き換えない。publish は外部サービスへの送信なので既定行動にせず、ユーザーの依頼か明示的な合意がある場合だけ行う。
+
+| Host | 経路 | 起動 | 主な制約 |
+| --- | --- | --- | --- |
+| Claude Code | artifact | skill から publish できる | publish 直後は作成者のみ。共有時、Pro / Max は public link しか選べず、組織内限定共有は Team / Enterprise（Enterprise は Owner が有効化） |
+| Codex | app の Sites | 人間が ChatGPT app 側で起動する。agent の tool ではない | public beta。plan / region / workspace 設定に依存し、本番デプロイとして作られる |
+
+共通の注意:
+
+- artifact は publish しただけでは作成者しか見られない。危険なのは共有操作の方。Claude Pro / Max では共有手段が public link だけなので、顧客の設計、非公開の architecture、社外に出せない情報を含むページを共有しない。自分だけが見る用途の publish は差し支えない。
+- 組織 policy（zero data retention、CMEK、HIPAA）、Bedrock / Vertex / Foundry 経由、API key や gateway token のセッション、CI 実行では artifact を publish できない。file だけで完結させる。
+- Codex Sites は本番デプロイを作る。使い捨ての合意形成資料を毎回 site 化せず、継続的に参照される plan に限る。
+- publish した場合は URL を active plan の `## Implementation Handoff` に記録する。次セッションが URL から更新できる。
+
 Codex:
 
 - `.codex-plugin/plugin.json` は Codex 配布用。

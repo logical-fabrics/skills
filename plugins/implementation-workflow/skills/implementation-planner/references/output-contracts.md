@@ -62,7 +62,7 @@ Section hygiene:
 - `## Step-by-step Implementation`: 実行順、対象ファイル、acceptance criteria に集中する。検討過程や reviewer ごとの発言を混ぜない。
 - `## Implementation Handoff`: 次に読むファイル、実行する最小 slice、直近 verification、残リスクに絞る。会話履歴を読ませる前提にしない。
 
-`## Implementation Handoff` には `Next Action Contract` block を含める:
+`## Implementation Handoff` には `Next Action Contract` block を含める。この block 定義は plugin 全体の正本であり、executor / auditor / docs 側は再掲せずここを参照する:
 
 ```md
 ### Next Action Contract
@@ -116,3 +116,5 @@ package / library / SDK / CLI を追加・更新・設定変更する plan で�
 - 理由は「単純だから」ではなく、影響範囲、判断の有無、次セッションの再開容易性に基づいて書く。
 
 作成する場合、既定の保存先は `docs/implementation/abstract-plan.html`。完了後に source of truth として残す必要がなければ archive または削除候補にする。
+
+人間へ配る必要がある場合は、host の共有チャネル（Claude Code の artifact、Codex app の Sites）へ publish してよい。file が正本であることは変わらない。publish したら URL を `## Implementation Handoff` に 1 行で記録し、次セッションがその URL を更新できるようにする。条件と制約は `host-adapters.md` を見る。

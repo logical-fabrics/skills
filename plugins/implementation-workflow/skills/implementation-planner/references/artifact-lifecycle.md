@@ -42,7 +42,17 @@ docs/implementation/
 
 既定運用では、新しい plan を作るよりまず `current.md` を更新する。新計画が必要な場合は、古い `current.md` を `archive/` に移してから置き換える。
 
-## Archive
+## Human-facing Sharing
+
+`abstract-plan.html` の正本は repo の file。host の共有チャネルは、その file を人間が見やすい形で配るための追加経路であり、正本を置き換えない。
+
+- Claude Code: artifact として publish できる。同じ file を publish し、返った URL を active plan の `## Implementation Handoff` に記録する。
+- Codex: app の Sites で共有できる。agent 側の tool ではないため、必要なときに publish をユーザーへ提案し、URL を同じ場所に記録する。
+- この差（Claude は skill から publish でき、Codex は人間が起動する）は意図した host 固有差分。詳細は `host-adapters.md`。
+
+publish は外部サービスへの送信なので、既定行動にしない。ユーザーの依頼、または publish してよいという明示的な合意がある場合だけ行う。
+
+publish できない環境（後述の制約に該当する場合）でも作業を止めない。file だけで完結させ、共有が必要なら repo 経由で渡す。
 
 archive は履歴の墓場ではなく、後から判断を追うための薄い記録。
 

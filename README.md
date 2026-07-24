@@ -14,11 +14,11 @@ Logical Fabrics のエンジニア向けに配布する Codex / Claude Code 共�
 
 | Plugin | Status | Purpose | Docs |
 | --- | --- | --- | --- |
-| `implementation-workflow` | active | 実装の audit、plan、execute を Codex / Claude Code で揃える | [docs/prompt-guide.md](docs/prompt-guide.md) |
+| `implementation-workflow` | active | 実装の audit、plan、execute と、人間の訂正からの durable learning を Codex / Claude Code で揃える | [docs/prompt-guide.md](docs/prompt-guide.md) |
 
 ### implementation-workflow
 
-`implementation-workflow` は、実装をいきなり始めるための道具ではありません。現在の実装を読み、必要なら調査し、実装計画を作り、複数観点でレビューし、最小単位で実装し、検証し、残った問題をまた計画に戻すための workflow です。
+`implementation-workflow` は、実装をいきなり始めるための道具ではありません。現在の実装を読み、必要なら調査し、実装計画を作り、複数観点でレビューし、最小単位で実装し、検証し、残った問題をまた計画に戻すための workflow です。人間が agent の誤りを訂正した時は、訂正を候補として検知し、再利用可能性と evidence を確認した上で、利用先 repo の instruction、skill、deterministic guardrail へ最小差分として昇格できます。
 
 主な入口:
 
@@ -27,6 +27,7 @@ Logical Fabrics のエンジニア向けに配布する Codex / Claude Code 共�
 | Audit | 今の実装が本当に良い状態か見直したい | UX、設計、過剰設計、テスト、DB、運用などを evidence 付きでレビューする |
 | Plan | 実装前に方針を固めたい | 実装担当 LLM が迷わない計画を作り、複数観点レビューで改善する |
 | Execute | 既存 plan に沿って実装したい | 最小 slice で実装し、検証し、必要なら plan / handoff を更新する |
+| Learn | agent の誤りを訂正した、同じ review feedback を繰り返した | current task を直した後、訂正を ADD / REFINE / MERGE / NOOP でキュレーションし、適切な保存先と enforcement へ昇格する |
 
 よく使うプロンプト:
 
@@ -40,6 +41,10 @@ Logical Fabrics のエンジニア向けに配布する Codex / Claude Code 共�
 
 ```text
 docs/implementation/current.md の次の slice を実装して、検証までやって
+```
+
+```text
+今の訂正を次からも守れるように、適切な AGENTS.md、skill、hook のどこへ残すか判断して反映して
 ```
 
 詳しい使い方は [docs/prompt-guide.md](docs/prompt-guide.md) を参照してください。
@@ -100,6 +105,7 @@ plugins/
       implementation-auditor/
       implementation-planner/
       implementation-executor/
+      learning-curator/
 ```
 
 ## Shared Conventions

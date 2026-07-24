@@ -1,6 +1,6 @@
 # UI Implementation
 
-実装時は planner の `references/ui-ux.md` を canonical rubric として扱う。この file は、その基準を実装中の判断と完了前 QA に落とすための checklist。
+実装時は `../../implementation-planner/references/ui-ux.md` を canonical rubric として扱う。この file は、その基準を実装中の判断と完了前 QA に落とすための checklist。
 
 ## Build Rules
 

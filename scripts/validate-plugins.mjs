@@ -29,6 +29,13 @@ const supportedAgentEfforts = new Set([
   "xhigh",
   "max",
 ]);
+// Models that do not accept the effort parameter. Setting effort on these is a
+// silent no-op, so the routing intent has to be expressed by narrowing the task.
+const effortlessAgentModels = new Set([
+  "haiku",
+  "claude-haiku-4-5",
+  "claude-haiku-4-5-20251001",
+]);
 
 const errors = [];
 
@@ -147,14 +154,9 @@ function validateAgentFrontmatter(
   const fields = parseAgentFrontmatter(filePath, text);
   if (!fields) return;
 
-  for (const key of [
-    "name",
-    "description",
-    "model",
-    "effort",
-    "maxTurns",
-    "skills",
-  ]) {
+  // effort and skills stay optional: a leaf agent should be able to run without
+  // loading a whole skill, and some models do not accept effort at all.
+  for (const key of ["name", "description", "model", "maxTurns"]) {
     if (!fields.get(key) || fields.get(key).length === 0) {
       errors.push(`${filePath}: missing ${key}: in frontmatter`);
     }
@@ -190,6 +192,11 @@ function validateAgentFrontmatter(
   if (typeof effort === "string" && !supportedAgentEfforts.has(effort)) {
     errors.push(
       `${filePath}: effort must be one of ${[...supportedAgentEfforts].join(", ")}`,
+    );
+  }
+  if (fields.has("effort") && effortlessAgentModels.has(fields.get("model"))) {
+    errors.push(
+      `${filePath}: model ${fields.get("model")} does not accept effort:; narrow the task instead`,
     );
   }
 

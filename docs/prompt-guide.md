@@ -1,14 +1,15 @@
 # Prompt Guide
 
-`implementation-workflow` は、主に 3 つの入口で使う。
+`implementation-workflow` は、3 つの implementation lane と、lane 横断の learning loop で使う。
 
 | やりたいこと | 期待する skill | 自然文プロンプト例 |
 | --- | --- | --- |
 | 既存実装を見直す | `implementation-auditor` | `現在の実装を見直して、UX・設計・テスト・過剰設計の問題を洗い出して` |
 | 実装計画を作る | `implementation-planner` | `この機能の実装計画を作って。docs/implementation/current.md にまとめて` |
 | 計画を実装する | `implementation-executor` | `docs/implementation/current.md の次の slice を実装して、検証までやって` |
+| 人間の訂正を future session に残す | `learning-curator` | `今の訂正、再発防止して` |
 
-Codex でも Claude Code でも、基本は自然文プロンプトで発火する想定。Claude Code では skill が 3 つだけ見えるよう、薄い slash command alias は配布しない。
+Codex でも Claude Code でも、基本は自然文プロンプトで発火する想定。Claude Code では薄い slash command alias は配布しない。
 
 基本思想は「lane 内では止まらない。lane 境界は勝手に越えない」。Audit は知るため、Plan は人間が方向性を確認するため、Execute は accepted slice をやりきるために分ける。各 lane の最後には `Next Action Contract` を出し、次に使う入口、理由、実行可能 slice、人間判断の要否、推奨 prompt を明示する。
 
@@ -21,6 +22,7 @@ Codex でも Claude Code でも、基本は自然文プロンプトで発火す�
 | まず現状の問題を知りたい | Audit |
 | 実装前に合意したい、範囲が広い、DB/UI/認証/infra が絡む | Plan |
 | 既に active plan または明示 plan があり、編集してよい | Execute |
+| agent の誤りを訂正した、同じ feedback を繰り返した、今後の rule にしたい | Learn |
 | セッションを終える、次回に引き継ぎたい | Session Handoff |
 
 Claude Code で自然文発火させたい場合も、特別な書式は不要。以下のように普通に依頼する。
@@ -36,6 +38,46 @@ Claude Code で自然文発火させたい場合も、特別な書式は不要�
 ```text
 current.md の次を実装して
 ```
+
+```text
+それは違う。対象は repo のルールではなく plugin の配布物。次から同じ scope mistake をしないように学びを残して
+```
+
+最短の推奨形:
+
+```text
+今の訂正、再発防止して。
+```
+
+## Learn
+
+agent の誤りを直した後、同じ mistake class の再発を減らしたい時に使う。短い推奨 trigger は `今の訂正、再発防止して`。通常の訂正表現は UserPromptSubmit hook が候補として検知し、`learning-curator` の判断を同じ turn に追加する。`再発防止して`、`覚えて`、`次から`、`今後は`、`二度と`、`AGENTS.md に追記` のような明示的 durable intent があり、final response に learning outcome がない場合だけ、Stop hook が一度だけ continuation を要求する。
+
+例:
+
+```text
+今の訂正を次からも守れるようにルール化して。保存先は既存の AGENTS.md、CLAUDE.md、skill、hook を調べて最適なものを選んで。
+```
+
+```text
+この review feedback は前にも出した。同じ error class を防げるよう、既存 rule と重複しない形で反映して。
+```
+
+```text
+私が agent の変更を revert して正しく直した。diff と repo の source of truth を確認し、一般化できる部分だけ学びにして。
+```
+
+期待する動き:
+
+- current task の誤りを先に直す。
+- regex 発火だけでは保存せず、accepted / correct / generalizable / actionable / scoped / novel / safe を確認する。
+- 既存 guidance を検索し、`ADD` / `REFINE` / `MERGE` / `NOOP` の一つを選ぶ。
+- always-on rule は canonical `AGENTS.md` / `CLAUDE.md`、multi-step workflow は skill、machine-checkable な危険 behavior は hook / test / linter へ置く。
+- Codex の generated memory state は直接編集せず、host-native memory を mandatory team rule の唯一の保存先にしない。
+- raw prompt や transcript を永続化しない。
+- 最後に `Learning outcome: ...` で変更先または NOOP 理由を報告する。
+
+通常の first-time bug fix、単発の要件変更、仮定の議論、引用文は learning trigger にしない。曖昧な最初の correction は自動保存せず、再発・accepted review・検証可能な高リスク invariant、または明示的 durable intent がある時に昇格する。
 
 ## Audit
 
@@ -107,13 +149,17 @@ current.md の次を実装して
 ```
 
 ```text
+abstract-plan.html を artifact として publish して、URL を Implementation Handoff に残して。共有範囲は組織内だけにして。
+```
+
+```text
 DB schema 変更を含むので、YAGNI と migration/rollback を厳しく見た実装計画を作って。
 ```
 
 期待する動き:
 
 - 明示 plan や repo 慣習がなければ、`docs/implementation/current.md` を active plan にする。
-- 人間向け合意形成が必要な場合だけ `abstract-plan.html` を作る。
+- 人間向け合意形成が必要な場合だけ `abstract-plan.html` を作る。正本は repo の file。共有したい場合は、Claude Code なら artifact、Codex app なら Sites へ publish するよう頼む。publish は依頼したときだけ行われ、URL は `Implementation Handoff` に残る。
 - P0/P1 がなくなるまで計画レビューする。
 - 不明点は調査し、調査で決められないことだけ選択肢付きで聞く。
 - Plan から Execute へは自動遷移しない。最後に `Next Action Contract` で、実行承認が必要か、次の最小 slice は何かを示す。
@@ -158,7 +204,7 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 - 古い plan をそのまま信じない。
 - 実装は最小 slice にする。
 - low / medium / high risk を選び、low risk は main の直接実装も許可し、medium risk は implementation と独立 review、high risk は必要な domain review / verification を分ける。role 数を固定しない。
-- model を選択できる場合、Codex は迷う一般 main を GPT-5.6 Sol `medium`、明確な bounded coding worker を Luna `xhigh`、長い context / 複雑 debugging を含む coding worker を Terra `xhigh`、単独の高難度判断を Sol `xhigh` で行う。`low` / `medium` は決定的な verification に限定し、Codex で選択不能な `max` を要求しない。委任時は `quality` / `balanced` / `throughput` と retry cost も指定する。Claude Code は Sonnet 5 `high` を daily coding / main の既定にし、単一の sitting を超える長時間・高難度 task だけ Fable 5、単純 leaf は Haiku 4.5 を使う。vendor 間で tier を無理に対称化せず、公式情報と host で実際に選択可能な model を正とする。
+- model / effort / escalation は `implementation-executor/references/model-routing.md` に従う。vendor 間で tier を無理に対称化せず、公式情報と host で実際に選択可能な model を正とする。
 - orchestration は flat な main → workers を既定にする。Codex `xhigh`（単独推論）と `ultra`（自動 subagents）、Claude Code の通常 subagents と `ultracode` / dynamic workflow を区別し、host-native orchestration と manual fan-out を同じ workstream に重ねない。
 - UI 変更は changed behavior と risk に応じて、affected route の browser smoke、responsive screenshot、route / auth / persistence の targeted E2E、release 時の full E2E を使い分ける。
 - UI 検証を実行した場合は、確認した route、viewport、browser/tool、state、未確認 state、残リスクと、価値がある場合だけ screenshot/trace path を報告する。
@@ -166,7 +212,7 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 - accepted slice 内では、局所的な stale plan 修正、実装、risk-based review、修正、再検証までやりきる。未解決 P0/P1 がなく、acceptance criteria の evidence が揃った時だけ完了する。
 - 完了時に `Next Action Contract` を出し、続けるなら次の最小 slice、止めるなら人間判断が必要な理由を示す。
 
-共通の出口形式:
+共通の出口形式。正本の定義は plugin の `implementation-planner/references/output-contracts.md` にあり、以下は利用者が確認するための転記:
 
 ```md
 ## Next Action Contract

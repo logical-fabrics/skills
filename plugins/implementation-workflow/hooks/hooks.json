@@ -1,5 +1,17 @@
 {
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/hooks/scripts/user-prompt-learning.mjs\"",
+            "timeout": 10,
+            "statusMessage": "Checking for correction learning signals"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|MultiEdit|Write|apply_patch|Bash",
@@ -21,6 +33,16 @@
             "command": "node \"${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/hooks/scripts/stop-knip-gate.mjs\"",
             "timeout": 120,
             "statusMessage": "Checking Knip when dependency graph changed"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/hooks/scripts/stop-learning-gate.mjs\"",
+            "timeout": 10,
+            "statusMessage": "Checking explicit learning requests"
           }
         ]
       }
