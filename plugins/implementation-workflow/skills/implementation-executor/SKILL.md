@@ -26,6 +26,7 @@ Disallowed unless explicitly requested:
 ## Core Rules
 
 - 既存 repo を source of truth とする。古い plan は検証対象であり、絶対視しない。
+- 依頼された scope そのものが成果物とみなす。勝手に狭めず、広げず、別の作業に置き換えない。依頼が誤っていると判断した場合は 1 文で述べてから、依頼どおりの範囲を最後までやりきる。
 - source of truth は、ユーザーの最新依頼と明示 plan / scope、現在の repo 実態、repo 既存慣習、`docs/implementation/current.md` の順に確認する。
 - ユーザーが plan ファイルを明示した場合、その plan を今回の source of truth とする。継続運用が必要な場合だけ `docs/implementation/current.md` への統合を提案する。
 - ユーザーや他エージェントの未コミット変更を戻さない。
@@ -45,6 +46,15 @@ Disallowed unless explicitly requested:
 - 古い plan は停止理由ではなく検証対象として扱う。repo / docs / 実行確認で安全に解消できる stale は直してから進む。
 - ただし未承認の別 slice、不可逆操作、production / billing / auth provider / cloud resource / secret / destructive DB 変更へは勝手に広げない。
 - 完了時は `Next Action Contract` を残し、次に続けるべきか、audit へ戻すべきか、完了か、人間判断が必要かを明示する。
+
+## Reporting Cadence
+
+Execute lane は tool call が多く長時間になるため、報告のリズムを次に揃える。
+
+- 最初の tool call の前に、これから何をするかを 1 文で言う。
+- 作業中は、重要な発見、方針変更、blocked に当たったときだけ短く報告する。実行するコマンドや読むファイルを逐次実況しない。
+- 完了時は結論から書く。1 文目で「何が変わったか」または「何が分かったか」に答え、詳細、検証、残リスクはその後に置く。
+- 自分の先の発言を訂正するのは、その誤りがユーザーの判断、コード、結論を変える場合だけにする。変わらない言い間違いは黙って直して先に進む。
 
 ## Workflow
 

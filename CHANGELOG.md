@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.3
+
+- Added a `Reporting Cadence` section to the executor, planner, and auditor skills: one sentence before the first tool call, mid-run updates only for important findings, direction changes, or blocked states, and a conclusion-first final response. Anthropic documents that the Claude 5 generation narrates agentic work more than prior models and benefits from an explicit description of the cadence, and the plugin previously specified only the final output contracts, never the turn-level communication.
+- Told the executor to correct an earlier statement only when the error changes the user's decisions, code, or conclusions. The same guide names correction narration as a behavior that grew on the current generation.
+- Added written-deliverable length calibration to `output-contracts.md` and `report-format.md`. Files written to disk run longer on the current generation, and the fourteen required `##` sections of the active plan contract invite padding, so the contract now states explicitly that a required section is a heading contract rather than a word-count contract, and that a section with nothing to report is one line saying so.
+- Removed the mandatory `diff self-review` step from the low-risk rows of `review-and-parallelism.md` and `review-rubric.md`. Generic self-verification instructions compound with behavior the model already performs and cause over-verification. The deterministic gates and the evidence rules are unchanged: what is required is the acceptance evidence, not an extra step that produces it.
+- Generalized the model-routing rule from delegation prompts to lane rubrics, and recorded that narration length and written-deliverable length are governed by the skills rather than by the effort parameter.
+- Stated in the executor and auditor core rules that the requested scope is the deliverable: do not narrow it, widen it, or replace it, and raise a disagreement in one sentence before completing the task as asked.
+- Kept a single host-neutral instruction body. The new rules apply to both hosts, and the host-specific layer stays where it already was: `model-routing.md` for model and effort, `host-adapters.md` for orchestration modes and publishing, and the two manifests for presentation metadata.
+- Migration: update the installed plugin and restart the host. Expect shorter mid-run narration and shorter generated plans and audit reports. If you want step-by-step progress for a particular run, ask for it in the prompt.
+
 ## 0.3.2
 
 - Moved `adversarial-reviewer` from Sonnet 5 `high` to Opus 5 `medium`. Anthropic names code review and bug-finding as an Opus 5 strength with both high precision and high recall, and states it stays accurate at lower effort, so the review lane raises the model tier before the effort level. The agent holds no delegation tool, so the Claude 5 generation's stronger tendency to spawn subagents does not apply to it.

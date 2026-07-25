@@ -51,6 +51,12 @@ Disallowed unless explicitly requested:
 - ただし Plan から Execute へは勝手に移らない。実装は、ユーザーの明示依頼、または承認済み active plan に対する executor 依頼がある場合だけ行う。
 - 成果物の最後に `Next Action Contract` を置き、次 lane、理由、実行可能 slice、人間判断の要否、推奨 prompt を明示する。
 
+## Reporting Cadence
+
+- 最初の tool call の前に、これから何をするかを 1 文で言う。
+- 調査と review の途中は、重要な発見、方針変更、ユーザー判断が要る論点だけを短く報告する。読んだファイルや review round を逐次実況しない。
+- 完了時は結論から書く。1 文目で「どういう計画にしたか」に答え、根拠、未解決判断、`Next Action Contract` はその後に置く。
+
 ## Workflow
 
 1. ユーザーの最新依頼を読む。

@@ -11,6 +11,8 @@
 
 Codex でも Claude Code でも、基本は自然文プロンプトで発火する想定。Claude Code では薄い slash command alias は配布しない。
 
+どの lane でも報告のリズムは共通で、最初に何をするかを 1 文、作業中は重要な発見と方針変更だけ、完了時は結論から述べる。逐次実況は既定で行わない。細かく進捗を見たい場合は、その旨を依頼に書く。
+
 基本思想は「lane 内では止まらない。lane 境界は勝手に越えない」。Audit は知るため、Plan は人間が方向性を確認するため、Execute は accepted slice をやりきるために分ける。各 lane の最後には `Next Action Contract` を出し、次に使う入口、理由、実行可能 slice、人間判断の要否、推奨 prompt を明示する。
 
 長時間・複数 slice・検証ループを前提にする Plan / Execute では、Codex / Claude Code の `/goal` を使う。Plan の goal は「レビュー指摘がなくなるまで計画を完成させる」ためであり、実装開始を意味しない。Execute の goal は accepted slice を実装・検証・handoff 更新までやりきるために使う。Goal には長い計画全文を貼らず、目的、成功条件、制約、検証条件だけを書く。詳細は明示 plan または `docs/implementation/current.md` に置く。
@@ -211,6 +213,7 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 - 完了時に `current.md` の handoff を必要に応じて更新する。
 - accepted slice 内では、局所的な stale plan 修正、実装、risk-based review、修正、再検証までやりきる。未解決 P0/P1 がなく、acceptance criteria の evidence が揃った時だけ完了する。
 - 完了時に `Next Action Contract` を出し、続けるなら次の最小 slice、止めるなら人間判断が必要な理由を示す。
+- 依頼した scope をそのまま実行する。勝手に狭めず、広げず、別作業に置き換えない。依頼が誤っていると判断した場合は 1 文で指摘した上で、依頼どおりの範囲をやりきる。
 
 共通の出口形式。正本の定義は plugin の `implementation-planner/references/output-contracts.md` にあり、以下は利用者が確認するための転記:
 

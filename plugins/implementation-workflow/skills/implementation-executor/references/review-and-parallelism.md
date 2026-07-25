@@ -26,7 +26,7 @@ slice 開始時に low / medium / high のいずれかを選び、理由を作�
 
 | Risk | 目安 | 必要な実行・review role |
 | --- | --- | --- |
-| Low | copy / docs / isolated config、機械的で可逆、決定的 check がある | main または implementation worker。独立 reviewer は任意。relevant deterministic gate と diff self-review は必須 |
+| Low | copy / docs / isolated config、機械的で可逆、決定的 check がある | main または implementation worker。独立 reviewer は任意。relevant deterministic gate は必須で、closure 前に diff と acceptance evidence を確認する |
 | Medium | 通常の複数ファイル変更、共有ロジック、ユーザー可視 behavior、局所 API / state 変更 | implementation role と独立 review role を分ける。verification は review role と兼任可能だが、acceptance evidence を独立に確認する |
 | High | auth、billing、migration、data loss、security、production / infra、cross-slice architecture、広い UX / persistence、収束しない P0/P1 | implementation と独立 review を分け、必要な domain（security / schema / UX 等）だけ追加する。verification role を別に立てるのは、acceptance evidence を独立に再現する必要がある場合に限る。高難度の統合判断は Opus 5 `xhigh` / Fable 5 / Sol へ escalation する |
 

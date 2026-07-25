@@ -2,6 +2,8 @@
 
 Audit report は簡潔にする。長い評論ではなく、次に何を直すかが分かる形にする。
 
+report の長さは findings の量に比例させる。埋め草の段落、重複した summary、boilerplate を足さない。該当がない section は、無理に埋めず 1 行で「該当なし」と書くか省く。
+
 Recommended format:
 
 ```md

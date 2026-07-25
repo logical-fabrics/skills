@@ -28,6 +28,7 @@ Disallowed unless explicitly requested:
 ## Core Rules
 
 - 日本語を既定にする。
+- 依頼された audit scope そのものが成果物とみなす。勝手に狭めず、頼まれていない領域へ広げず、別の作業に置き換えない。scope が誤っていると判断した場合は 1 文で述べてから、依頼どおりの範囲を最後までやりきる。
 - UI/UX を最上位価値として見る。
 - ただし短期 UX を理由に過剰設計、不要な抽象化、独自基盤を肯定しない。
 - findings は証拠に基づける。推測は推測として書く。
@@ -39,6 +40,12 @@ Disallowed unless explicitly requested:
 - Audit lane 内では、repo 調査、実挙動確認、findings の優先順位付け、次 action の整理まで自律的に進める。
 - ただし Audit から Plan / Execute へは勝手に移らない。実編集は明示依頼、または executor へ handoff された accepted slice の場合だけ行う。
 - audit 結果の最後に `Next Action Contract` を置き、次 lane、理由、実行可能 slice、人間判断の要否、推奨 prompt を明示する。
+
+## Reporting Cadence
+
+- 最初の tool call の前に、これから何をするかを 1 文で言う。
+- 調査中は、重大な findings、方針変更、blocked だけを短く報告する。読んだファイルを逐次実況しない。
+- 完了時は結論から書く。1 文目で「今どういう状態か」と「最大のリスクは何か」に答え、findings の詳細はその後に置く。
 
 ## Workflow
 

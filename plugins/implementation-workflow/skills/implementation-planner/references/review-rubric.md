@@ -12,7 +12,7 @@ reviewer を subagent / worker に委任し model を選択できる場合は、
 
 | Risk | 目安 | Review |
 | --- | --- | --- |
-| Low | docs、copy、限定設定、局所的で可逆な plan | implementation 観点と diff self-review。独立 reviewer は任意 |
+| Low | docs、copy、限定設定、局所的で可逆な plan | implementation 観点で、実装手順と acceptance criteria が揃っているかを確認する。独立 reviewer は任意 |
 | Medium | 通常の複数ファイル、共有ロジック、ユーザー可視 behavior、局所 API / state | implementation と独立 adversarial review を分け、変更領域に関係する reviewer を追加 |
 | High | auth、billing、migration、data loss、security、production / infra、cross-slice architecture、広い UX / persistence | implementation、adversarial、必要な domain reviewer を分け、高難度統合は Opus 5 `xhigh` / Fable 5 / Sol へ escalation |
 

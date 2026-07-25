@@ -36,9 +36,11 @@ Claude Opus 5 世代は前世代より subagent へ委任しやすい。この p
 - 委任してよい場面を明示する。独立した workstream、独立した read-only review / verification、親では分解できない bounded な実装に限る。「重そうだから」を委任理由にしない。
 - 同時に走らせる worker 数の上限を決めてから fan-out する。上限は host / workspace / repo の cap を正とし、plugin 側で固定値を上書きしない。
 - narrow な task では scope を明示的に制約する。Opus 5 世代は task scope を自分で広げやすい。
-- 委任 prompt に「作業後に自己検証せよ」「self-check せよ」といった一般的な自己検証指示を入れない。Opus 5 世代は言われなくても自己検証し、指示を残すと over-verification になる。
-- ただし evidence の質に関する規律は別軸として維持する。worker の自己申告だけで受理しない、CLI の成功メッセージを唯一の根拠にしない、実際の出力を親が読む、は削らない。
+- 委任 prompt にも lane の rubric にも、「作業後に自己検証せよ」「self-check せよ」「diff を自分でレビューせよ」といった一般的な自己検証指示を入れない。Opus 5 世代は言われなくても自己検証し、指示を残すと over-verification になる。
+- ただし evidence の質に関する規律は別軸として維持する。worker の自己申告だけで受理しない、CLI の成功メッセージを唯一の根拠にしない、実際の出力を親が読む、closure 前に diff と acceptance evidence を確認する、は削らない。求めるのは「もう一度確認する手順」ではなく「確認した結果の evidence」である。
 - 出力の長さは effort では縮まない。簡潔さが必要なら、prompt で目標の長さや形式を指定する。
+- agentic session 中の実況と最終応答の長さも model の既定に任せない。lane ごとの `SKILL.md` の `Reporting Cadence` に従う。Opus 5 世代は tool call ごとの前置きと訂正の説明が長くなりやすい。
+- ファイルへ書く成果物も前世代より長くなりやすい。plan / report の分量規律は `../../implementation-planner/references/output-contracts.md` と `../../implementation-auditor/references/report-format.md` を正とする。
 
 ## Effort Ladder
 
@@ -105,5 +107,6 @@ model を指定できない host では、task を tier 相当の難度まで狭
 - [Anthropic Claude Fable 5](https://platform.claude.com/docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5)
 - [Anthropic model migration guide (Opus 4.8 → Opus 5)](https://platform.claude.com/docs/en/about-claude/models/migration-guide)
 - [Anthropic effort parameter](https://platform.claude.com/docs/en/build-with-claude/effort)
+- [Anthropic prompting Claude Opus 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5)
 - [Claude Code dynamic workflows and ultracode](https://code.claude.com/docs/en/workflows)
 - [Claude data retention](https://platform.claude.com/docs/en/manage-claude/api-and-data-retention)
