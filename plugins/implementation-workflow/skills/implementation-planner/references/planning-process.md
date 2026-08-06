@@ -27,13 +27,11 @@ Planner が必要:
 - 仕様の解釈が複数あり、実装すると戻しにくい。
 - 人間向け合意形成が必要。
 
-Research / AskUser が先:
+Research が先:
 
 - 公式 docs や現在の code で解消できる unknown が残る。
-- product、cost、security、compatibility、long-term maintenance の判断が必要。
-- 現実的な選択肢を 2-3 個に絞れる。
 
-AskUser は最終手段にする。repo、一次情報、実行確認で解ける unknown は聞かずに調査する。
+repo、一次情報、実行確認で解ける unknown は聞かずに調査する。AskUser の要否は `ask-user.md` の 3 テストと checkpoint に従う。人間が所有する判断(product 方針、UX の方向性、コスト受容、リスク受容、rollout)は調査で代替せず、checkpoint でまとめて確認する。
 
 ## Freshness
 

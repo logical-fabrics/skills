@@ -9,7 +9,7 @@ Ready:
 - 現在の repo、schema、routes、UI、tests と矛盾していない。
 - package / library / SDK / CLI version が latest 原則と矛盾していない。古い version を使う場合は互換性制約と解除条件が書かれている。
 - accepted slice、touched surface、changed behavior に関する P0/P1 findings が残っていない。
-- AskUser が必要な判断が残っていない。
+- AskUser が必要な判断が残っていない。`## Review Findings` 内の `Decision Log:` で始まる行は planner が解決済みの代行判断の記録であり、未解決判断や blocked 理由として扱わない。
 
 Stale / Blocked:
 

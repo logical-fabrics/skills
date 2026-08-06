@@ -6,7 +6,15 @@ if (!file) {
   process.exit(1);
 }
 
-const text = await readFile(file, "utf8");
+const raw = await readFile(file, "utf8");
+
+// `Decision Log:` lines record decisions the planner already made (see the
+// planner's ask-user.md); drop them so their wording cannot read as an
+// unresolved marker or an open finding.
+const text = raw
+  .split(/\r?\n/)
+  .filter((line) => !/^\s*[-*]?\s*Decision Log:/i.test(line))
+  .join("\n");
 
 // Return the body of a `## Heading` section (up to the next `##` heading).
 // Used so P0/P1 detection only looks at recorded findings, not a rubric or

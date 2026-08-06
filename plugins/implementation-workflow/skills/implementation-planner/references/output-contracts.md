@@ -38,7 +38,7 @@
 - `## Step-by-step Implementation`: 各 step は checkbox で完了管理する。
 - `## Files to Change`
 - `## Verification Plan`: 直近の verification status（通った / 失敗した / 未実行）を含める。
-- `## Review Findings`: P0/P1/P2 ledger と open decisions を含める。
+- `## Review Findings`: P0/P1/P2 ledger、open decisions、Decision Log(planner が代行した material 判断の 1 行記録)を含める。
 - `## Risks and Rollback`
 - `## Next actions`: 次に実行する最小 slice。
 - `## Implementation Handoff`
@@ -60,7 +60,7 @@ Active plan は実装者が読むための作業入口であり、planning sessi
 Section hygiene:
 
 - `## Current State`: 現在の実装状態、完了済み slice、最後に確認した事実だけを書く。時系列ログや session recap にしない。
-- `## Review Findings`: 未解決 findings、受け入れる残リスク、誤実装を防ぐ重要判断だけを書く。解消済み findings は、修正後の計画本文に反映したら原則削る。
+- `## Review Findings`: 未解決 findings、受け入れる残リスク、誤実装を防ぐ重要判断、Decision Log だけを書く。解消済み findings は、修正後の計画本文に反映したら原則削る。Decision Log の entry は `Decision Log:` で始まる 1 行(判断、採用案、主な代替案、選定理由)で書き、checkbox・P0/P1 ラベル・未解決マーカー語(TODO / TBD / 未確定 / 要確認 / AskUser / Blocked)を含めない。veto されたら本文へ反映して削る。基準は `ask-user.md`。
 - `## Step-by-step Implementation`: 実行順、対象ファイル、acceptance criteria に集中する。検討過程や reviewer ごとの発言を混ぜない。
 - `## Implementation Handoff`: 次に読むファイル、実行する最小 slice、直近 verification、残リスクに絞る。会話履歴を読ませる前提にしない。
 
@@ -78,7 +78,7 @@ Section hygiene:
 - Suggested prompt:
 ```
 
-Plan の成果物では、ユーザーが実行承認する前提のときは `Human decision required: yes` にする。AI は plan lane 内の調査と review は自律的に進めるが、Plan から Execute へはユーザーの明示依頼なしに移らない。
+Plan の成果物では、ユーザーが実行承認する前提のときは `Human decision required: yes` にする。AI は plan lane 内の調査と review は自律的に進めるが、Plan から Execute へはユーザーの明示依頼なしに移らない。`ask-user.md` の Checkpoint B を通過した plan は、blocked を除き、未解決の人間判断(3 テスト通過の open decision)を `Next Action Contract` へ持ち越さない。lane enum の `Ask user` は planner では blocked のみに使い、実行承認そのものだけを `Human decision required` に残す。
 
 package / library / SDK / CLI を追加・更新・設定変更する plan では、`## Target Architecture` または `## Step-by-step Implementation` に latest 確認結果を書く。既存 version より上げられるものは upgrade step として扱い、latest を使わないものは `## Risks and Rollback` に pin / downgrade 理由、互換性制約、解除条件を書く。
 

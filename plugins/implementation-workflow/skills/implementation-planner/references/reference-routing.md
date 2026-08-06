@@ -9,6 +9,7 @@ Always:
 - `artifact-lifecycle.md`
 - `output-contracts.md`
 - `review-rubric.md`
+- `ask-user.md`
 
 UI / Web app:
 
@@ -77,10 +78,6 @@ Codex / Claude Code behavior:
 
 - `host-adapters.md`
 
-Ask user:
-
-- `ask-user.md` only when research cannot decide a material product, UX, cost, security, schema, compatibility, or production behavior decision.
-
 ## Reference Index
 
 上の routing で選んだ file が何を持っているか:
@@ -90,7 +87,7 @@ Ask user:
 - `artifact-lifecycle.md`: 成果物の置き場所、active plan、archive、session handoff。
 - `output-contracts.md`: 成果物契約と `Next Action Contract` の正本。
 - `review-rubric.md`: P0/P1/P2、reviewer roles、改善ループ。
-- `ask-user.md`: AskUser 条件と選択肢提示。
+- `ask-user.md`: Decision Interview の正本。通過テスト、checkpoint、質問フォーマット、Decision Log。
 - `ui-ux.md`: UI/UX canonical rubric、視覚検証、URL 状態、改行品質。
 - `ai-ux.md`: AI-first UX。
 - `ai-runtime.md`: Cloudflare AI Gateway、Workers AI、Gemma。

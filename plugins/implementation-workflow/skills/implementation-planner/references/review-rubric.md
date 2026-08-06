@@ -38,7 +38,8 @@ Domain reviewers:
 - P2 は ledger に残す。
 - closure には、risk 上必要な reviewer が確認済みであること、未解決 P0/P1 がないこと、実装手順・acceptance criteria・verification evidence・未確認範囲が揃っていることの全てが必要。
 - finding 修正後は、その finding と変更した section に関係する reviewer だけを再実行する。無関係な role を全て再実行しない。
-- 同じ原因で 2 回進展がない、evidence が相反する、または risk が上がった場合は model / role / scope を escalation する。安全に解けない判断だけ `Next Action Contract` で Plan 続行または Ask user として返す。
+- 同じ原因で 2 回進展がない、evidence が相反する、または risk が上がった場合は model / role / scope を escalation する。checkpoint で扱える判断は `ask-user.md` に従いそこで解消し、`Next Action Contract` の Ask user は blocked(その場で安全に進められない判断)だけに使う。
+- reviewer 間で P1 以上の判断が割れ、repo 慣習・一次情報で決着しない場合は、多数決や再試行で黙って上書きせず、`ask-user.md` の Divergence test 通過とみなす。Ownership / Materiality も満たす場合だけ checkpoint 行きの質問候補にし、満たさない場合は Decision Log に落とす。
 - reviewer が新規 finding を出さなかったことだけでも、validation が通ったことだけでも closure にしない。model 品質を測る独自反復 fixture eval は要求しない。
 
 ## Review Round

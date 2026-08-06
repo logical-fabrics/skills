@@ -10,6 +10,22 @@
 - 長時間・複数 slice・複数 review rounds を前提にする Plan lane では `/goal` を使ってよい。scope は計画完成と review closure に限定し、実装開始を含めない。
 - 長時間・複数 slice・検証ループを前提にする Execute handoff では `/goal` 用の短い draft を残す。
 
+## Decision Interview (AskUser) の host 差分
+
+`ask-user.md` の通過テスト・checkpoint・質問フォーマットは host 共通。tool だけが異なる。
+
+| Host | Tool | 制約 |
+| --- | --- | --- |
+| Claude Code | AskUserQuestion | 1 呼び出し最大 4 問、各 2-4 択 + Other(自動付与)、multiSelect 可 |
+| Codex | request_user_input | 1 呼び出し 1-3 問、各 2-3 択 + Other(`is_other`)+ secret 入力。ブロッキング(応答待ち)になるのは Plan Mode のみで、Default / Code / Exec mode では unavailable エラーになる。root thread 専用で subagent からは呼べない(2026-08 時点の openai/codex 実装) |
+
+共通:
+
+- checkpoint 1 回は原則 1 回の質問バッチ(1 呼び出しまたは 1 メッセージ)に収める。
+- tool が使えない場合(mode 制約、subagent 実行、tool エラーを含む)は、同じ契約(推奨案を先頭に置く、各案の tradeoff、未回答時のデフォルト挙動)を番号付き選択肢のテキスト質問で再現し、回答を待ってから続行する。
+- planner 自身が subagent として動いている場合は、ユーザーへ直接質問できない。質問 block を最終出力として親エージェントへ返し、自分では待たない。
+- Codex では mode を自己判定しない。まず `request_user_input` を呼び、unavailable エラーが返ったらテキスト質問へフォールバックする。
+
 ## abstract-plan.html の共有チャネル
 
 正本は repo の `docs/implementation/abstract-plan.html`。以下は publish できる環境でだけ使う追加経路で、file を置き換えない。publish は外部サービスへの送信なので既定行動にせず、ユーザーの依頼か明示的な合意がある場合だけ行う。

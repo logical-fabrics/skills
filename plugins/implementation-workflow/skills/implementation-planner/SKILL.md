@@ -45,7 +45,9 @@ Disallowed unless explicitly requested:
 - seed / sample / demo asset は初期状態、説明、テスト、セーフモードには使えるが、ユーザー生成物や本人素材の結果として混ぜない。計画に fallback を入れる場合は、誰の何を何で代替しているのか、ユーザーが誤認しないか、成功条件を偽っていないかを必ず書く。
 - 軽微で可逆な作業では、永続 plan や `abstract-plan.html` を作らず、短い方針と検証だけで終えてよい。
 - `references/review-rubric.md` に従って plan の risk と変更領域に必要な reviewer だけを選ぶ。未解決 P0/P1 がゼロで、実装者が迷わない acceptance / verification evidence が揃うまで改善する。P2 は修正、受け入れ、延期のいずれかを記録する。
-- material unknown は調査する。repo や一次情報で解けず、product / business / rollout 判断が必要な場合だけ AskUserTool または host equivalent を使う。
+- material unknown は調査する。repo や一次情報で解ける unknown は聞かない。
+- 人間が所有する判断(`references/ask-user.md` の 3 テストを通過するもの)は調査で代替しない。plan 起草前の Intent Interview と handoff 前の代行判断開示の 2 checkpoint で、host の質問 tool を使ってまとめて確認する。
+- planner が代行した material 判断は Decision Log として `## Review Findings` に 1 行で残し、人間が後からまとめて veto できるようにする。
 - Plan lane 内では、調査、unknown 解消、計画修正、review、handoff 整理まで自律的に進める。
 - 長時間・複数 slice・複数 review rounds を前提にする計画作業では `/goal` を使ってよい。Goal の scope は計画完成と review closure に限定し、実装開始を含めない。
 - ただし Plan から Execute へは勝手に移らない。実装は、ユーザーの明示依頼、または承認済み active plan に対する executor 依頼がある場合だけ行う。
@@ -65,24 +67,27 @@ Disallowed unless explicitly requested:
 4. `references/reference-routing.md` で必要な references を選ぶ。
 5. 追加・更新・設定変更する package / library / SDK / CLI の latest と current docs を確認する。既存 version が latest より古く、上げられるなら plan に upgrade step を含める。
 6. material unknown を Research / AskUser / Blocked に分類する。
-7. `references/artifact-lifecycle.md` で保存場所、active plan、archive 方針を決める。
-8. `references/output-contracts.md` に従って計画成果物を作る。
-9. `references/review-rubric.md` で low / medium / high risk を選び、plan の変更領域に必要な reviewer を決める。
-10. implementation / adversarial と、発火した UX、simplicity、schema、security、delivery、AI の観点だけをレビューする。
-11. `references/review-rubric.md` の closure 条件に従い、未解決 P0/P1 がないことと、実装手順・acceptance criteria・verification evidence が揃ったことを確認する。finding 修正後は変わった section に関係する reviewer だけを再実行し、同じ原因で進展しない場合は model / role / scope を escalation する。
-12. review 結果を plan に畳み込み、active plan から経緯・途中案・解消済みメモを削る。未解決 findings と実装者が必要な判断理由だけを残す。
-13. final response 前に `abstract-plan.html` 要否を判定する。必要なら作成/更新し、不要なら理由を `Next Action Contract` に残す。
-14. `Next Action Contract` と `Implementation Handoff` で終える。
+7. `references/ask-user.md` の 3 テストを通過した判断があれば、plan 起草前に Checkpoint A(Intent Interview)を行う。なければ黙ってスキップする。
+8. `references/artifact-lifecycle.md` で保存場所、active plan、archive 方針を決める。
+9. `references/output-contracts.md` に従って計画成果物を作る。
+10. `references/review-rubric.md` で low / medium / high risk を選び、plan の変更領域に必要な reviewer を決める。
+11. implementation / adversarial と、発火した UX、simplicity、schema、security、delivery、AI の観点だけをレビューする。
+12. `references/review-rubric.md` の closure 条件に従い、未解決 P0/P1 がないことと、実装手順・acceptance criteria・verification evidence が揃ったことを確認する。finding 修正後は変わった section に関係する reviewer だけを再実行し、同じ原因で進展しない場合は model / role / scope を escalation する。
+13. review 結果を plan に畳み込み、active plan から経緯・途中案・解消済みメモを削る。未解決 findings、Decision Log、実装者が必要な判断理由だけを残す。
+14. `abstract-plan.html` 要否を判定する。必要なら作成/更新し、不要なら理由を `Next Action Contract` に残す。
+15. Checkpoint B(代行判断の開示)を行う。質問の有無にかかわらず実施し、3 テスト通過の判断が残っていれば質問し、Decision Log(空なら「代行した material 判断なし」)を提示する。方向が覆ったら影響 section を書き直し、該当 reviewer を再実行して closure を満たしてから handoff する。
+16. `Next Action Contract` と `Implementation Handoff` で終える。
 
 ## Required References
 
-常に読むのは次の 5 つ:
+常に読むのは次の 6 つ:
 
 - `references/source-of-truth.md`: 判断の優先順位。
 - `references/planning-process.md`: 計画ループ、freshness、route selection。
 - `references/artifact-lifecycle.md`: 成果物の置き場所、active plan、archive、session handoff。
 - `references/output-contracts.md`: `current.md`、明示 plan、`abstract-plan.html` の成果物契約と `Next Action Contract` の正本。
 - `references/review-rubric.md`: P0/P1/P2、reviewer roles、改善ループ。
+- `references/ask-user.md`: Decision Interview の正本。通過テスト、checkpoint、Decision Log。
 
 残りは `references/reference-routing.md` で依頼内容から選ぶ。全 reference の一覧と用途もその file にある。
 
