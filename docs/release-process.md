@@ -1,6 +1,6 @@
 # Release Process
 
-社内配布前に、以下を確認する。
+配布前に、以下を確認する。
 
 この手順は `logical-fabrics/skills` marketplace 全体の release process です。現在の例は `implementation-workflow` ですが、plugin が増えた場合は変更対象 plugin ごとに同じ checks を行います。
 
@@ -94,7 +94,7 @@ model routing の能力、価格、availability、retention、effort は vendor 
 
 ## 6. Tagging
 
-社内配布する版は tag を打つ。
+配布する版は tag を打つ。
 
 ```bash
 git tag vX.Y.Z

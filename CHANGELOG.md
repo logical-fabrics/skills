@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1
+
+- Corrected the `homepage` and `repository` URLs in both plugin manifests from `logical-fabrics/lf-skills` to `logical-fabrics/skills`, which is the actual remote. The old URLs did not resolve.
+- Dropped the "internal" / 「社内」 framing from the marketplace description, README summary, and release process, in preparation for making the repository public. No behavioral change to any skill, reference, hook, or agent.
+- Migration: none. Update the installed plugin and restart the host at your convenience.
+
 ## 0.5.0
 
 - Added a Retrospective mode to `learning-curator`. Until now the only entry point was Incident mode: a single correction, surfaced either by the user saying 「再発防止して」 or by the UserPromptSubmit regex hook firing on that turn. Real corrections are often short (「違う」) or silent (the user just edits the file back), so the prompt-time regex rarely fires and most of a session's learnings were never captured.

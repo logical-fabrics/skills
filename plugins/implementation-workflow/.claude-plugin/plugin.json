@@ -2,13 +2,13 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "implementation-workflow",
   "displayName": "Implementation Workflow",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Japanese implementation planning, auditing, execution, and correction-learning workflow with curated persistent guidance shared with Codex.",
   "author": {
     "name": "Logical Fabrics"
   },
-  "homepage": "https://github.com/logical-fabrics/lf-skills",
-  "repository": "https://github.com/logical-fabrics/lf-skills",
+  "homepage": "https://github.com/logical-fabrics/skills",
+  "repository": "https://github.com/logical-fabrics/skills",
   "license": "Proprietary",
   "keywords": [
     "implementation-plan",

@@ -1,12 +1,12 @@
 {
   "name": "implementation-workflow",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Japanese implementation planning, auditing, execution, and correction-learning workflow for Codex and Claude Code, with curated persistent guidance and deterministic guardrails.",
   "author": {
     "name": "Logical Fabrics"
   },
-  "homepage": "https://github.com/logical-fabrics/lf-skills",
-  "repository": "https://github.com/logical-fabrics/lf-skills",
+  "homepage": "https://github.com/logical-fabrics/skills",
+  "repository": "https://github.com/logical-fabrics/skills",
   "license": "Proprietary",
   "keywords": [
     "implementation-plan",

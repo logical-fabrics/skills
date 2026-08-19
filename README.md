@@ -4,7 +4,7 @@ Logical Fabrics のエンジニア向けに配布する Codex / Claude Code 共�
 
 ## Summary
 
-このリポジトリは、Logical Fabrics のエンジニアが Codex と Claude Code で共通の agent plugin / skill を使うための社内 marketplace です。
+このリポジトリは、Logical Fabrics が公開している、Codex と Claude Code で共通の agent plugin / skill を使うための marketplace です。
 
 リポジトリ名は `logical-fabrics/skills` です。複数の plugin を同じリポジトリで配布できる前提で、共通の skill body、host 固有 manifest、導入手順、release checks を管理します。
 

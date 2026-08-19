@@ -1,6 +1,6 @@
 {
   "name": "lf-skills",
-  "description": "Logical Fabrics internal engineering workflow plugins for Codex and Claude Code.",
+  "description": "Logical Fabrics engineering workflow plugins for Codex and Claude Code.",
   "owner": {
     "name": "Logical Fabrics"
   },
