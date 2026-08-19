@@ -1,6 +1,6 @@
 {
   "name": "implementation-workflow",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Japanese implementation planning, auditing, execution, and correction-learning workflow for Codex and Claude Code, with curated persistent guidance and deterministic guardrails.",
   "author": {
     "name": "Logical Fabrics"
@@ -37,6 +37,7 @@
       "この implementation-plan.md を実装して",
       "この計画をレビューして改善して",
       "今の訂正、再発防止して",
+      "retro",
       "同じ間違いを繰り返さないよう、適切な AGENTS.md、skill、hook に学びを残して",
       "この画面の UI/UX を ui-ux.md の rubric に沿って audit して",
       "判断材料と CTA、操作後の結果、通知、戻せるかまで含めて UI 計画を作って"

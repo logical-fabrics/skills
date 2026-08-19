@@ -49,6 +49,17 @@ Guidance delta では:
 - raw transcript、secret、personal data を含まないか。
 - 新しい skill / hook / test の discovery と構造 validation が通るか。
 
+## Retrospective sweep checks
+
+Retrospective mode では追加で確認する:
+
+- 各候補が in-session の human correction、accepted feedback、deterministic failure のいずれかに紐づくか。agent の自己反省だけの候補が混ざっていないか。
+- transcript file / session log を path から読んでいないか。
+- 候補提示 → user 選択 → 書き込み、の順序を守っているか。
+- 上限で切り捨てた候補の件数を報告しているか。
+- 一度の sweep で deterministic guardrail を 2 件以上新設していないか。
+- context 圧縮で失われた範囲を、推測で候補化していないか。
+
 ## Behavior replay
 
 重要な learning は、可能なら二つの fixture で検証する:
@@ -68,3 +79,4 @@ instruction-only learning は host behavior smoke で確認し、deterministic g
 - validation / behavior replay の結果。
 - prose-only か deterministic enforcement か。
 - residual false-positive / recurrence risk。
+- Retrospective mode では、提示した候補数、選択された数、切り捨てた数。

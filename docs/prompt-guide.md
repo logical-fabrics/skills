@@ -53,7 +53,7 @@ current.md の次を実装して
 
 ## Learn
 
-agent の誤りを直した後、同じ mistake class の再発を減らしたい時に使う。短い推奨 trigger は `今の訂正、再発防止して`。通常の訂正表現は UserPromptSubmit hook が候補として検知し、`learning-curator` の判断を同じ turn に追加する。`再発防止して`、`覚えて`、`次から`、`今後は`、`二度と`、`AGENTS.md に追記` のような明示的 durable intent があり、final response に learning outcome がない場合だけ、Stop hook が一度だけ continuation を要求する。
+agent の誤りを直した後、同じ mistake class の再発を減らしたい時に使う。入口は 2 つある。直前の訂正 1 件を扱う Incident mode の短い推奨 trigger は `今の訂正、再発防止して`。session を遡って複数の候補を洗い出す Retrospective mode は `retro` の一語で呼べる。長い形なら `このセッションで直したことを振り返って、残す価値のある学びを候補として出して` のように依頼する。Retrospective mode では候補一覧が提示され、選んだものだけが保存される。通常の訂正表現は UserPromptSubmit hook が候補として検知し、`learning-curator` の判断を同じ turn に追加する。`再発防止して`、`覚えて`、`次から`、`今後は`、`二度と`、`AGENTS.md に追記` のような明示的 durable intent があり、final response に learning outcome がない場合だけ、Stop hook が一度だけ continuation を要求する。
 
 例:
 
@@ -69,6 +69,14 @@ agent の誤りを直した後、同じ mistake class の再発を減らした�
 私が agent の変更を revert して正しく直した。diff と repo の source of truth を確認し、一般化できる部分だけ学びにして。
 ```
 
+```text
+retro
+```
+
+```text
+このセッションで直したことを振り返って、残す価値のある学びを候補として出して。保存先と operation も添えて。
+```
+
 期待する動き:
 
 - current task の誤りを先に直す。
@@ -77,6 +85,7 @@ agent の誤りを直した後、同じ mistake class の再発を減らした�
 - always-on rule は canonical `AGENTS.md` / `CLAUDE.md`、multi-step workflow は skill、machine-checkable な危険 behavior は hook / test / linter へ置く。
 - Codex の generated memory state は直接編集せず、host-native memory を mandatory team rule の唯一の保存先にしない。
 - raw prompt や transcript を永続化しない。
+- Retrospective mode では、候補は context に残る会話、git state、accepted review だけから作り、transcript file は読まない。候補を提示して選択を得るまで書き込まない。
 - 最後に `Learning outcome: ...` で変更先または NOOP 理由を報告する。
 
 通常の first-time bug fix、単発の要件変更、仮定の議論、引用文は learning trigger にしない。曖昧な最初の correction は自動保存せず、再発・accepted review・検証可能な高リスク invariant、または明示的 durable intent がある時に昇格する。

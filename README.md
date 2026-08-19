@@ -47,6 +47,10 @@ docs/implementation/current.md の次の slice を実装して、検証までや
 今の訂正を次からも守れるように、適切な AGENTS.md、skill、hook のどこへ残すか判断して反映して
 ```
 
+```text
+retro
+```
+
 詳しい使い方は [docs/prompt-guide.md](docs/prompt-guide.md) を参照してください。
 
 Design priorities:

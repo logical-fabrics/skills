@@ -24,6 +24,16 @@ Claude Code 公式 docs は、同じ mistake の二度目、code review で判�
 
 Adoption: correction trigger、false-positive examples、warn/context と block の分離、mandatory behavior は hook / test へ。
 
+### On-demand retrospective capture
+
+Hookify の `/hookify` は引数なしで起動すると conversation-analyzer agent が直近の会話を遡り、correction / frustration / 繰り返しを候補として構造化し、severity と regex 案を返す。作成するかどうかは user が選ぶ。Cursor の `/Generate Cursor Rules` も同様に、会話からルールを生成する入口を user 起動の command として持つ。いずれも prompt 時点の pattern match を主 trigger にしていない。
+
+- [Hookify README](https://github.com/anthropics/claude-code/blob/main/plugins/hookify/README.md)
+- [Cursor changelog 0.49 - Rules generation](https://cursor.com/changelog/0-49)
+- [Cursor docs - Rules](https://cursor.com/docs/context/rules)
+
+Adoption: user 起動の retrospective sweep を第一の入口にし、候補の提示と選択を書き込みの前提にする。prompt regex hook は主 trigger ではなく低精度の routing hint として残す。Difference: 候補生成に会話を使う場合も transcript file は読まず、context に残る会話と deterministic state に限定する。
+
 ### OpenHands agent-memory
 
 OpenHands の `agent-memory` skill は repository-specific knowledge を `AGENTS.md` に保存し、issue-specific information を避け、保存項目を user に確認する。

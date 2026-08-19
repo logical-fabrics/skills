@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0
+
+- Added a Retrospective mode to `learning-curator`. Until now the only entry point was Incident mode: a single correction, surfaced either by the user saying 「再発防止して」 or by the UserPromptSubmit regex hook firing on that turn. Real corrections are often short (「違う」) or silent (the user just edits the file back), so the prompt-time regex rarely fires and most of a session's learnings were never captured.
+- The new mode is user-invoked and retrospective. The short trigger is a single word, `retro`; the long form 「このセッションで直したことを振り返って、残す価値のある学びを候補として出して」 works too. It sweeps the session, groups items by error class, applies the existing promotion gate per candidate, presents at most five ranked candidates as a table, and writes only what the user selects. This matches how Anthropic's Hookify (`/hookify` with no arguments) and Cursor's `/Generate Cursor Rules` capture learnings — neither uses prompt-time pattern matching as its primary trigger.
+- Added `skills/learning-curator/references/retrospective-sweep.md` as the canonical procedure, with an explicit evidence boundary: candidates may come from the conversation still in context, deterministic state (git diff, revert, test/CI failure), and accepted review comments — never from transcript files or session logs on disk, and never from agent self-reflection alone. Ranges lost to context compaction are reported, not guessed at.
+- A retrospective sweep may create at most one new deterministic guardrail per run, and the user's invocation counts as batch-level durable intent only; each candidate still requires selection before it is written.
+- `evaluation.md` gained a `Retrospective sweep checks` section and a closure-evidence line for presented / selected / truncated candidate counts. `methodology.md` gained an `On-demand retrospective capture` entry citing Hookify and Cursor as the prior art for this mode.
+- Scope: `learning-curator` skill and its references only. The detection hooks (`user-prompt-learning.mjs`, `stop-learning-gate.mjs`) are unchanged; the prompt regex remains a low-precision routing hint and is explicitly no longer treated as the primary trigger. Known limitation: Incident mode still depends on that regex, so short or silent corrections continue to go undetected unless the user runs a sweep.
+- Migration: update the installed plugin and restart the host. No changes to existing prompts or artifacts.
+
 ## 0.4.0
 
 - Rewrote the planner's `ask-user.md` from a last-resort AskUser rule into the canonical `Decision Interview` reference. Question volume is now controlled by three quality tests (Ownership, Divergence, Materiality) instead of frequency limits: only decisions that pass all three become questions, and everything else is decided autonomously.
