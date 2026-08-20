@@ -31,9 +31,10 @@ model は agent の肩書きではなく、その task の判断難度、scope�
 
 ## Claude 5 世代の委任と prompt 前提
 
-Claude Opus 5 世代は前世代より subagent へ委任しやすい。この plugin の flat orchestration 既定は、コスト削減のためではなく、この委任傾向に対する guardrail である。
+Claude Opus 5 世代は前世代より subagent へ委任しやすい。worker の主目的は、探索、長い log、試行錯誤、独立 workstream の詳細を main context から隔離することであり、agent 数を増やすことではない。
 
-- 委任してよい場面を明示する。独立した workstream、独立した read-only review / verification、親では分解できない bounded な実装に限る。「重そうだから」を委任理由にしない。
+- `review-and-parallelism.md` の Delegation Value Test を spawn 前に行う。期待する context benefit が handoff / coordination / integration overhead を有意に上回る場合だけ委任する。
+- 独立 workstream、広い探索、長い debugging / verification loop、独立した read-only review は委任価値が高い。必要 context がすでに main に揃った小さく coherent な実装は、複数ファイルでも main が直接進めてよい。
 - 同時に走らせる worker 数の上限を決めてから fan-out する。上限は host / workspace / repo の cap を正とし、plugin 側で固定値を上書きしない。
 - narrow な task では scope を明示的に制約する。Opus 5 世代は task scope を自分で広げやすい。
 - 委任 prompt にも lane の rubric にも、「作業後に自己検証せよ」「self-check せよ」「diff を自分でレビューせよ」といった一般的な自己検証指示を入れない。Opus 5 世代は言われなくても自己検証し、指示を残すと over-verification になる。
@@ -80,20 +81,31 @@ Claude 側の起点:
 - Luna `xhigh` で長い context、複雑な debugging、継続的な自己修正が必要になったら Terra `xhigh` へ上げる。未知の root cause、scope 外判断、高リスク判断が必要になったら Sol `xhigh` へ戻す。Claude Code の Haiku は Sonnet 5 へ戻し、Sonnet 5 でも判断が重くなったら Opus 5 へ、単一の sitting を超える長時間 investigation / architecture 判断になったら Fable 5 へ上げる。
 - Claude Fable 5 は adaptive thinking が常時有効で、30-day data retention が必要。zero-data-retention や組織 policy と衝突する repo / data を自動で送らず、許可された model tier を選ぶ。Opus 5 / Sonnet 5 はこの retention 制約を持たないため、retention 制約下の default escalation 先は Fable 5 ではなく Opus 5 にする。
 
-## Delegation Prompt Contract
+## Mandatory Spawn-time Selection Contract
 
-外部 agent / subagent の model を指定できる host では、委任 prompt または agent config に最低限以下を含める:
+worker を起動するたび、main はまず task shape、context、失敗コスト、read-only / implementation / review role を分類し、この file の routing table から model tier と effort を選ぶ。選べる値を inherited / default に任せない。指定した pair、選択理由、fallback、selection-unavailable は assignment または handoff に短く残す。
 
-- model ID または model tier。
-- effort / reasoning level（host が対応する場合）。
-- optimization priority（`quality` / `balanced` / `throughput`）と retry cost。
-- 同一 model 内の effort escalation と、上位 model へ返す条件。
-- worker role と accepted slice。
-- read / write scope と禁止操作。
-- acceptance criteria と verification command。
-- escalation condition と返却形式。
+### Codex
 
-model を指定できない host では、task を tier 相当の難度まで狭め、重要な場合だけ選択不能だったことを報告する。retired model や暗黙 default への fallback を避けるため、指定可能なのに model / effort を省略しない。
+- applicable な `AGENTS.md` / skill instruction が delegation を要求できる。main は requirements、scope / risk / model / effort 判断、worker steering、diff / evidence acceptance、final output に集中する。
+- Codex の custom agent config の field は `model` と `model_reasoning_effort` である。現在の worker spawn interface は `model` と `reasoning_effort` を受け付け、明示した値は `[agents]` defaults と parent の値を override する。明示 override は full-history fork では使えないため、`fork_turns: "none"` または bounded な recent-turn count を選び、assignment に必要な plan、scope、acceptance criteria、禁止操作、relevant evidence をコピーする。
+- full history が不可欠なら、明示 pair を指定したと主張しない。inherited model / reasoning pair を `selection-unavailable` として報告し、理由と未コピー context を返却する。non-full-history fork を使える全 Codex worker spawn では、task shape を分類してから両方を明示して渡し、暗黙の inherit / default に任せない。
+- Codex worker の実行前に、選んだ model と reasoning effort が current host / plan / workspace で選択可能か確認する。要求 pair が使えなければ、同じ routing role を満たす選択可能な pair を選び、requested pair、chosen fallback、理由を返却する。値を指定可能なのに省略して fallback させない。
+
+### Claude Code
+
+- plugin / custom agent definition の frontmatter は `model` と `effort` を持てる。bundled definition は read-only diagnostic / accepted-slice implementation の両 mode を持つ `implementation-worker` が Sonnet / `high`、`adversarial-reviewer` が Opus / `medium`、`verification-worker` が Haiku で effort なし（Haiku 4.5 は effort 非対応）である。
+- 通常の Agent invocation は invocation ごとの model override を受け付けるが、通常の Agent tool には invocation ごとの effort 指定がない。effort は agent frontmatter または session から来るため、通常の Agent 呼び出しに dynamic effort を指定したと誤って報告しない。
+- Agent SDK または `--agents` の runtime `AgentDefinition` が使える場合は、task shape ごとに `model` と `effort` の両方を動的に設定する。使えない場合は、task に合う frontmatter effort を持つ bundled agent definition を選び、互換性がある時だけ model を invocation ごとに override する。該当 definition / session effort がない場合は、選択不能と選んだ fallback を report する。
+
+委任 assignment には最低限以下を含める:
+
+- 選択した model ID / tier と effort / reasoning level、選択理由、optimization priority（`quality` / `balanced` / `throughput`）と retry cost。
+- worker role と accepted slice、read / write scope、禁止操作。
+- acceptance criteria、verification command、同一 tier 内で effort を上げる条件、上位 tier へ返す条件。
+- escalation condition、返却形式、fallback または selection-unavailable の報告要件。
+
+model または effort を選べない host / interface では、task を選べる tier 相当まで狭めるだけで黙って暗黙 default にしない。host 機構により dynamic selection ができないこと、実際に適用された definition / session setting、未解決の制約を返却する。
 
 ## Primary Sources
 

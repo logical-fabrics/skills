@@ -4,6 +4,9 @@
 - git worktree を新規作成したら、.gitignore された自動生成ファイル（型定義、ルートツリー生成物など）や worktree ローカルの DB state を再生成するステップを踏む。忘れると検証（tsc / e2e）が失敗して初めて発覚する。
 - 既存の命名、format、test、UI pattern を読む。
 - 最小の coherent slice を決める。
+- accepted slice の詳細を読み込む前に、`review-and-parallelism.md` の Delegation Value Test で context benefit と handoff / coordination / integration overhead を比較する。
+- context benefit が有意に大きい場合は、main が詳細 context を取り込む前に implementation worker へ委任する。main は source-of-truth、scope / risk / model / effort、assignment、diff / evidence acceptance、active-plan / handoff status を担当する。
+- overhead が context benefit 以上なら main が直接編集と deterministic verification を行う。小さく coherent で context がすでに揃った変更を、ファイル数や形式的な role 分離だけを理由に委任しない。
 - 編集前に影響範囲を確認する。
 - 変更後は近いテストから走らせる。
 - format / lint の post-edit hook が利用できる repo では、編集後に Biome などの高速で局所的な整形・lint を走らせる。自動修正後は差分を確認する。

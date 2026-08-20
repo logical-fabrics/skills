@@ -80,6 +80,11 @@ model routing の能力、価格、availability、retention、effort は vendor 
 - audit は不要なファイルを増やさず、必要時だけ improvement backlog へ接続する。
 - executor は stale plan を検出できる。
 - executor は repo / docs / 実行確認で解ける recoverable stale を自己修復して、accepted slice を続行できる。
+- 広い repo 探索、大量 log、長い debugging / verification loop の fixture は、main が詳細を読み込む前に `implementation-worker` の read-only `diagnostic` mode へ委任し、短い結論と evidence だけを統合する。
+- 必要 context がすでに揃った小さく coherent な fixture は、複数ファイルでも handoff / coordination / integration overhead が context benefit 以上なら main が直接実装する。専用の `micro-task exception` 宣言を要求しない。
+- low / medium / high risk は delegation 判断と分離され、medium / high risk では implementation owner にかかわらず必要な独立 review / verification が入る。
+- worker が利用できない fixture は context 収支と scope を再評価し、安全に main で扱える場合は続行し、判断品質、権限、scope を損なう場合だけ blocked / AskUser になる。
+- 独立 workstream がない fixture を agent 数のためだけに並列化しない。
 - audit / plan / execute は `Next Action Contract` で次 lane、人間判断の要否、`/goal` 推奨有無、推奨 prompt を返す。
 - 軽微な UI copy / style fixture では full E2E を要求せず、responsive fixture では mobile / desktop screenshot、route / auth / persistence fixture では targeted E2E、release fixture では full gate が plan に入る。
 

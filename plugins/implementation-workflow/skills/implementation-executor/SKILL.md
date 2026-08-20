@@ -9,11 +9,19 @@ description: Execute an existing Japanese implementation plan safely and increme
 
 ## Capability Boundary
 
-Allowed:
-- 実装計画、現在の repo、docs、schema、routes、UI、tests、package、設定を読む。
-- accepted scope に必要なファイルを編集する。
-- accepted scope と risk に関係する local の lint、typecheck、test、build、targeted E2E、UI 検証を実行する。full E2E は repo / user / release gate または高リスク変更で必要な場合に限る。
-- plan が古い場合、実装前に差分と判断点を明示する。
+メインエージェントの第一責務は、実装全体の source of truth、判断、統合を保持しつつ、探索、長い log、試行錯誤、独立 workstream の大量 context を必要に応じて worker へ隔離し、main context を温存することである。委任自体は目的ではない。
+
+- 実装計画、現在の repo、docs、schema、routes、UI、tests、package、設定を読み、plan の古さと判断点を明示する。
+- accepted slice の scope / risk と、委任による context 節約が handoff / coordination / integration overhead を上回るかを判断する。
+- 委任する場合は model / effort を決め、worker を割り当て、必要時に方向修正する。
+- worker の diff、findings、verification evidence を読み、accept / reject / escalation を判断する。
+- active plan と handoff の status、completed、next action、verification record を更新する。
+
+### Direct implementation
+
+`references/review-and-parallelism.md` の Delegation Value Test で、worker へ渡すための説明、context の複製、起動、調整、競合回避、結果統合の overhead が、main から隔離できる context 量と集中維持の効果以上なら、メインエージェントが直接実装してよい。小さく coherent な作業、必要 context がすでに main に揃っている作業、期待 diff と検証が明確な作業は、ファイル数だけを理由に委任しない。専用の `micro-task exception` 宣言や新規 artifact は不要である。
+
+一方、広い repo 探索、大量 log、長い debugging / test loop、複数の独立 workstream など、worker が詳細を保持して短い結論と evidence を返せる作業は、main が詳細を読み込む前に委任する。local lint、typecheck、test、build、targeted E2E、UI verification は context 収支、risk、受入条件に応じて main、implementation worker、または独立 verifier に割り当てる。full E2E は repo / user / release gate または高リスク変更で必要な場合に限る。
 
 Disallowed unless explicitly requested:
 - production deploy と、production / billing / auth provider / cloud resource / production database / secret の変更。
@@ -31,9 +39,9 @@ Disallowed unless explicitly requested:
 - ユーザーが plan ファイルを明示した場合、その plan を今回の source of truth とする。継続運用が必要な場合だけ `docs/implementation/current.md` への統合を提案する。
 - ユーザーや他エージェントの未コミット変更を戻さない。
 - 実装は最小の coherent slice にする。
-- `references/review-and-parallelism.md` に従って low / medium / high risk を選び、必要な role だけ分ける。low-risk の小さく可逆な変更はメインエージェントが直接実装してよい。medium / high risk では implementation と独立 review を分け、高リスク時だけ domain reviewer / verifier を追加する。
-- orchestration の既定形は flat な main → leaf workers とする。host の concurrency / depth cap を尊重し、Codex `ultra` または Claude Code `ultracode` / dynamic workflow と manual fan-out を同じ workstream に重ねない。
-- model / effort / escalation を選択できる host では `references/model-routing.md` を canonical policy とする。ここでは再掲しない。
+- `references/review-and-parallelism.md` に従って Delegation Value Test と low / medium / high risk 判定を分けて行う。context 収支は implementation owner を決め、risk は独立 reviewer / verifier の強さを決める。
+- 委任する場合の既定形は flat な main → leaf workers とする。並列化は独立 workstream がある場合だけにし、host の concurrency / depth cap を尊重する。Codex `ultra` または Claude Code `ultracode` / dynamic workflow と manual fan-out を同じ workstream に重ねない。
+- model / effort / escalation を選択できる host では `references/model-routing.md` を canonical policy とする。Codex の明示的な `model` / `reasoning_effort` 選択には fork 制約があるため、context の引き渡しと selection-unavailable 報告を含めて同 reference と `host-adapters.md` に従う。Claude Code の動的 effort 選択にも host 固有の制約がある。
 - 既存 stack、命名、format、test、UI pattern を優先する。
 - 軽微で可逆な修正は、計画成果物を増やさず、変更内容と検証を簡潔に報告する。
 - UI/UX を最上位価値にする。ただし過剰設計を避ける。
@@ -62,9 +70,9 @@ Execute lane は tool call が多く長時間になるため、報告のリズ�
 2. `references/plan-readiness.md` で freshness check を行う。
 3. `references/artifact-lifecycle.md` で active plan と session handoff の更新方針を確認する。
 4. 次の実装 slice を狭く決める。
-5. `references/review-and-parallelism.md` と `references/model-routing.md` で orchestration / delegation plan、model tier、effort、escalation 条件を決める。
+5. `references/review-and-parallelism.md` で Delegation Value Test と risk 判定を行う。委任する場合だけ `references/model-routing.md` で model tier、effort、escalation 条件を決める。
 6. 現在の code path、tests、UI、schema、config を確認する。
-7. `references/execution-process.md` に従って実装する。risk に応じて直接実装または worker 委任を選び、メインエージェントは統合と acceptance 判断を担う。
+7. `references/execution-process.md` と canonical delegation contract に従い、main または worker が編集と実装 command を実行する。メインエージェントは常に統合と acceptance 判断を担う。
 8. 変更領域に応じて relevant references を読む。
 9. `references/review-and-parallelism.md` に従って実装レビューを行う。
 10. `references/testing-verification.md` に従って検証する。

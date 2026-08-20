@@ -2,21 +2,54 @@
 
 ## Main Agent Role
 
-メインエージェントは implementation orchestrator であり、accepted slice の risk と規模に応じて自分で実装するか worker へ委任する。責務は以下:
+メインエージェントは implementation orchestrator であり、第一に守る資源は main context である。worker は探索、長い log、試行錯誤、独立 workstream の詳細を別 context に隔離し、main が短い結果と evidence だけを統合するために使う。委任件数や並列数そのものを成果にしない。責務は以下:
 
 - plan / repo / docs の source-of-truth 確認。
-- accepted slice の risk 判定、分割、worker assignment。
+- accepted slice の context 収支、risk、分割、implementation owner の判断。
+- 委任する場合の worker assignment、model / effort 選択、方向修正。
 - worker が返した patch、findings、verification の統合判断。
 - conflicting edits、scope creep、stale plan、AskUser / blocked 判定。
 - acceptance evidence の完了確認、final response、handoff 更新。
 
-メインエージェントが直接実装してよい例:
+リスクは implementation owner ではなく、独立 review / verification の強さを決める。secrets、destructive operation、production 操作などの停止判断は常にメインが所有する。
 
-- typo、copy、1 つの guard、1 つの設定値など、小さく可逆な変更。
-- low-risk で scope と verification が明確な単一 slice。
-- subagent / worker tool が host にない場合。
-- worker 起動、handoff、統合の overhead が実装本体より明らかに大きい場合。
-- secrets、destructive operation、production 操作など、委任せずメインエージェントが停止判断を保持すべき場合。
+<!-- executor-delegation-contract:start -->
+```json
+{
+  "version": 2,
+  "primary_objective": "preserve-main-context",
+  "delegate_when": "expected-context-savings-exceed-overhead",
+  "main_direct_when": "overhead-meets-or-exceeds-context-savings",
+  "risk_controls": "independent-review-and-verification",
+  "parallelize_when": "independent-workstreams",
+  "worker_unavailable": "reassess-context-benefit-and-scope"
+}
+```
+<!-- executor-delegation-contract:end -->
+
+この JSON object は executor delegation policy の machine-checkable な不変条件の正本であり、以下の Delegation Value Test が判断手順の正本である。`SKILL.md` や利用者向け docs は結論を短く要約してよいが、別の threshold、例外 gate、implementation owner の既定値を定義しない。
+
+### Delegation Value Test
+
+accepted slice の詳細を main が読み込む前に、次を比較する。
+
+**Context benefit:**
+
+- main から隔離できる repo 探索、log、test output、debugging history、候補比較の量。
+- 独立 workstream を別 context で完結させ、短い結論、diff、evidence だけを返せるか。
+- 長い作業中も main が source of truth、ユーザー判断、他 slice の統合に集中できるか。
+
+**Delegation overhead:**
+
+- assignment のために複製する plan、制約、既知 context の量。
+- spawn latency、方向修正、shared-file conflict、結果統合、再検証の負担。
+- main がすでに持っている context を worker に再説明するだけにならないか。
+
+期待する context benefit が overhead を**有意に上回る時だけ**委任する。同程度、判断が拮抗、または overhead の方が大きい場合は main が直接実装する。task の小ささ、ファイル数、low risk は参考信号であって単独の gate ではない。必要 context がすでに main に揃い、scope、expected diff、verification が明確な小さく coherent な変更は、複数ファイルでも main が直接実装してよい。
+
+逆に、広い探索、大量 log、長い debugging / verification loop、独立 workstream は、main がその詳細を先に読み込んでから形式的に委任しない。最小限の assignment を渡して早めに隔離し、worker には短い返却形式を指定する。委任しない判断のための user-visible 宣言や artifact は不要である。
+
+worker が利用できない場合は context 収支と scope を再評価する。main で扱える coherent scope へ安全に絞れる、または overhead が節約量以上なら直接続行できる。大量 context によって判断品質を損なう、権限がない、scope を不当に狭める必要がある場合だけ blocked / AskUser とする。
 
 複数ファイル、UI、schema、migration、外部 API、認証、課金、infra、E2E、性能、security が絡むだけで機械的に agent 数を増やさない。changed behavior、失敗コスト、独立 workstream の有無で決める。
 
@@ -26,19 +59,19 @@ slice 開始時に low / medium / high のいずれかを選び、理由を作�
 
 | Risk | 目安 | 必要な実行・review role |
 | --- | --- | --- |
-| Low | copy / docs / isolated config、機械的で可逆、決定的 check がある | main または implementation worker。独立 reviewer は任意。relevant deterministic gate は必須で、closure 前に diff と acceptance evidence を確認する |
-| Medium | 通常の複数ファイル変更、共有ロジック、ユーザー可視 behavior、局所 API / state 変更 | implementation role と独立 review role を分ける。verification は review role と兼任可能だが、acceptance evidence を独立に確認する |
-| High | auth、billing、migration、data loss、security、production / infra、cross-slice architecture、広い UX / persistence、収束しない P0/P1 | implementation と独立 review を分け、必要な domain（security / schema / UX 等）だけ追加する。verification role を別に立てるのは、acceptance evidence を独立に再現する必要がある場合に限る。高難度の統合判断は Opus 5 `xhigh` / Fable 5 / Sol へ escalation する |
+| Low | copy / docs / isolated config、機械的で可逆、決定的 check がある | Delegation Value Test で main または implementation worker を選ぶ。独立 reviewer は任意。relevant deterministic gate は必須で、closure 前に diff と acceptance evidence を確認する |
+| Medium | 通常の複数ファイル変更、共有ロジック、ユーザー可視 behavior、局所 API / state 変更 | implementation owner は Delegation Value Test で選び、独立 review role を分ける。verification は review role と兼任可能だが、acceptance evidence を独立に確認する |
+| High | auth、billing、migration、data loss、security、production / infra、cross-slice architecture、広い UX / persistence、収束しない P0/P1 | implementation owner にかかわらず独立 review を置き、必要な domain（security / schema / UX 等）だけ追加する。verification role を別に立てるのは、acceptance evidence を独立に再現する必要がある場合に限る。高難度の統合判断は Opus 5 `xhigh` / Fable 5 / Sol へ escalation する |
 
-role は agent 数と同義ではない。low risk に 3 worker を強制せず、medium risk の reviewer が verification evidence も確認できるなら別 verifier を増やさない。high risk でも関係のない reviewer role を全列挙しない。
+role は agent 数と同義ではない。main が implementation と orchestration を兼ねる場合もある。medium risk の reviewer が verification evidence も確認できるなら別 verifier を増やさない。high risk でも関係のない reviewer role を全列挙しない。
 
-reviewer は worker の自己申告を信用せず、diff、changed behavior、acceptance criteria、実際の verification output を読む。委任プロンプトには `git add` / `git commit` / `git stash` / `git reset` / `git checkout --` / worktree 操作をしないことを明示する。ベースライン比較は `git show HEAD:<path>` か read-only な差分で行う。
+reviewer は implementation owner の自己申告を信用せず、diff、changed behavior、acceptance criteria、実際の verification output を読む。委任する場合の prompt には `git add` / `git commit` / `git stash` / `git reset` / `git checkout --` / worktree 操作をしないことを明示する。ベースライン比較は `git show HEAD:<path>` か read-only な差分で行う。
 
 ## Parallelization Rules
 
-既定形は flat な main → leaf workers とする。並列化するのは独立した workstream または独立した read-only review / verification だけで、依存する task は順番に進める。
+委任する場合の既定形は flat な main → leaf workers とする。並列化するのは独立した workstream または独立した read-only review / verification だけで、依存する task は順番に進める。1 名の worker に順番に任せる場合も delegation であり、並列実行である必要はない。
 
-この既定はコスト都合ではない。Claude Opus 5 世代の main agent は前世代より subagent へ委任しやすく、放置すると必要のない fan-out が増える。委任してよい場面を先に決め、同時に走らせる worker 数の上限を持ってから fan-out する。詳細は `model-routing.md` の委任 guardrail に従う。
+並列化の目的も main context の温存と独立 workstream の待ち時間短縮である。fan-out による assignment、競合、統合の overhead が上回るなら 1 worker または main で順番に進める。詳細は `model-routing.md` の委任 guardrail に従う。
 
 並列化に向く例:
 

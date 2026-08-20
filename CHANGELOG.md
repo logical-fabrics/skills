@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.0
+
+- Made preservation of the main agent's context the executor's primary delegation objective. The executor now delegates only when the expected context savings from isolating exploration, logs, debugging loops, or independent workstreams materially exceed handoff, coordination, and integration overhead.
+- Removed the strict all-gate `micro-task exception`. The main agent may directly implement small coherent work when the needed context is already available or delegation overhead meets or exceeds the context benefit, including clear multi-file edits; no ceremonial pre-edit exception record is required.
+- Separated delegation from risk routing. Context economics select the implementation owner, while medium/high risk still requires the appropriate independent review and verification roles. Parallel execution is reserved for genuinely independent workstreams.
+- Added a read-only `diagnostic` mode to the bundled Claude `implementation-worker`, so broad exploration and log-heavy root-cause work can be isolated before an implementation slice is accepted without creating another agent type.
+- Made Codex worker selection explicit at spawn time when a non-full-history fork is used. `fork_turns: "none"` or a bounded recent-turn count must copy the needed assignment context and can pass `model` plus `reasoning_effort`; when full history is indispensable, the inherited pair is reported as selection-unavailable rather than claimed as explicit selection.
+- Documented the Claude Code asymmetry precisely. Plugin/custom agent frontmatter can set `model` and `effort`, but ordinary Agent invocation can only override model per call; dynamic model-and-effort selection requires an Agent SDK or `--agents` runtime `AgentDefinition`. Otherwise the executor chooses the bundled definition whose frontmatter effort fits the task, and reports a selection limitation when it cannot.
+- Added a deterministic validation guard for the canonical structured executor delegation contract.
+- Migration: update `implementation-workflow` to 0.6.0 and restart Codex or Claude Code. Existing accepted plans do not need rewriting; executor delegation now starts with the context-benefit test instead of mandatory worker ownership.
+- Known limitation: context savings and coordination overhead are judgment calls. The structured contract and behavior smoke cases guard the decision boundary, but hosts do not expose a universal token-cost estimate for delegation.
+
 ## 0.5.1
 
 - Corrected the `homepage` and `repository` URLs in both plugin manifests from `logical-fabrics/lf-skills` to `logical-fabrics/skills`, which is the actual remote. The old URLs did not resolve.

@@ -241,6 +241,49 @@ async function validateReferences(skillDir, skillText) {
   }
 }
 
+const executorDelegationContractPath =
+  "skills/implementation-executor/references/review-and-parallelism.md";
+const executorDelegationContract = {
+  version: 2,
+  primary_objective: "preserve-main-context",
+  delegate_when: "expected-context-savings-exceed-overhead",
+  main_direct_when: "overhead-meets-or-exceeds-context-savings",
+  risk_controls: "independent-review-and-verification",
+  parallelize_when: "independent-workstreams",
+  worker_unavailable: "reassess-context-benefit-and-scope",
+};
+const executorDelegationContractPattern =
+  /<!-- executor-delegation-contract:start -->\s*```json\s*\n([\s\S]*?)\n```\s*<!-- executor-delegation-contract:end -->/;
+async function validateExecutorDelegationPolicy(pluginRoot) {
+  const contractFile = path.join(pluginRoot, executorDelegationContractPath);
+  const match = (await readFile(contractFile, "utf8")).match(
+    executorDelegationContractPattern,
+  );
+  if (!match) {
+    errors.push(
+      `${contractFile}: missing executor delegation contract markers`,
+    );
+  } else {
+    try {
+      const actual = JSON.stringify(
+        Object.entries(JSON.parse(match[1])).sort(),
+      );
+      const expected = JSON.stringify(
+        Object.entries(executorDelegationContract).sort(),
+      );
+      if (actual !== expected) {
+        errors.push(
+          `${contractFile}: executor delegation contract must contain exactly the stable keys and values`,
+        );
+      }
+    } catch (error) {
+      errors.push(
+        `${contractFile}: invalid executor delegation contract JSON: ${error.message}`,
+      );
+    }
+  }
+}
+
 async function validatePlugin(pluginName) {
   const pluginRoot = path.join(pluginsDir, pluginName);
   const codexManifestPath = path.join(
@@ -334,6 +377,10 @@ async function validatePlugin(pluginName) {
     } else {
       validateHookCommands(pluginRoot, hooksPath, hooksConfig.hooks);
     }
+  }
+
+  if (pluginName === "implementation-workflow") {
+    await validateExecutorDelegationPolicy(pluginRoot);
   }
 }
 
