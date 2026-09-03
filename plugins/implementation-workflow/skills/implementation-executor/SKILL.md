@@ -19,7 +19,7 @@ description: Execute an existing Japanese implementation plan safely and increme
 
 ### Direct implementation
 
-`references/review-and-parallelism.md` の Delegation Value Test で、worker へ渡すための説明、context の複製、起動、調整、競合回避、結果統合の overhead が、main から隔離できる context 量と集中維持の効果以上なら、メインエージェントが直接実装してよい。小さく coherent な作業、必要 context がすでに main に揃っている作業、期待 diff と検証が明確な作業は、ファイル数だけを理由に委任しない。専用の `micro-task exception` 宣言や新規 artifact は不要である。
+`references/review-and-parallelism.md` の Delegation Value Test で、worker へ渡すための説明、context の複製、起動、調整、競合回避、結果統合の overhead が、main から隔離できる context 量と集中維持の効果以上なら、メインエージェントが直接実装してよい。小さく coherent な作業、必要 context がすでに main に揃っている作業、期待 diff と検証が明確な作業は、ファイル数だけを理由に委任しない。
 
 一方、広い repo 探索、大量 log、長い debugging / test loop、複数の独立 workstream など、worker が詳細を保持して短い結論と evidence を返せる作業は、main が詳細を読み込む前に委任する。local lint、typecheck、test、build、targeted E2E、UI verification は context 収支、risk、受入条件に応じて main、implementation worker、または独立 verifier に割り当てる。full E2E は repo / user / release gate または高リスク変更で必要な場合に限る。
 

@@ -47,7 +47,7 @@ accepted slice の詳細を main が読み込む前に、次を比較する。
 
 期待する context benefit が overhead を**有意に上回る時だけ**委任する。同程度、判断が拮抗、または overhead の方が大きい場合は main が直接実装する。task の小ささ、ファイル数、low risk は参考信号であって単独の gate ではない。必要 context がすでに main に揃い、scope、expected diff、verification が明確な小さく coherent な変更は、複数ファイルでも main が直接実装してよい。
 
-逆に、広い探索、大量 log、長い debugging / verification loop、独立 workstream は、main がその詳細を先に読み込んでから形式的に委任しない。最小限の assignment を渡して早めに隔離し、worker には短い返却形式を指定する。委任しない判断のための user-visible 宣言や artifact は不要である。
+逆に、広い探索、大量 log、長い debugging / verification loop、独立 workstream は、main がその詳細を先に読み込んでから形式的に委任しない。最小限の assignment を渡して早めに隔離し、worker には短い返却形式を指定する。
 
 worker が利用できない場合は context 収支と scope を再評価する。main で扱える coherent scope へ安全に絞れる、または overhead が節約量以上なら直接続行できる。大量 context によって判断品質を損なう、権限がない、scope を不当に狭める必要がある場合だけ blocked / AskUser とする。
 
@@ -102,7 +102,7 @@ Fan-out 制御:
 - scope 外の P0/P1 は隠さず backlog 化し、今回の完了条件とは分ける。
 - P2 は今回の slice を広げすぎない範囲で修正、受け入れ、延期を記録する。
 - finding 修正後は、その finding と修正で変わった surface に必要な reviewer / check だけを再実行する。無関係な全 reviewer roles を毎回回さない。
-- review loop は固定 10 rounds を目的にしない。同じ原因で 2 回進展がない、evidence が相反する、または risk が上がった場合は model / role / scope を escalation する。安全に解けない判断だけユーザーへ戻す。
+- review loop に固定回数の目標や上限を置かない。同じ原因で 2 回進展がない、evidence が相反する、または risk が上がった場合は model / role / scope を escalation する。安全に解けない判断だけユーザーへ戻す。
 
 完了条件は次の両方:
 

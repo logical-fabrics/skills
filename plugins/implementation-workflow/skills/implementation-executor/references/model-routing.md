@@ -31,21 +31,21 @@ model は agent の肩書きではなく、その task の判断難度、scope�
 
 ## Claude 5 世代の委任と prompt 前提
 
-Claude Opus 5 世代は前世代より subagent へ委任しやすい。worker の主目的は、探索、長い log、試行錯誤、独立 workstream の詳細を main context から隔離することであり、agent 数を増やすことではない。
+Claude Opus 5 世代は subagent への委任に適する。worker の主目的は、探索、長い log、試行錯誤、独立 workstream の詳細を main context から隔離することであり、agent 数を増やすことではない。
 
 - `review-and-parallelism.md` の Delegation Value Test を spawn 前に行う。期待する context benefit が handoff / coordination / integration overhead を有意に上回る場合だけ委任する。
 - 独立 workstream、広い探索、長い debugging / verification loop、独立した read-only review は委任価値が高い。必要 context がすでに main に揃った小さく coherent な実装は、複数ファイルでも main が直接進めてよい。
 - 同時に走らせる worker 数の上限を決めてから fan-out する。上限は host / workspace / repo の cap を正とし、plugin 側で固定値を上書きしない。
-- narrow な task では scope を明示的に制約する。Opus 5 世代は task scope を自分で広げやすい。
+- narrow な task では、やらないことも含めて scope を明示する。明示がないと隣接コードの修正や追加 test へ広がるため。
 - 委任 prompt にも lane の rubric にも、「作業後に自己検証せよ」「self-check せよ」「diff を自分でレビューせよ」といった一般的な自己検証指示を入れない。Opus 5 世代は言われなくても自己検証し、指示を残すと over-verification になる。
 - ただし evidence の質に関する規律は別軸として維持する。worker の自己申告だけで受理しない、CLI の成功メッセージを唯一の根拠にしない、実際の出力を親が読む、closure 前に diff と acceptance evidence を確認する、は削らない。求めるのは「もう一度確認する手順」ではなく「確認した結果の evidence」である。
 - 出力の長さは effort では縮まない。簡潔さが必要なら、prompt で目標の長さや形式を指定する。
-- agentic session 中の実況と最終応答の長さも model の既定に任せない。lane ごとの `SKILL.md` の `Reporting Cadence` に従う。Opus 5 世代は tool call ごとの前置きと訂正の説明が長くなりやすい。
-- ファイルへ書く成果物も前世代より長くなりやすい。plan / report の分量規律は `../../implementation-planner/references/output-contracts.md` と `../../implementation-auditor/references/report-format.md` を正とする。
+- agentic session 中の実況と最終応答は、lane ごとの `SKILL.md` の `Reporting Cadence` に従う。既定の narration 量は model 世代で変わるため、cadence は model 更新時に再調整する。
+- ファイルへ書く成果物の分量は task が必要とする量に合わせる。plan / report の分量規律は `../../implementation-planner/references/output-contracts.md` と `../../implementation-auditor/references/report-format.md` を正とする。
 
 ## Effort Ladder
 
-effort は固定値ではなく、eval で sweep する軸として扱う。前世代の設定をそのまま引き継がず、その workload で品質が保てる下限を測ってから決める。
+effort は固定値ではなく、eval で sweep する軸として扱う。model 更新時は設定を引き継がず、その workload で品質が保てる下限を測ってから決める。
 
 model tier は task の不確実性、context、失敗コストで選ぶ。Codex の code-generating worker は、モデル単価を Luna / Terra で調整し、effort は `xhigh` に固定する。小型 model と低 effort を重ねて品質を二重に下げない。
 
@@ -73,13 +73,14 @@ Claude 側の起点:
 
 ## Host-native Modes And Effort
 
-- GPT-5.6 Sol / Terra / Luna は、2026-07-25 時点で Codex と OpenAI API で利用でき、Codex の対象 model は plan / workspace により異なる。旧 limited preview 前提は使わない。選択不能なら task を止めず、host で選択可能な最新 model から同じ tier の役割を満たす model を選び、重要な fallback だけ handoff に残す。
+- GPT-5.6 Sol / Terra / Luna は、2026-07-25 時点で Codex と OpenAI API で利用でき、Codex の対象 model は plan / workspace により異なる。選択不能なら task を止めず、host で選択可能な最新 model から同じ tier の役割を満たす model を選び、重要な fallback だけ handoff に残す。
 - Codex の既定 Power は Sol `medium`。一般 main は必要に応じて `high` / `xhigh` へ上げ、code-generating worker は Luna / Terra `xhigh` を使う。Codex で選択できない `max` を要求しない。`ultra` は自動 subagents を使う orchestration mode であり、単独 agent の effort の代替と見なさない。
 - Claude Code の dynamic workflow は script が多数の subagent を orchestrate する仕組みで、`ultracode` は `xhigh` effort と自動 workflow orchestration を組み合わせる session mode である。通常の manual subagent delegation と同義ではない。
 - Codex `ultra` または Claude Code `ultracode` / dynamic workflow を使う場合、同じ workstream に plugin の manual fan-out を重ねない。host-native orchestration に assignment と cap の管理を委ね、main は結果の統合と acceptance evidence の確認に集中する。
 - Claude Opus 5 / Sonnet 5 / Fable 5 の default effort は `high`。plugin agent が明示的に下げるのは、その workload で品質が保てると確認できた場合に限る。Haiku 4.5 は effort parameter に対応しないので、effort 指定ではなく task の絞り込みで制御する。
 - Luna `xhigh` で長い context、複雑な debugging、継続的な自己修正が必要になったら Terra `xhigh` へ上げる。未知の root cause、scope 外判断、高リスク判断が必要になったら Sol `xhigh` へ戻す。Claude Code の Haiku は Sonnet 5 へ戻し、Sonnet 5 でも判断が重くなったら Opus 5 へ、単一の sitting を超える長時間 investigation / architecture 判断になったら Fable 5 へ上げる。
 - Claude Fable 5 は adaptive thinking が常時有効で、30-day data retention が必要。zero-data-retention や組織 policy と衝突する repo / data を自動で送らず、許可された model tier を選ぶ。Opus 5 / Sonnet 5 はこの retention 制約を持たないため、retention 制約下の default escalation 先は Fable 5 ではなく Opus 5 にする。
+- Claude Fable 5.1 (`claude-fable-5-1`) は Fable 5 の後継で、同じ tier・同じ価格。adaptive thinking 常時有効と 30-day retention の制約も同じなので、escalation 先として Fable 5 と同様に扱う。host の `fable` alias がどちらへ解決するかは実行環境で確認する。
 
 ## Mandatory Spawn-time Selection Contract
 

@@ -81,7 +81,7 @@ model routing の能力、価格、availability、retention、effort は vendor 
 - executor は stale plan を検出できる。
 - executor は repo / docs / 実行確認で解ける recoverable stale を自己修復して、accepted slice を続行できる。
 - 広い repo 探索、大量 log、長い debugging / verification loop の fixture は、main が詳細を読み込む前に `implementation-worker` の read-only `diagnostic` mode へ委任し、短い結論と evidence だけを統合する。
-- 必要 context がすでに揃った小さく coherent な fixture は、複数ファイルでも handoff / coordination / integration overhead が context benefit 以上なら main が直接実装する。専用の `micro-task exception` 宣言を要求しない。
+- 必要 context がすでに揃った小さく coherent な fixture は、複数ファイルでも handoff / coordination / integration overhead が context benefit 以上なら main が直接実装する。委任しない判断のための宣言や artifact を要求しない。
 - low / medium / high risk は delegation 判断と分離され、medium / high risk では implementation owner にかかわらず必要な独立 review / verification が入る。
 - worker が利用できない fixture は context 収支と scope を再評価し、安全に main で扱える場合は続行し、判断品質、権限、scope を損なう場合だけ blocked / AskUser になる。
 - 独立 workstream がない fixture を agent 数のためだけに並列化しない。

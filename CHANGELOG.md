@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0
+
+- Ran a prompt audit against the current model generation (Claude Opus 5 main / Fable 5 escalation) and removed dated phrasing. Migration-relative text that referred to removed concepts (`micro-task exception`, the former 10-round review cap, the GPT-5.6 limited-preview period) is now stated as current rules only.
+- Rewrote model-generation trait claims in `model-routing.md` as absolute guidance so they do not invert when the main model changes; the reasons behind scope discipline and reporting cadence are kept.
+- Added Claude Fable 5.1 to the escalation tier as the same-tier successor of Fable 5 with the same always-on thinking and retention constraints.
+- Made `ui-ux.md` the single source for result-centered copy guidance. `ui-implementation.md` and `audit-rubric.md` now reference it instead of carrying a parallel replacement word list that disagreed with the canonical rule.
+- Moved the learning-curator prior-art write-up out of the skill into `docs/learning-curator-methodology.md`; it is background for maintainers, not agent instruction.
+- Bundled `implementation-worker` description now names the Sonnet tier instead of a pinned model version.
+- Migration: update `implementation-workflow` to 0.7.0 and restart Codex or Claude Code. No plan or hook changes are required.
+
 ## 0.6.0
 
 - Made preservation of the main agent's context the executor's primary delegation objective. The executor now delegates only when the expected context savings from isolating exploration, logs, debugging loops, or independent workstreams materially exceed handoff, coordination, and integration overhead.

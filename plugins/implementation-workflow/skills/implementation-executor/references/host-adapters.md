@@ -20,7 +20,7 @@ Codex:
 - custom agent config では `model` と `model_reasoning_effort` を使う。現在の worker spawn interface では `model` と `reasoning_effort` を渡す。明示した spawn values は `[agents]` defaults と parent settings より優先し、値を省略した時だけ inherit / default される。
 - 明示的な model / reasoning override は full-history fork では使えない。`fork_turns: "none"` または bounded な recent-turn count を選び、assignment に必要な plan、scope、acceptance criteria、禁止操作、relevant evidence をコピーする。full history が不可欠なら inherited pair を `selection-unavailable` として報告し、明示選択済みとは扱わない。
 - requested model / effort pair が current plan / workspace で選択不能なら、routing role を保つ選択可能な pair を選び、requested pair、chosen fallback、理由を handoff に残す。non-full-history fork を使える時に選択可能な pair を implicit fallback へ任せない。
-- GPT-5.6 は Codex の対象 plan へ段階 rollout されている。旧 limited preview 前提を使わず、現在の plan / workspace で選択可能な model を使う。存在しない model ID を繰り返し要求しない。
+- GPT-5.6 の availability は Codex の plan / workspace により異なる。現在の plan / workspace で選択可能な model を使い、選択不能な model ID は要求しない。
 - 公開 API evaluation に `max` があっても、Codex で選択できなければ routing 候補にしない。`ultra` は自動 subagents を使う multi-agent orchestration であり、単独 agent の `max` 相当として扱わない。`ultra` を選んだ workstream では manual subagent fan-out を追加せず、host が管理する depth / concurrency cap を尊重する。
 - manual delegation は flat に保つ。active host / workspace / repo の concurrency、depth、rate、workflow size settings を正とし、plugin 側で固定値を仮定しない。
 

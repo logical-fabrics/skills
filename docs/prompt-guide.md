@@ -215,7 +215,7 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 - 古い plan をそのまま信じない。
 - 実装は最小 slice にする。
 - worker の主目的は main context の温存である。accepted slice の詳細を読む前に、隔離できる探索、log、試行錯誤、独立 workstream の context と、assignment、context 複製、起動、調整、競合回避、統合の overhead を比較する。context benefit が有意に大きい場合だけ委任する。
-- overhead が context benefit 以上なら main が直接実装する。必要 context がすでに揃い、scope、expected diff、verification が明確な小さく coherent な作業は、複数ファイルでも無理に委任しない。専用の `micro-task exception` 宣言は不要。正本は `implementation-executor/references/review-and-parallelism.md`。
+- overhead が context benefit 以上なら main が直接実装する。必要 context がすでに揃い、scope、expected diff、verification が明確な小さく coherent な作業は、複数ファイルでも無理に委任しない。正本は `implementation-executor/references/review-and-parallelism.md`。
 - low / medium / high risk は delegation 判断と分離する。risk は独立 review / verification の強さを決める。medium risk は implementation owner と独立 review、high risk は必要な domain review / verification を分けるが、role 数を固定しない。
 - model / effort / escalation は `implementation-executor/references/model-routing.md` に従う。vendor 間で tier を無理に対称化せず、公式情報と host で実際に選択可能な model を正とする。
 - 委任時の orchestration は flat な main → workers を既定にし、並列化は独立 workstream がある場合だけ行う。Codex `xhigh`（単独推論）と `ultra`（自動 subagents）、Claude Code の通常 subagents と `ultracode` / dynamic workflow を区別し、host-native orchestration と manual fan-out を同じ workstream に重ねない。

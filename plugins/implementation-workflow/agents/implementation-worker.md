@@ -1,6 +1,6 @@
 ---
 name: implementation-worker
-description: Main context を温存するための read-only diagnostic、または accepted slice が明確な通常実装を担当する。広い探索、長い log 調査、coherent code change、局所テストを Sonnet 5 へ委任するときに使う
+description: Main context を温存するための read-only diagnostic、または accepted slice が明確な通常実装を担当する。広い探索、長い log 調査、coherent code change、局所テストを Sonnet tier の worker へ委任するときに使う
 model: sonnet
 effort: high
 maxTurns: 30

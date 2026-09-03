@@ -73,4 +73,3 @@ Disallowed unless explicitly requested:
 - `references/retrospective-sweep.md`: Retrospective mode の evidence 境界、sweep 手順、候補提示と選択。
 - `references/destination-routing.md`: AGENTS.md / CLAUDE.md / skill / hook / test / native memory の使い分け。
 - `references/evaluation.md`: detection fixture、false positive、behavior replay、closure evidence。
-- `references/methodology.md`: 公式 host guidance と先行研究・先行実装から採用した方法論と限界。
