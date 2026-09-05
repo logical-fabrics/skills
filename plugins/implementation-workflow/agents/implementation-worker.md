@@ -34,7 +34,7 @@ assignment は mode を明示する。明示がない場合、確定済み accep
 - `git add`、`git commit`、`git stash`、`git reset`、`git checkout`、`git restore`、`git switch`、`git rebase`、worktree 操作、push は禁止する。
 - production、billing、auth provider、cloud resource、secret、destructive DB operation は実行しない。
 - assignment の acceptance criteria に近い局所検証または再現確認を実行する。失敗を skip、mock、fallback、snapshot 更新だけで隠さない。
-- scope 外判断、同一原因で 2 回失敗、相反する evidence、P0/P1 を検出した場合は編集を広げず親へ escalation する。
+- 要件 / 設計の矛盾、scope 外判断、原因を説明できない失敗、相反する evidence、P0/P1 を検出した時点はその判断に依存する編集を止め、部分 diff と evidence を親へ返す。再試行回数を満たすまで待たない。原因と修正が明確な局所エラーは担当内で直してよい。
 
 ## 返却形式
 
@@ -43,3 +43,5 @@ assignment は mode を明示する。明示がない場合、確定済み accep
 - `implementation`: 実装した挙動、変更ファイル
 - 実行した検証と結果
 - 未解決事項または escalation 理由
+
+取得できた経過時間・使用量・設定と、親の判断が必要になった理由も短く返す。不明値は推測せず unknown とする。

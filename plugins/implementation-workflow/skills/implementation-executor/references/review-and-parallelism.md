@@ -2,7 +2,7 @@
 
 ## Main Agent Role
 
-メインエージェントは implementation orchestrator であり、第一に守る資源は main context である。worker は探索、長い log、試行錯誤、独立 workstream の詳細を別 context に隔離し、main が短い結果と evidence だけを統合するために使う。委任件数や並列数そのものを成果にしない。責務は以下:
+メインエージェントは実装者と orchestrator を兼ね、受入品質を維持して完了までの総時間・使用量・手直しを抑える。main context の温存はそのための手段である。worker は探索、長い log、試行錯誤、独立 workstream の詳細を別 context に隔離し、main が短い結果と evidence だけを統合するために使う。委任件数や並列数そのものを成果にしない。責務は以下:
 
 - plan / repo / docs の source-of-truth 確認。
 - accepted slice の context 収支、risk、分割、implementation owner の判断。
@@ -16,8 +16,8 @@
 <!-- executor-delegation-contract:start -->
 ```json
 {
-  "version": 2,
-  "primary_objective": "preserve-main-context",
+  "version": 3,
+  "primary_objective": "accepted-outcome-with-total-cost-awareness",
   "delegate_when": "expected-context-savings-exceed-overhead",
   "main_direct_when": "overhead-meets-or-exceeds-context-savings",
   "risk_controls": "independent-review-and-verification",
@@ -31,7 +31,7 @@
 
 ### Delegation Value Test
 
-accepted slice の詳細を main が読み込む前に、次を比較する。
+main が通常の要件確認と必要な調査を進め、委譲候補が見えた時に次を比較する。routing だけの追加調査はしない。
 
 **Context benefit:**
 
@@ -47,7 +47,7 @@ accepted slice の詳細を main が読み込む前に、次を比較する。
 
 期待する context benefit が overhead を**有意に上回る時だけ**委任する。同程度、判断が拮抗、または overhead の方が大きい場合は main が直接実装する。task の小ささ、ファイル数、low risk は参考信号であって単独の gate ではない。必要 context がすでに main に揃い、scope、expected diff、verification が明確な小さく coherent な変更は、複数ファイルでも main が直接実装してよい。
 
-逆に、広い探索、大量 log、長い debugging / verification loop、独立 workstream は、main がその詳細を先に読み込んでから形式的に委任しない。最小限の assignment を渡して早めに隔離し、worker には短い返却形式を指定する。
+広い探索、大量 log、長い debugging / verification loop、独立 workstream は、調査目的・範囲・返却条件が定まった時点で詳細を隔離できる。main が全詳細を先読みする必要はないが、広い探索という理由だけで委譲や軽量化を強制しない。model の選択、早期返却、結果記録は `model-routing.md` に従う。
 
 worker が利用できない場合は context 収支と scope を再評価する。main で扱える coherent scope へ安全に絞れる、または overhead が節約量以上なら直接続行できる。大量 context によって判断品質を損なう、権限がない、scope を不当に狭める必要がある場合だけ blocked / AskUser とする。
 

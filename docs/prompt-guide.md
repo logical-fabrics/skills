@@ -214,10 +214,10 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 - 最初に plan freshness を確認する。
 - 古い plan をそのまま信じない。
 - 実装は最小 slice にする。
-- worker の主目的は main context の温存である。accepted slice の詳細を読む前に、隔離できる探索、log、試行錯誤、独立 workstream の context と、assignment、context 複製、起動、調整、競合回避、統合の overhead を比較する。context benefit が有意に大きい場合だけ委任する。
+- main が要件理解と実装を進め、明確な委譲候補が見えた時に、隔離できる探索、log、試行錯誤、独立 workstream の context と、assignment、context 複製、起動、調整、競合回避、統合の overhead を比較する。context benefit が有意に大きい場合だけ委任する。
 - overhead が context benefit 以上なら main が直接実装する。必要 context がすでに揃い、scope、expected diff、verification が明確な小さく coherent な作業は、複数ファイルでも無理に委任しない。正本は `implementation-executor/references/review-and-parallelism.md`。
 - low / medium / high risk は delegation 判断と分離する。risk は独立 review / verification の強さを決める。medium risk は implementation owner と独立 review、high risk は必要な domain review / verification を分けるが、role 数を固定しない。
-- model / effort / escalation は `implementation-executor/references/model-routing.md` に従う。既存 main の設定を尊重し、worker は task に合う pair を選ぶ。coding worker の `xhigh` 固定や毎回の override 強制はせず、definition / 継承の実効設定と host の制限を確認する。判断根拠は `docs/model-routing-research.md`。
+- model / effort / escalation は `implementation-executor/references/model-routing.md` に従う。既存 main の設定を尊重し、通常実装を一律に軽量化せず、worker は scope・期待結果・確認方法・早期返却条件に合う pair を選ぶ。結果を既存メモ / handoff または最終報告へ短く残し、次回の参考にする。永続的な policy / 設定変更は提案にとどめる。coding worker の `xhigh` 固定や毎回の override 強制はせず、definition / 継承の実効設定と host の制限を確認する。判断根拠は `docs/model-routing-research.md`。
 - 委任時の orchestration は flat な main → workers を既定にし、並列化は独立 workstream がある場合だけ行う。Codex `xhigh`（単独推論）と `ultra`（自動 subagents）、Claude Code の通常 subagents と `ultracode` / dynamic workflow を区別し、host-native orchestration と manual fan-out を同じ workstream に重ねない。
 - UI 変更は changed behavior と risk に応じて、affected route の browser smoke、responsive screenshot、route / auth / persistence の targeted E2E、release 時の full E2E を使い分ける。
 - UI 検証を実行した場合は、確認した route、viewport、browser/tool、state、未確認 state、残リスクと、価値がある場合だけ screenshot/trace path を報告する。

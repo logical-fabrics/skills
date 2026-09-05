@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.0
+
+- Let the main agent select workers during normal understanding and implementation, retaining coupled or ambiguous features instead of automatically routing ordinary coding to smaller models. Context isolation and model downsizing are separate decisions.
+- Return unexpected design, scope, or unexplained failure decisions to the main agent immediately; preserve partial work instead of repeating the same failed attempt.
+- Record available outcome, time, usage, and rework evidence in existing notes or final reports. Use it as context for later choices; persistent policy and configuration changes remain proposals requiring approval. No telemetry service or automatic benchmark is added.
+- Migration: update to 0.10.0 and restart the host. Existing main settings and host override limits remain respected. Routing is instruction-driven judgment, not a guaranteed optimizer; installed-session behavior and cost improvements require runtime observation.
+
 ## 0.9.0
 
 - Replaced blanket coding-worker xhigh and mandatory spawn override rules with task-based model / effort starting points. Existing main settings are respected; explicit, definition-based, and deliberate inherited selections are valid when they fit the task.

@@ -80,7 +80,7 @@ model routing の能力、価格、availability、retention、effort は vendor 
 - audit は不要なファイルを増やさず、必要時だけ improvement backlog へ接続する。
 - executor は stale plan を検出できる。
 - executor は repo / docs / 実行確認で解ける recoverable stale を自己修復して、accepted slice を続行できる。
-- 広い repo 探索、大量 log、長い debugging / verification loop の fixture は、main が詳細を読み込む前に `implementation-worker` の read-only `diagnostic` mode へ委任し、短い結論と evidence だけを統合する。
+- 広い repo 探索、大量 log、長い debugging / verification loop の fixture は、main が調査目的・範囲・返却条件を定めて委譲の価値を判断する。隔離する場合は未知点に合う model を選び、短い結論と evidence を統合する。Sonnet diagnostic への自動固定はしない。
 - 必要 context がすでに揃った小さく coherent な fixture は、複数ファイルでも handoff / coordination / integration overhead が context benefit 以上なら main が直接実装する。委任しない判断のための宣言や artifact を要求しない。
 - low / medium / high risk は delegation 判断と分離され、medium / high risk では implementation owner にかかわらず必要な独立 review / verification が入る。
 - worker が利用できない fixture は context 収支と scope を再評価し、安全に main で扱える場合は続行し、判断品質、権限、scope を損なう場合だけ blocked / AskUser になる。
@@ -89,6 +89,8 @@ model routing の能力、価格、availability、retention、effort は vendor 
 - 軽微な UI copy / style fixture では full E2E を要求せず、responsive fixture では mobile / desktop screenshot、route / auth / persistence fixture では targeted E2E、release fixture では full gate が plan に入る。
 - model routing 更新では、Astra 未提供時の Sol fallback、Fable 5.1 の host version / alias / retention、API-only parameter と host tool の分離、main / worker effort の整合を公式資料と diff で確認する。価格や model 品質の反復 benchmark は追加しない。
 - task-based routing では、既存 main 設定の維持、明確な編集と複雑な review の effort の区別、適切な継承、override による要求値と実効値の差、必要な read-only reviewer が選択不能な場合を確認する。確認手段が docs / diff なら、モデルを実行した behavior smoke と区別して記録する。
+
+- 自動 routing 更新では、曖昧な feature を main が継続する場合、明確な部分を軽量 worker へ渡す場合、想定外の判断を再試行前に返す場合、usage 不明値、host override、既存記録への保存、永続 policy を自動変更しない境界を docs / diff で確認する。実モデルでの behavior / cost benchmark と区別する。
 
 ## 5. Release notes
 

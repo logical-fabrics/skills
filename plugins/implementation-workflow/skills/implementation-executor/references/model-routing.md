@@ -6,11 +6,13 @@ model は task の不確実性と必要な能力、effort は必要な推論の�
 
 ## Selection Order
 
-1. ユーザーが選んだ main の model / effort、budget、組織 policy を尊重する。この表を理由に実行中 main の設定を変更しない。新規選択を求められた時だけ main の起点を提案する。
-2. `review-and-parallelism.md` の Delegation Value Test を通す。必要 context がすでに main にあり、引き渡しの負担が上回るなら直接進める。risk と独立 review の要否は別に判定する。
-3. scope、未知点、失敗コスト、必要 tool / context から下表の pair を選ぶ。指定がなければ `balanced` とし、品質を受入条件で固定した上で速度とコストを調整する。
-4. host が公開する model、effort、definition、fork、権限の制約を確認する。API の能力と host tool の入力項目を混同しない。
-5. pair を適用するか、適切な既存 definition / 継承設定を意図して使う。要求値だけを実効値と報告しない。結果は diff と acceptance evidence で受理する。
+1. ユーザーが選んだ main の model / effort、budget、組織 policy を尊重する。自動選択は現在の host が許す委譲先と実行設定の範囲で行い、main の設定変更や別 session 起動を強制しない。
+2. main が通常の要件確認・code 調査・実装を進め、その中で scope、未知点、受入条件を把握する。ユーザーに毎回 model 選択を求めず、routing 専用の追加調査や事前 benchmark は行わない。
+3. `review-and-parallelism.md` の Delegation Value Test を通す。曖昧さや複数箇所の結合が残る feature は main が実装まで持ってよい。通常実装という分類だけで Terra / Sonnet に降ろさない。
+4. 委譲する時に下表で pair を選ぶ。軽い model へ渡すのは、scope、期待する結果、確認方法、親へ戻す条件を短く明示できる部分。context 隔離のための探索委譲と model の軽量化は別判断とし、未知の root cause 等は強い pair または main で扱う。
+5. host の model / effort / definition / fork / 権限制約を確認し、explicit、適切な既存 definition、意図した継承で適用する。要求値と実効値を区別し、結果は diff と acceptance evidence で受理する。
+
+指定がなければ `balanced`。品質を受入条件で固定し、完了までの時間・使用量・再試行・handoff・統合・人間の手直しを含めて判断する。単価や初回応答の速さだけで model を選ばない。
 
 ## Task-based Starting Points
 
@@ -20,17 +22,17 @@ Claude API の ID は Opus 5=`claude-opus-5`、Sonnet 5=`claude-sonnet-5`、Fabl
 
 | Task / role | Codex の起点 | Claude Code の起点 | 上げる条件 |
 | --- | --- | --- | --- |
-| main の新規選択を求められた、判断・統合中心 | Astra `medium` | Opus 5 `high` | 複雑な制約・判断には高難度 role |
+| main の新規選択を求められた | Astra `low`、判断が深い時は `medium` | Opus 5 `high`、一連のアプリ構築を強い model に任せるなら Fable 5.1 `high` | 既存 main は維持し、難しい判断には高難度 role |
 | 既知 command の実行、抽出、明確な read-only 確認 | Luna `low` | Haiku 4.5、effort なし | ログの因果関係を追うなら通常 worker |
 | 機械的な局所編集、expected diff と確認方法が明確 | Luna `medium` | Sonnet 5 `high`（bundled worker） | 推測を要する変更なら通常 worker |
-| 通常実装、広い read-only 探索、原因候補が絞れた debugging | Terra `medium` | Sonnet 5 `high` | 複雑な制御フローや edge case は Terra `high` / Opus 5 `high` |
+| scope・期待結果・確認方法が明確になった実装 / 探索 / debugging | Terra `medium` | Sonnet 5 `high` | 複雑な制御フローや edge case は Terra `high` / Opus 5 `high` |
 | 独立した bug-finding / code review | Terra `high` | Opus 5 `medium`（bundled reviewer） | 高リスク・深い設計判断は高難度 role |
 | architecture、未知の root cause、高リスクの独立 review / 統合 | Astra `high` | Opus 5 `high`、長時間・最難関は Fable 5.1 `high` | 追加の推論が必要なら `xhigh`、時間・使用量を許容する最難関だけ `max` |
 
 - Sol は Astra が利用不能、または cost / latency 制約がある時の複雑作業の候補。`medium` / `high` を task に合わせる。許可されない model へ data を送らない。
 - Luna / Haiku に未知の architecture、security、auth / billing / migration 判断を委ねない。高い effort を小型 model の能力不足の代替にしない。
 - Opus 5 review の `medium` は低 effort でも bug-finding が強いという公式情報を踏まえた初期 policy。全 review の品質保証ではなく、高リスク review には別の受入判断が必要。
-- Fable 5.1 `low` / `medium` は、小型 model の高 effort に対する比較候補にもなる。task 単位の品質・時間・再試行の evidence があり、その pair を適用できる場合に使う。Sonnet worker 全件の自動置換にはしない。
+- Fable 5.1 `low` / `medium` と Astra の低 effort も、通常実装の候補から除外しない。強い model が理解済みの仕事をそのまま完了する方が、軽量化と再説明より安く速い場合がある。全件の置換や費用優位を断定せず、host 制約と受入結果で判断する。
 - コストは cache、出力、再計画、親の再調査、並列起動の context 複製を含めて判断する。API 価格を Codex / Claude Code の plan 使用量や usage credits の換算値として扱わない。
 
 ## Effort And Escalation
@@ -41,6 +43,15 @@ Claude API の ID は Opus 5=`claude-opus-5`、Sonnet 5=`claude-sonnet-5`、Fabl
 - 失敗時は原因を分ける。入力不足は context を補い、tool / 権限 / 環境の失敗はその原因を直す。方針が妥当で推論が足りない時だけ同一 model の effort を上げる。未知の因果関係、scope 外判断、長 context の統合、相反する高リスク evidence は frontier role へ返す。
 - 同じ原因に対して同じ model / effort / prompt の再試行を繰り返さない。試行、diff、重要 log、未解決判断を渡す。設定変更だけで直ると決めつけない。
 - `max` は単独推論の選択肢。`ultra` / `ultracode` は host-native orchestration を伴うため、失敗した worker の単純な「次の effort」として起動しない。独立 workstream がある時だけ検討する。
+
+## Automatic Reassessment And Outcome Record
+
+- worker は要件 / 設計の矛盾、想定外の scope 拡大、原因を説明できない失敗、相反する evidence に当たった時点で、その判断に依存する編集を止めて main へ返す。再試行回数を満たすまで待たない。原因と修正が明確な局所エラーは担当内で直してよい。
+- 返却には部分 diff、実行した確認、evidence、未解決判断を含める。main は既存の作業を引き継ぎ、context 補完、直接実装、同じ worker の設定調整、適切な強い worker への再割当を判断する。同じ仕事を最初から重複実行しない。
+- routing を行った作業の完了 / 返却時に、既存の作業メモ・handoff・verification record のいずれかへ短く記録する。既存 artifact が不要な小変更では最終報告で足りる。新しい ledger や telemetry 基盤は作らない。
+- 記録するのは task の種類 / scope、requested / effective pair（不明なら `unverified`）、受入結果、分かる範囲の経過時間と使用量、差し戻し・main の手直し・人間の介入。未取得値は `unknown` とし、token 数を推測したり API 金額を plan 使用量へ換算したりしない。既存の tool metadata を使い、記録だけのために別 session や監視を起動しない。
+- 次の似た作業では利用可能な既存記録を参考にする。ただし少数の成功や単価だけで品質・費用優位を一般化しない。受入基準、scope、host、effort が違う記録は同条件の比較として扱わない。
+- 実行内の再割当は自律的に行うが、永続的な routing policy、agent definition、ユーザー設定の変更は自動で行わない。改善が見えたら根拠と適用範囲を提案し、承認後に変更する。
 
 ## Spawn-time Contract
 

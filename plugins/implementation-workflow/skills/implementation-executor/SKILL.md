@@ -9,7 +9,7 @@ description: Execute an existing Japanese implementation plan safely and increme
 
 ## Capability Boundary
 
-メインエージェントの第一責務は、実装全体の source of truth、判断、統合を保持しつつ、探索、長い log、試行錯誤、独立 workstream の大量 context を必要に応じて worker へ隔離し、main context を温存することである。委任自体は目的ではない。
+メインエージェントは要件理解から実装・統合まで担当し、受入品質を保って完了までの総時間・使用量・手直しを抑える。必要に応じて詳細 context を worker へ隔離するが、委任や model の軽量化自体は目的ではない。
 
 - 実装計画、現在の repo、docs、schema、routes、UI、tests、package、設定を読み、plan の古さと判断点を明示する。
 - accepted slice の scope / risk と、委任による context 節約が handoff / coordination / integration overhead を上回るかを判断する。
@@ -21,7 +21,7 @@ description: Execute an existing Japanese implementation plan safely and increme
 
 `references/review-and-parallelism.md` の Delegation Value Test で、worker へ渡すための説明、context の複製、起動、調整、競合回避、結果統合の overhead が、main から隔離できる context 量と集中維持の効果以上なら、メインエージェントが直接実装してよい。小さく coherent な作業、必要 context がすでに main に揃っている作業、期待 diff と検証が明確な作業は、ファイル数だけを理由に委任しない。
 
-一方、広い repo 探索、大量 log、長い debugging / test loop、複数の独立 workstream など、worker が詳細を保持して短い結論と evidence を返せる作業は、main が詳細を読み込む前に委任する。local lint、typecheck、test、build、targeted E2E、UI verification は context 収支、risk、受入条件に応じて main、implementation worker、または独立 verifier に割り当てる。full E2E は repo / user / release gate または高リスク変更で必要な場合に限る。
+一方、広い repo 探索、大量 log、長い debugging / test loop、複数の独立 workstream など、worker が詳細を保持して短い結論と evidence を返せる作業は、main が調査目的・範囲・返却条件を把握した時点で委任を判断する。探索の委譲と model の軽量化は別々に判断する。local lint、typecheck、test、build、targeted E2E、UI verification は context 収支、risk、受入条件に応じて main、implementation worker、または独立 verifier に割り当てる。full E2E は repo / user / release gate または高リスク変更で必要な場合に限る。
 
 Disallowed unless explicitly requested:
 - production deploy と、production / billing / auth provider / cloud resource / production database / secret の変更。
@@ -41,6 +41,7 @@ Disallowed unless explicitly requested:
 - 実装は最小の coherent slice にする。
 - `references/review-and-parallelism.md` に従って Delegation Value Test と low / medium / high risk 判定を分けて行う。context 収支は implementation owner を決め、risk は独立 reviewer / verifier の強さを決める。
 - 委任する場合の既定形は flat な main → leaf workers とする。並列化は独立 workstream がある場合だけにし、host の concurrency / depth cap を尊重する。Codex `ultra` または Claude Code `ultracode` / dynamic workflow と manual fan-out を同じ workstream に重ねない。
+- main が通常の作業中に委譲先を選び、想定外の判断は早期に引き取る。結果を既存メモ / handoff または最終報告に短く残し、永続的な routing 変更は提案にとどめる。
 - model / effort / escalation は `references/model-routing.md` を canonical policy とする。既存 main の設定を尊重し、作業に合う worker pair を明示指定、definition、または意図した継承で選ぶ。host の field、fork、優先順位、実効値の確認は `host-adapters.md` に従う。要求値だけを適用済みと扱わない。
 - 既存 stack、命名、format、test、UI pattern を優先する。
 - 軽微で可逆な修正は、計画成果物を増やさず、変更内容と検証を簡潔に報告する。
