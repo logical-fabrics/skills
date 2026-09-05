@@ -41,7 +41,7 @@ Disallowed unless explicitly requested:
 - 実装は最小の coherent slice にする。
 - `references/review-and-parallelism.md` に従って Delegation Value Test と low / medium / high risk 判定を分けて行う。context 収支は implementation owner を決め、risk は独立 reviewer / verifier の強さを決める。
 - 委任する場合の既定形は flat な main → leaf workers とする。並列化は独立 workstream がある場合だけにし、host の concurrency / depth cap を尊重する。Codex `ultra` または Claude Code `ultracode` / dynamic workflow と manual fan-out を同じ workstream に重ねない。
-- model / effort / escalation を選択できる host では `references/model-routing.md` を canonical policy とする。Codex の明示的な `model` / `reasoning_effort` 選択には fork 制約があるため、context の引き渡しと selection-unavailable 報告を含めて同 reference と `host-adapters.md` に従う。Claude Code の動的 effort 選択にも host 固有の制約がある。
+- model / effort / escalation は `references/model-routing.md` を canonical policy とする。既存 main の設定を尊重し、作業に合う worker pair を明示指定、definition、または意図した継承で選ぶ。host の field、fork、優先順位、実効値の確認は `host-adapters.md` に従う。要求値だけを適用済みと扱わない。
 - 既存 stack、命名、format、test、UI pattern を優先する。
 - 軽微で可逆な修正は、計画成果物を増やさず、変更内容と検証を簡潔に報告する。
 - UI/UX を最上位価値にする。ただし過剰設計を避ける。

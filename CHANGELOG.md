@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0
+
+- Replaced blanket coding-worker xhigh and mandatory spawn override rules with task-based model / effort starting points. Existing main settings are respected; explicit, definition-based, and deliberate inherited selections are valid when they fit the task.
+- Distinguished requested and effective settings, corrected Codex custom-agent precedence, and documented Claude Code version / provider / environment overrides and ordinary Agent versus SDK definition limits.
+- Retained the three bundled agent profiles. Fable 5.1 low / medium is an evidence-dependent alternative, not an automatic worker replacement. Missing high-effort read-only review profiles are reported without widening tool permissions or starting a separate CLI / SDK solely to force effort.
+- Added `docs/model-routing-research.md` with official sources, local host observations, adopted decisions, and limits. The routing table is a starting policy, not a claim of benchmark-proven optimality.
+- Migration: update implementation-workflow to 0.9.0 and restart the host. No user settings, existing plans, or agent inventory changes are required. Host-specific overrides may prevent the requested pair from being applied.
+
 ## 0.8.0
 
 - Updated executor model routing against official OpenAI and Anthropic documentation checked on 2026-09-05. Astra is the main / hardest-work starting point; Sol remains a fallback, with Terra and Luna retaining bounded worker roles. Explicit role / effort pairs are plugin policy, not claims about account defaults.

@@ -88,6 +88,7 @@ model routing の能力、価格、availability、retention、effort は vendor 
 - audit / plan / execute は `Next Action Contract` で次 lane、人間判断の要否、`/goal` 推奨有無、推奨 prompt を返す。
 - 軽微な UI copy / style fixture では full E2E を要求せず、responsive fixture では mobile / desktop screenshot、route / auth / persistence fixture では targeted E2E、release fixture では full gate が plan に入る。
 - model routing 更新では、Astra 未提供時の Sol fallback、Fable 5.1 の host version / alias / retention、API-only parameter と host tool の分離、main / worker effort の整合を公式資料と diff で確認する。価格や model 品質の反復 benchmark は追加しない。
+- task-based routing では、既存 main 設定の維持、明確な編集と複雑な review の effort の区別、適切な継承、override による要求値と実効値の差、必要な read-only reviewer が選択不能な場合を確認する。確認手段が docs / diff なら、モデルを実行した behavior smoke と区別して記録する。
 
 ## 5. Release notes
 
