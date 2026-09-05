@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0
+
+- Updated executor model routing against official OpenAI and Anthropic documentation checked on 2026-09-05. Astra is the main / hardest-work starting point; Sol remains a fallback, with Terra and Luna retaining bounded worker roles. Explicit role / effort pairs are plugin policy, not claims about account defaults.
+- Promoted Fable 5.1 to the Claude escalation baseline while retaining Opus 5 for ordinary main work. Updated effort, cache-read pricing, retention, Claude Code minimum version and alias behavior, and API migration boundaries.
+- Updated planner / executor review escalation references and all three lanes' progress-reporting guidance. Added model-specific guidance for completing authorized work, batching independent reads, preserving steering, and avoiding redundant verification.
+- Migration: update implementation-workflow to 0.8.0 and restart the host. Fable 5.1 needs Claude Code 2.1.255 or later; review pinned model IDs. No changes to existing plans, bundled agent definitions, or hooks are required.
+- Known limits: Astra availability varies by rollout and account; API capabilities are not automatically exposed by host tools. Model quality and cost comparisons use vendor documentation, not a local benchmark.
+
 ## 0.7.0
 
 - Ran a prompt audit against the current model generation (Claude Opus 5 main / Fable 5 escalation) and removed dated phrasing. Migration-relative text that referred to removed concepts (`micro-task exception`, the former 10-round review cap, the GPT-5.6 limited-preview period) is now stated as current rules only.

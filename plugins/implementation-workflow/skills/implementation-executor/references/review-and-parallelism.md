@@ -61,7 +61,7 @@ slice 開始時に low / medium / high のいずれかを選び、理由を作�
 | --- | --- | --- |
 | Low | copy / docs / isolated config、機械的で可逆、決定的 check がある | Delegation Value Test で main または implementation worker を選ぶ。独立 reviewer は任意。relevant deterministic gate は必須で、closure 前に diff と acceptance evidence を確認する |
 | Medium | 通常の複数ファイル変更、共有ロジック、ユーザー可視 behavior、局所 API / state 変更 | implementation owner は Delegation Value Test で選び、独立 review role を分ける。verification は review role と兼任可能だが、acceptance evidence を独立に確認する |
-| High | auth、billing、migration、data loss、security、production / infra、cross-slice architecture、広い UX / persistence、収束しない P0/P1 | implementation owner にかかわらず独立 review を置き、必要な domain（security / schema / UX 等）だけ追加する。verification role を別に立てるのは、acceptance evidence を独立に再現する必要がある場合に限る。高難度の統合判断は Opus 5 `xhigh` / Fable 5 / Sol へ escalation する |
+| High | auth、billing、migration、data loss、security、production / infra、cross-slice architecture、広い UX / persistence、収束しない P0/P1 | implementation owner にかかわらず独立 review を置き、必要な domain（security / schema / UX 等）だけ追加する。verification role を別に立てるのは、acceptance evidence を独立に再現する必要がある場合に限る。高難度の統合判断は Opus 5 `xhigh` / Fable 5.1 / Astra へ escalation する |
 
 role は agent 数と同義ではない。main が implementation と orchestration を兼ねる場合もある。medium risk の reviewer が verification evidence も確認できるなら別 verifier を増やさない。high risk でも関係のない reviewer role を全列挙しない。
 

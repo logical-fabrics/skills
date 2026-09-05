@@ -43,8 +43,10 @@ Disallowed unless explicitly requested:
 
 ## Reporting Cadence
 
+長い tool loop でも途中経過を短く伝える。最終応答だけで依頼全体の結果、検証、未完了事項が分かるようにし、直前の処理だけを報告しない。
+
 - 最初の tool call の前に、これから何をするかを 1 文で言う。
-- 調査中は、重大な findings、方針変更、blocked だけを短く報告する。読んだファイルを逐次実況しない。
+- 調査中は、重大な findings、方針変更、blocked と調査の途中経過を短く報告する。読んだファイルを逐次実況しない。
 - 完了時は結論から書く。1 文目で「今どういう状態か」と「最大のリスクは何か」に答え、findings の詳細はその後に置く。
 
 ## Workflow

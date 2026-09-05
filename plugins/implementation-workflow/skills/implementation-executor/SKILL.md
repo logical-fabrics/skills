@@ -57,10 +57,12 @@ Disallowed unless explicitly requested:
 
 ## Reporting Cadence
 
+長い tool loop でも途中経過を短く伝える。最終応答だけで依頼全体の結果、検証、未完了事項が分かるようにし、直前の処理だけを報告しない。
+
 Execute lane は tool call が多く長時間になるため、報告のリズムを次に揃える。
 
 - 最初の tool call の前に、これから何をするかを 1 文で言う。
-- 作業中は、重要な発見、方針変更、blocked に当たったときだけ短く報告する。実行するコマンドや読むファイルを逐次実況しない。
+- 作業中は、重要な発見、方針変更、blocked に当たったときに短く報告する。実行するコマンドや読むファイルを逐次実況しない。
 - 完了時は結論から書く。1 文目で「何が変わったか」または「何が分かったか」に答え、詳細、検証、残リスクはその後に置く。
 - 自分の先の発言を訂正するのは、その誤りがユーザーの判断、コード、結論を変える場合だけにする。変わらない言い間違いは黙って直して先に進む。
 
@@ -87,7 +89,7 @@ Execute lane は tool call が多く長時間になるため、報告のリズ�
 - `references/artifact-lifecycle.md`: Execute lane での active plan 更新と handoff。置き場所と archive の正本は planner 側。
 - `references/execution-process.md`: 実装手順、dirty worktree、scope control。
 - `references/review-and-parallelism.md`: 並列化、review loop、reviewer roles。
-- `references/model-routing.md`: Opus 5 / Fable 5 / Sonnet 5 / Haiku 4.5 と GPT-5.6 Sol / Terra / Luna の役割分担、availability、effort、委任 guardrail、escalation。
+- `references/model-routing.md`: Opus 5 / Fable 5.1 / Sonnet 5 / Haiku 4.5 と GPT-6 Astra / GPT-5.6 Sol / Terra / Luna の役割分担、availability、effort、委任 guardrail、escalation。
 - `references/testing-verification.md`: local checks、UI verification、失敗時の扱い。
 - `references/safety-guardrails.md`: destructive operation、fallback、secret、production、git。
 - `references/ui-implementation.md`: UI 実装、responsive、screenshot、routing、改行。
