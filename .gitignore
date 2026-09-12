@@ -5,3 +5,6 @@ coverage/
 .turbo/
 .pnpm-store/
 
+
+# plugin eval run artifacts
+plugins/*/evals/results/
