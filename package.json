@@ -12,7 +12,7 @@
     "lint": "biome check . && knip"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.12",
+    "@biomejs/biome": "2.5.13",
     "knip": "6.34.0"
   }
 }
