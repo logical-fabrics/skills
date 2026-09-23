@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.11.0
+
+- Updated model routing for Claude Opus 5.5 (default effort `medium`) and GPT-6 Astra / Sol / Luna. GPT-5.6 models are now fallbacks for environments without GPT-6.
+- Rewrote the delegation guidance around host defaults: Claude Code models spawn subagents proactively, so the skills now state when to work directly; Codex spawns subagents when skills request it, so the skills state when delegation is permitted. Independent review runs in a fresh context, never a fork.
+- Removed the bundled agents' preload of the full executor skill so leaf agents no longer receive orchestration instructions. Agent descriptions now state when to use and when not to use each agent. The implementation worker now carries the primary-deliverable, secret, and latest-package rules directly.
+- Removed Reporting Cadence sections and other guidance that duplicated built-in host behavior; trimmed host version trivia and outcome-record bureaucracy. Added writing-style rules to `CONTRIBUTING.md`.
+- In Claude Code, `abstract-plan.html` is now published as a private artifact by default, with the URL recorded in `Implementation Handoff` and reused on updates. Sharing scope is widened only on explicit request. The repo file remains canonical; Codex keeps the file and suggests Sites.
+- Migration: update to 0.11.0 and restart the host. Existing plans need no changes.
+
 ## 0.10.0
 
 - Let the main agent select workers during normal understanding and implementation, retaining coupled or ambiguous features instead of automatically routing ordinary coding to smaller models. Context isolation and model downsizing are separate decisions.

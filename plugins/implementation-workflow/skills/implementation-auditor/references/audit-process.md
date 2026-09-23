@@ -1,6 +1,6 @@
 # Audit Process
 
-audit を複数 subagent / worker に分け、model を選択できる場合は `../../implementation-executor/references/model-routing.md` を canonical policy とする。全体統合と高リスク finding の判断は frontier tier、通常 domain audit は balanced tier、定型的な evidence 収集は fast tier に割り当てる。
+audit を subagent に分けるのは、互いに独立した広い scope（例: UI 導線と data model）を read-only で並行調査する価値がある時だけにする。委任の判断は `../../implementation-executor/references/review-and-parallelism.md`、model / effort は同じ directory の `model-routing.md` に従う。findings の統合と高リスク finding の判断は main が行う。
 
 1. Scope を決める。
    - 全体 health check。

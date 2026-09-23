@@ -58,3 +58,22 @@ scenario review は既存 main、機械的編集、複雑な review、継承、o
 結果は既存記録へ残し、次回の参考にする。永続 policy / agent / user 設定の自動学習・書換えは行わず、改善案を承認後に反映する。runtime が metadata を返さない値は unknown とする。
 
 0.10.0 検証: frozen-lockfile offline install、validate、lint、19 hook tests、Claude strict manifest validation、4 skills / 3 agents / 3 hook events の inventory を確認した。曖昧な feature の main 継続、明確な部分の委譲、想定外判断の即時返却、不明 metadata、host override、永続変更の承認境界は docs / diff で照合した。新規 installed session の behavior smoke とモデル間の時間・費用比較は未実施。
+
+## 0.11.0: Opus 5.5 / GPT-6 Sol・Luna 対応と記述の整理
+
+確認日: 2026-09-24。Claude Code `2.1.281`、Codex CLI `0.156.1`。
+
+| 根拠 | 確認内容 | この repo の判断 |
+| --- | --- | --- |
+| [Prompting Claude Opus 5.5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5) | 既定 effort は `medium`。`medium` で Opus 5 の `high` と同等以上。code review は Opus 5 より多くの bug を少ない誤検知で見つける。「think carefully」系の指示は削除を推奨 | reviewer は Opus 5.5 `medium`。推論の代替指示を skill に書かない |
+| [Claude effort](https://platform.claude.com/docs/en/build-with-claude/effort) | Sonnet 5 / Fable 5.1 の既定は `high`。`xhigh` / `max` は測定できる品質差がある時 | worker は Sonnet 5 `high` を維持 |
+| [Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) | 最新 model は subagent を指示なしで積極的に起動し、直接の grep で足りる場面でも起動し得る。抑制の prompt 例あり | Claude Code では委任を促す文言を削り、直接やる条件を明記 |
+| [Claude Code subagents](https://code.claude.com/docs/en/sub-agents) | fork は親の context と model を引き継ぐ。background subagent は AskUserQuestion を使えない | 独立 review に fork を使わない。bundled agent から executor skill の preload を外す |
+| [Codex subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents) | ユーザー、`AGENTS.md`、skill が求めた時に subagent を起動する。read-heavy な並列作業を推奨し、write-heavy な並列は衝突しやすい | Codex では Delegation Value Test を通った作業に限り skill が起動を許可する |
+| [Codex models](https://learn.chatgpt.com/docs/models) | Astra は長い複合 workflow、Sol は難しい coding や判断、Luna は良い結果が明確な定型作業。既定は Sol `medium` / Luna `high` / Astra `low`。`ultra` は subagents による並列化で、多くの task には不要 | routing 表を GPT-6 Astra / Sol / Luna に更新し、GPT-5.6 系は fallback に下げる |
+
+Codex CLI `0.156.1` の bundled catalog では、`gpt-6-sol`（"Workhorse model for coding and everyday work"）と `gpt-6-luna` が追加され、GPT-5.6 系は "Older" と表示される。GPT-6 の base instructions には、進捗 commentary の頻度、自律的な完遂、独立 read の並列化、skill がユーザー指示より優先されないことが含まれる。このため各 SKILL.md の Reporting Cadence 節を削除した。
+
+同時に、Claude Code では `abstract-plan.html` を非公開の artifact として publish することを既定にした。publish 直後は作成者しか見られず、共有範囲の拡大は明示指示がある時だけ行う。Codex の Sites は agent から起動できないため、提案にとどめる。
+
+検証は構造 validation、lint、hook test、Claude strict validation と inventory に限る。installed session での behavior smoke や model 間の費用比較は行っていない。

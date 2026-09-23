@@ -8,7 +8,7 @@
 
 ## Risk-based Reviewers
 
-reviewer を subagent / worker に委任し model を選択できる場合は、`../../implementation-executor/references/model-routing.md` を canonical policy とする。通常 review は balanced tier、security、cross-slice architecture、収束しない P0/P1 の判断は high-complexity tier、定型確認だけなら fast tier を使う。
+reviewer を subagent に委任する場合は、実装計画の作成者とは別の fresh context で行う（Claude Code では read-only の `adversarial-reviewer`）。model / effort は `../../implementation-executor/references/model-routing.md` に従う（通常 review は独立 review の行、security・cross-slice architecture・収束しない P0/P1 は高難度 role）。
 
 | Risk | 目安 | Review |
 | --- | --- | --- |

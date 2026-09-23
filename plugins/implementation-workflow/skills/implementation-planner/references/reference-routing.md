@@ -102,4 +102,4 @@ Codex / Claude Code behavior:
 - `refactoring.md`: LLM が読みやすい構造。
 - `host-adapters.md`: Codex / Claude Code 固有差分。
 - `../../implementation-executor/references/safety-guardrails.md`: 禁止・許可される操作の正本。
-- `../../implementation-executor/references/model-routing.md`: model / effort / 委任 guardrail の正本。
+- `../../implementation-executor/references/model-routing.md`: model / effort / escalation の正本。委任の判断は同じ directory の `review-and-parallelism.md`。

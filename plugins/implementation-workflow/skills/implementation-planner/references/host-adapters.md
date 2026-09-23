@@ -28,19 +28,15 @@
 
 ## abstract-plan.html の共有チャネル
 
-正本は repo の `docs/implementation/abstract-plan.html`。以下は publish できる環境でだけ使う追加経路で、file を置き換えない。publish は外部サービスへの送信なので既定行動にせず、ユーザーの依頼か明示的な合意がある場合だけ行う。
+正本は repo の `docs/implementation/abstract-plan.html`。運用ルールは `artifact-lifecycle.md` の Human-facing Sharing に従う。
 
-| Host | 経路 | 起動 | 主な制約 |
+| Host | 経路 | 既定 | 主な制約 |
 | --- | --- | --- | --- |
-| Claude Code | artifact | skill から publish できる | publish 直後は作成者のみ。共有時、Pro / Max は public link しか選べず、組織内限定共有は Team / Enterprise（Enterprise は Owner が有効化） |
-| Codex | app の Sites | 人間が ChatGPT app 側で起動する。agent の tool ではない | public beta。plan / region / workspace 設定に依存し、本番デプロイとして作られる |
+| Claude Code | artifact | Artifact tool が使えれば非公開で publish し、URL を handoff に記録 | 共有範囲の拡大は明示指示がある時だけ。Pro / Max の共有は public link のみ、組織内限定共有は Team / Enterprise |
+| Codex | app の Sites | file を渡し、継続参照される plan なら共有を提案 | 人間が app 側で起動する。本番デプロイとして作られる |
 
-共通の注意:
-
-- artifact は publish しただけでは作成者しか見られない。危険なのは共有操作の方。Claude Pro / Max では共有手段が public link だけなので、顧客の設計、非公開の architecture、社外に出せない情報を含むページを共有しない。自分だけが見る用途の publish は差し支えない。
+- 顧客の設計や非公開の architecture を含むページは、組織内に限定できない環境では共有しない。作成者だけが見る非公開 publish は問題ない。
 - 組織 policy（zero data retention、CMEK、HIPAA）、Bedrock / Vertex / Foundry 経由、API key や gateway token のセッション、CI 実行では artifact を publish できない。file だけで完結させる。
-- Codex Sites は本番デプロイを作る。使い捨ての合意形成資料を毎回 site 化せず、継続的に参照される plan に限る。
-- publish した場合は URL を active plan の `## Implementation Handoff` に記録する。次セッションが URL から更新できる。
 
 Codex:
 

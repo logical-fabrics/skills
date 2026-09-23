@@ -41,14 +41,6 @@ Disallowed unless explicitly requested:
 - ただし Audit から Plan / Execute へは勝手に移らない。実編集は明示依頼、または executor へ handoff された accepted slice の場合だけ行う。
 - audit 結果の最後に `Next Action Contract` を置き、次 lane、理由、実行可能 slice、人間判断の要否、推奨 prompt を明示する。
 
-## Reporting Cadence
-
-長い tool loop でも途中経過を短く伝える。最終応答だけで依頼全体の結果、検証、未完了事項が分かるようにし、直前の処理だけを報告しない。
-
-- 最初の tool call の前に、これから何をするかを 1 文で言う。
-- 調査中は、重大な findings、方針変更、blocked と調査の途中経過を短く報告する。読んだファイルを逐次実況しない。
-- 完了時は結論から書く。1 文目で「今どういう状態か」と「最大のリスクは何か」に答え、findings の詳細はその後に置く。
-
 ## Workflow
 
 1. ユーザーの最新依頼と audit scope を確認する。

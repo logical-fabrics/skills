@@ -15,7 +15,7 @@
 - 完了した slice を `## Current State`（completed）と `## Step-by-step Implementation` の checkbox に反映する。
 - 次の最小 slice を `## Next actions` に反映する。
 - 通った verification と失敗した verification を `## Verification Plan` に更新する。
-- scope、UX、schema、infra、security、cost、production behavior が変わった場合は plan を更新する。
+- scope、UX、schema、infra、security、cost、production behavior が変わった場合は plan を更新する。`abstract-plan.html` を更新した場合、Claude Code では handoff に記録済みの artifact URL へ再 publish する。
 - `## Implementation Handoff` の中に `Next Action Contract` を残す。独立した `##` section にせず、以下の block をそのまま埋める。散文で要約しない。
 
 ```md

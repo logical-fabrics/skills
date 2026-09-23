@@ -44,15 +44,13 @@ docs/implementation/
 
 ## Human-facing Sharing
 
-`abstract-plan.html` の正本は repo の file。host の共有チャネルは、その file を人間が見やすい形で配るための追加経路であり、正本を置き換えない。
+`abstract-plan.html` の正本は repo の file。人間が読む入口は host ごとに次のとおり:
 
-- Claude Code: artifact として publish できる。同じ file を publish し、返った URL を active plan の `## Implementation Handoff` に記録する。
-- Codex: app の Sites で共有できる。agent 側の tool ではないため、必要なときに publish をユーザーへ提案し、URL を同じ場所に記録する。
-- この差（Claude は skill から publish でき、Codex は人間が起動する）は意図した host 固有差分。詳細は `host-adapters.md`。
+- Claude Code: Artifact tool が使える環境では、作成・更新のたびに同じ file を非公開の artifact として publish し、URL を active plan の `## Implementation Handoff` に記録する。2 回目以降は記録済み URL を更新し、新しい artifact を増やさない。artifact の作り方（design guidance の読み込みなど）は host の Artifact tool の指示に従う。
+- Codex: Sites は人間が app 側で起動する機能で、agent の tool ではない。file を作り、継続的に参照される plan なら Sites での共有を提案する。URL が返れば同じ場所に記録する。
+- この差（Claude Code は既定で artifact を publish し、Codex は file を渡して提案にとどめる）は意図した host 固有差分。詳細は `host-adapters.md`。
 
-publish は外部サービスへの送信なので、既定行動にしない。ユーザーの依頼、または publish してよいという明示的な合意がある場合だけ行う。
-
-publish できない環境（後述の制約に該当する場合）でも作業を止めない。file だけで完結させ、共有が必要なら repo 経由で渡す。
+publish 直後の artifact は作成者だけが見られる。共有範囲を広げる操作（link 共有、組織への公開など）は、ユーザーの明示的な指示がある場合だけ行う。artifact を publish できない環境でも作業を止めず、file だけで完結させる。
 
 archive は履歴の墓場ではなく、後から判断を追うための薄い記録。
 

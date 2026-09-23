@@ -119,4 +119,4 @@ package / library / SDK / CLI を追加・更新・設定変更する plan で�
 
 作成する場合、既定の保存先は `docs/implementation/abstract-plan.html`。完了後に source of truth として残す必要がなければ archive または削除候補にする。
 
-人間へ配る必要がある場合は、host の共有チャネル（Claude Code の artifact、Codex app の Sites）へ publish してよい。file が正本であることは変わらない。publish したら URL を `## Implementation Handoff` に 1 行で記録し、次セッションがその URL を更新できるようにする。条件と制約は `host-adapters.md` を見る。
+Claude Code で Artifact tool が使える場合は、file と同じ内容を非公開の artifact として publish し、URL を `## Implementation Handoff` に 1 行で記録する。以後の更新は同じ URL へ行う。Codex では file を渡し、必要なら Sites での共有を提案する。file が正本であることは変わらない。条件と制約は `artifact-lifecycle.md` と `host-adapters.md` を見る。

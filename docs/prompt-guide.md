@@ -11,7 +11,7 @@
 
 Codex でも Claude Code でも、基本は自然文プロンプトで発火する想定。Claude Code では薄い slash command alias は配布しない。
 
-どの lane でも報告のリズムは共通で、最初に何をするかを 1 文、作業中は重要な発見と方針変更だけ、完了時は結論から述べる。逐次実況は既定で行わない。細かく進捗を見たい場合は、その旨を依頼に書く。
+作業中の進捗報告は各 host（Claude Code / Codex）の標準の振る舞いに任せる。細かく進捗を見たい場合は、その旨を依頼に書く。
 
 基本思想は「lane 内では止まらない。lane 境界は勝手に越えない」。Audit は知るため、Plan は人間が方向性を確認するため、Execute は accepted slice をやりきるために分ける。各 lane の最後には `Next Action Contract` を出し、次に使う入口、理由、実行可能 slice、人間判断の要否、推奨 prompt を明示する。
 
@@ -160,7 +160,7 @@ retro
 ```
 
 ```text
-abstract-plan.html を artifact として publish して、URL を Implementation Handoff に残して。共有範囲は組織内だけにして。
+abstract-plan.html の artifact を組織内に共有できる状態にして。
 ```
 
 ```text
@@ -170,7 +170,7 @@ DB schema 変更を含むので、YAGNI と migration/rollback を厳しく見�
 期待する動き:
 
 - 明示 plan や repo 慣習がなければ、`docs/implementation/current.md` を active plan にする。
-- 人間向け合意形成が必要な場合だけ `abstract-plan.html` を作る。正本は repo の file。共有したい場合は、Claude Code なら artifact、Codex app なら Sites へ publish するよう頼む。publish は依頼したときだけ行われ、URL は `Implementation Handoff` に残る。
+- 人間向け合意形成が必要な場合だけ `abstract-plan.html` を作る。正本は repo の file。Claude Code では同じ内容を非公開の artifact として publish し、URL を `Implementation Handoff` に残す（以後の更新も同じ URL）。共有範囲を広げるのは依頼したときだけ。Codex では file を渡し、必要なら app の Sites での共有を提案する。
 - P0/P1 がなくなるまで計画レビューする。
 - 不明点は調査し、調査で決められないことだけ選択肢付きで聞く。
 - Plan から Execute へは自動遷移しない。最後に `Next Action Contract` で、実行承認が必要か、次の最小 slice は何かを示す。
@@ -214,11 +214,10 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 - 最初に plan freshness を確認する。
 - 古い plan をそのまま信じない。
 - 実装は最小 slice にする。
-- main が要件理解と実装を進め、明確な委譲候補が見えた時に、隔離できる探索、log、試行錯誤、独立 workstream の context と、assignment、context 複製、起動、調整、競合回避、統合の overhead を比較する。context benefit が有意に大きい場合だけ委任する。
-- overhead が context benefit 以上なら main が直接実装する。必要 context がすでに揃い、scope、expected diff、verification が明確な小さく coherent な作業は、複数ファイルでも無理に委任しない。正本は `implementation-executor/references/review-and-parallelism.md`。
-- low / medium / high risk は delegation 判断と分離する。risk は独立 review / verification の強さを決める。medium risk は implementation owner と独立 review、high risk は必要な domain review / verification を分けるが、role 数を固定しない。
-- model / effort / escalation は `implementation-executor/references/model-routing.md` に従う。既存 main の設定を尊重し、通常実装を一律に軽量化せず、worker は scope・期待結果・確認方法・早期返却条件に合う pair を選ぶ。結果を既存メモ / handoff または最終報告へ短く残し、次回の参考にする。永続的な policy / 設定変更は提案にとどめる。coding worker の `xhigh` 固定や毎回の override 強制はせず、definition / 継承の実効設定と host の制限を確認する。判断根拠は `docs/model-routing-research.md`。
-- 委任時の orchestration は flat な main → workers を既定にし、並列化は独立 workstream がある場合だけ行う。Codex `xhigh`（単独推論）と `ultra`（自動 subagents）、Claude Code の通常 subagents と `ultracode` / dynamic workflow を区別し、host-native orchestration と manual fan-out を同じ workstream に重ねない。
+- 小さく coherent で main に context が揃った作業は main が直接実装する。広い探索、長い log / test 調査、独立 workstream、独立 review のように、別 context に隔離する価値が overhead を明確に上回る作業だけ委任する。Claude Code（Opus 5.5 など）は指示がなくても subagent を起動しがちなので抑え、Codex は `ultra` 以外ではこの条件を満たした時だけ subagent を起動する。正本は `implementation-executor/references/review-and-parallelism.md`。
+- low / medium / high risk は委任判断と分離する。risk は独立 review / verification の強さを決める。独立 review は実装者の会話を引き継がない fresh context で行い、fork は使わない。
+- model / effort は `implementation-executor/references/model-routing.md` に従う。既存 main の設定を尊重し、worker は scope・期待結果・確認方法に合う pair を選ぶ（例: Claude Code は Sonnet 5 worker / Opus 5.5 reviewer、Codex は Sol / Luna）。判断根拠は `docs/model-routing-research.md`。
+- 委任は flat な main → workers を既定にし、並列化は独立 workstream がある場合だけ行う。Codex `ultra`、Claude Code の `ultracode` / Workflow が orchestrate している workstream に manual fan-out を重ねない。
 - UI 変更は changed behavior と risk に応じて、affected route の browser smoke、responsive screenshot、route / auth / persistence の targeted E2E、release 時の full E2E を使い分ける。
 - UI 検証を実行した場合は、確認した route、viewport、browser/tool、state、未確認 state、残リスクと、価値がある場合だけ screenshot/trace path を報告する。
 - 完了時に `current.md` の handoff を必要に応じて更新する。
