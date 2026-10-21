@@ -262,6 +262,29 @@ test("check-diff --head checks the commit that will be pushed", (t) => {
   assert.match(head.stdout, /版の値以外/);
 });
 
+test("check-diff allows dropping the range symbol only in the working tree", (t) => {
+  const repo = createRepo(t);
+  const git = (...args) =>
+    execFileSync("git", args, { cwd: repo.dir, encoding: "utf8" });
+  repo.writePackage({
+    dependencies: { ...BASE_PACKAGE.dependencies, a: "1.3.0" },
+  });
+  const worktree = repo.check();
+  assert.equal(worktree.status, 0, worktree.stdout);
+
+  git("commit", "-q", "-am", "exact");
+  const head = repo.check("--head");
+  assert.equal(head.status, 1, head.stdout);
+  assert.match(head.stdout, /範囲の記号が変わる/);
+
+  repo.writePackage({
+    dependencies: { ...BASE_PACKAGE.dependencies, a: "~1.3.0" },
+  });
+  const swapped = repo.check();
+  assert.equal(swapped.status, 1, swapped.stdout);
+  assert.match(swapped.stdout, /範囲の記号が変わる/);
+});
+
 test("check-diff rejects changes beyond dependency versions", (t) => {
   const deps = BASE_PACKAGE.dependencies;
   const devDeps = BASE_PACKAGE.devDependencies;

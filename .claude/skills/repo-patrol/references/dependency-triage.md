@@ -25,12 +25,17 @@
 
 | パッケージマネージャー | 方法 |
 |---|---|
-| pnpm | package.json の版を書き換え、`pnpm install --lockfile-only --ignore-scripts` |
-| npm | package.json の版を書き換え、該当ディレクトリで `npm install --package-lock-only --ignore-scripts` |
+| pnpm | 下の 2 段で package.json を書き換え、それぞれのあとに `pnpm install --lockfile-only --ignore-scripts` |
+| npm | 下の 2 段で package.json を書き換え、それぞれのあとに該当ディレクトリで `npm install --package-lock-only --ignore-scripts` |
 | yarn | 要判断（巡回の対象外） |
 
-- 指定した版を範囲の最小値にする（例: `^1.2.3` の 1.2.3）。範囲だけを書き換えると、範囲内の最新（7 日未満を含む）に解決されることがある
-- 書き換えてよいのは、`^1.2.3`・`~1.2.3`・`1.2.3`（npm alias なら同じ alias 先）の形の値の版だけ。記号は変えない。`workspace:`・範囲指定・git などの値は変えない。prerelease（`-rc.1` など）にはしない
+1. 記号を外した意図した版にして lockfile を更新する（例: `^1.2.3` を `1.2.4`）。lockfile の解決先が意図した版になる
+2. 元の記号を付けた版に戻して、もう一度 lockfile を更新する（`^1.2.4`）。解決済みの版が範囲を満たすので、意図した版のまま残る
+
+1 段目を飛ばして `^1.2.4` に直接書き換えると、pnpm・npm とも範囲内の最新（7 日未満を含む）に解決する。2 段のあとで、lockfile の解決先が意図した版であることを確かめる。
+
+- 意図した版は範囲の最小値にする（例: `^1.2.4` の 1.2.4）
+- 書き換えてよいのは、`^1.2.3`・`~1.2.3`・`1.2.3`（npm alias なら同じ alias 先）の形の値の版だけ。最終的に記号は変えない（1 段目の記号を外した状態は作業ツリーでだけ許され、push の前の検査では元の記号に戻っている必要がある）。`workspace:`・範囲指定・git などの値は変えない。prerelease（`-rc.1` など）にはしない
 - overrides は既存のキーの版を上げるだけにする。推移依存だけが脆弱で overrides を足す必要があるときは要判断にする
 - 適用したら、lockfile の差分で目的の依存以外の版が動いていないかを見る。動いていて戻せなければ要判断にする
 - 最後に `check-diff.mjs` を通す（push の前に guard も通す）。依存や overrides の追加・削除、版下げ、記号や alias 先の変更、scripts などの変更、レジストリ以外からの解決、同じ版の integrity の変更を拒否する
