@@ -119,7 +119,7 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 2. 人がマージせずに閉じた巡回 PR（`pulls?state=closed&head=<owner>:claude/patrol-deps` のうち作成者が自分で `merged_at` が null のもの）の機械可読ブロックにある版は提案しない
 3. 取り込まない Dependabot の PR（メジャー更新、見送り中、7 日未満しかない）には、まだ自分の repo-patrol コメントがなければ、理由と見直す条件を 1 回だけコメントする。コメント済みのものは「見送り中」として扱う
 4. 候補がなければ手順 5 へ。あれば `git checkout -B claude/patrol-deps origin/<BASE>`
-5. package.json の版を書き換え、lockfile だけを更新する（pnpm: `pnpm install --lockfile-only --ignore-scripts`、npm: `npm install --package-lock-only --ignore-scripts`）。依存のコードを動かす前に中身を確かめるため
+5. package.json の版を書き換え、lockfile だけを更新する（pnpm: `pnpm install --lockfile-only --ignore-scripts`、npm: `npm install --package-lock-only --ignore-scripts`）。依存のコードを動かす前に中身を確かめるため。書き換えは `references/dependency-triage.md` の「lockfile への適用」の 2 段で行い、lockfile の解決先が意図した版であることを確かめる
 6. `node .claude/skills/repo-patrol/scripts/check-diff.mjs origin/<BASE> <設定の追加パス>` が exit 0 になること。設定に「事前検査」があれば、それも通す
 7. 設定の「セットアップ」と「検証」を流す
 8. 5〜7 のどこかで失敗したら push しない。何が失敗したかを要判断として報告する（直さない）
