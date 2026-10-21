@@ -9,6 +9,8 @@
 //   - 変わったファイルが package.json・pnpm / npm の lockfile・パターンで許したものだけか
 //   - package.json は、既存の依存と overrides の版の値だけが変わっているか。
 //     版は ^1.2.3・~1.2.3・1.2.3（npm alias なら同じ alias 先）の形で、記号を変えず、下げず、prerelease にしていないか。
+//     作業ツリーでは記号を外した版（^1.2.3 → 1.2.4）も認める。範囲のまま上げると範囲内の最新に解決されるので、
+//     いったん exact で lockfile を更新してから記号を戻す。push される HEAD では元の記号に戻っている必要がある。
 //     scripts などが変わると、CI の install で任意のコードが secrets 付きで動くため
 //   - lockfile の各パッケージの解決が、レジストリの integrity だけか。同じ版の解決が変わっていないか。
 //     pnpm-lock.yaml は、追加・変更された行が pnpm の書く形だけか（書式を変えて検査をすり抜けさせない）
@@ -214,7 +216,7 @@ function checkSpec(label, oldSpec, newSpec) {
   if (old[1] !== next[1]) {
     return [`${label} の alias 先が変わる（${oldSpec} → ${newSpec}）`];
   }
-  if (old[2] !== next[2]) {
+  if (old[2] !== next[2] && (head || next[2] !== "")) {
     return [`${label} の範囲の記号が変わる（${oldSpec} → ${newSpec}）`];
   }
   if (next[4] && !old[4]) {
