@@ -69,6 +69,10 @@ Design priorities:
 - DB schema 変更では YAGNI、migration、rollback、既存データへの影響を厳しく見る。
 - 不明点は調査し、調査で決められない判断だけユーザーに確認する。
 
+## Repo patrol
+
+`.claude/skills/repo-patrol/` は plugin ではなく、各リポジトリへコピーして使う skill です。Claude Code の scheduled tasks で毎日リポジトリを巡回し、Dependabot の更新をまとめた PR を作って CI を見届け、30 日を過ぎた Issue / PR を閉じ、結果を Slack に投稿します。マージは人がします。導入手順は [docs/repo-patrol.md](docs/repo-patrol.md) にあります。
+
 ## Repository Principles
 
 この repository 全体で重視すること:
@@ -94,6 +98,8 @@ plugins/
         scripts/
 docs/
 scripts/
+.claude/skills/repo-patrol/   コピー配布の skill（plugin ではない）
+tests/repo-patrol/            repo-patrol の guard とスクリプトのテスト
 ```
 
 現存 plugin:
@@ -150,6 +156,7 @@ docs/implementation/
 ```bash
 pnpm install
 pnpm validate
+pnpm test:hooks
 pnpm lint
 ```
 

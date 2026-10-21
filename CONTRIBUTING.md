@@ -13,6 +13,7 @@
 - `SKILL.md` の frontmatter デリミタ `---` は必ずファイル 1 行目に置く。先頭に HTML コメント等を置くと frontmatter バリデーションが壊れる。
 - 社員が使い続けても成果物が散らからないよう、artifact lifecycle を壊さない。
 - 過剰設計を避ける。新しい仕組みを足す前に、既存の references / scripts / docs で足りるか確認する。
+- `.claude/skills/repo-patrol/` は plugin ではなく、各リポジトリへコピーして使う skill の正本。クラウドのセッションが plugin を読まないため。変更したら `pnpm test:hooks` を通し、コピー先は `docs/repo-patrol.md` の手順で更新する。この repo は public なので、社内のリポジトリ名・取引先名・Slack の ID は書かない。
 - この repo の運用で再利用すべきルールは memory ではなく、`AGENTS.md`、`CLAUDE.md`、`CONTRIBUTING.md`、`docs/` に残す。
 - Claude Code では薄い slash command alias を増やさず、skill の自然文 trigger と description を優先する。独立した手動 workflow がある場合だけ command を追加する。
 - 配布済み plugin の manifest、skills、references、description、component inventory、host exposure を変えたら、`.codex-plugin/plugin.json` と `.claude-plugin/plugin.json` の version を同じ値に bump する。

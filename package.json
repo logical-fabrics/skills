@@ -7,7 +7,7 @@
   "packageManager": "pnpm@11.9.0",
   "scripts": {
     "validate": "node scripts/validate-plugins.mjs",
-    "test:hooks": "node --test plugins/implementation-workflow/hooks/tests/*.test.mjs",
+    "test:hooks": "node --test plugins/implementation-workflow/hooks/tests/*.test.mjs tests/repo-patrol/*.test.mjs",
     "format": "biome format --write .",
     "lint": "biome check . && knip"
   },
