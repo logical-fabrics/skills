@@ -102,6 +102,190 @@ test("slack-post refuses to post without a channel in the config", (t) => {
   }
 });
 
+// プレビューの出力から Block Kit の blocks を取り出す
+function previewBlocks(result) {
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout.split("（Block Kit:）\n")[1]);
+}
+
+test("slack-post renders the report as Block Kit", (t) => {
+  const repo = slackRepo(t, SLACK_CONFIG);
+  const blocks = previewBlocks(
+    repo.post(
+      [
+        "{{mention}} o/r の巡回（2026-10-22）: 要対応 1 件",
+        "",
+        "## :eyes: マージしてください",
+        "",
+        "- #12 依存更新（`a` 1.2.4・`b` 2.0.1）。CI 成功",
+        "- #13 `actions/setup-node` 6.1.0",
+        "",
+        "---",
+        "> :zzz: 見送り中: #3 `c` 2.0.0",
+        ">",
+        "> :white_check_mark: main の CI: 成功",
+        "実行ログ: https://claude.ai/code/session_abc123",
+        "",
+      ].join("\n"),
+    ),
+  );
+  assert.deepEqual(blocks, [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "o/r の巡回（2026-10-22）: 要対応 1 件",
+        emoji: true,
+      },
+    },
+    { type: "section", text: { type: "mrkdwn", text: "<!channel>" } },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: [
+          "*:eyes: マージしてください*",
+          "• <https://github.com/o/r/issues/12|#12> 依存更新（ `a` 1.2.4・ `b` 2.0.1）。CI 成功",
+          "• <https://github.com/o/r/issues/13|#13> `actions/setup-node` 6.1.0",
+        ].join("\n"),
+      },
+    },
+    { type: "divider" },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: [
+            ":zzz: 見送り中: <https://github.com/o/r/issues/3|#3> `c` 2.0.0",
+            ":white_check_mark: main の CI: 成功",
+            "<https://claude.ai/code/session_abc123|実行ログ>",
+          ].join("\n"),
+        },
+      ],
+    },
+  ]);
+
+  const quiet = previewBlocks(
+    repo.post("o/r の巡回（2026-10-22）: 対応なし\n"),
+  );
+  assert.equal(quiet.length, 1);
+  assert.equal(quiet[0].type, "header");
+});
+
+test("slack-post links only issue numbers and the session URL", (t) => {
+  const repo = slackRepo(t, SLACK_CONFIG);
+  const blocks = previewBlocks(
+    repo.post(
+      [
+        "o/r の巡回: <!channel> & <x>",
+        "- 題名 <!channel> <https://evil.example|click> #7 a#8 https://x.example/#9 &#10; `#11`",
+        "実行ログ: https://evil.example/code/session_abc",
+        "",
+      ].join("\n"),
+    ),
+  );
+  assert.equal(blocks[0].text.text, "o/r の巡回: ＜!channel＞ ＆ ＜x＞");
+  assert.equal(
+    blocks[1].text.text,
+    [
+      "• 題名 &lt;!channel&gt; &lt;https://evil.example|click&gt; <https://github.com/o/r/issues/7|#7> a#8 https://x.example/#9 &amp;#10; `#11`",
+      "実行ログ: https://evil.example/code/session_abc",
+    ].join("\n"),
+  );
+
+  const unlinked = slackRepo(t, "## Slack チャンネル\n\n`#engineer`\n");
+  const plain = previewBlocks(unlinked.post("x\n- #7\n"));
+  assert.equal(plain[1].text.text, "• #7");
+});
+
+test("slack-post keeps the blocks within Slack's limits", (t) => {
+  const repo = slackRepo(t, SLACK_CONFIG);
+  const blocks = previewBlocks(
+    repo.post(
+      [
+        "見".repeat(200),
+        "## 長い節",
+        ...Array.from({ length: 60 }, (_, i) => `- #${i} ${"あ".repeat(100)}`),
+        `- ${"い".repeat(5000)}`,
+        "",
+      ].join("\n"),
+    ),
+  );
+  assert.equal(blocks[0].text.text.length, 150);
+  const sections = blocks.filter((block) => block.type === "section");
+  assert.ok(sections.length > 1);
+  for (const section of sections) {
+    assert.ok(section.text.text.length <= 3000, section.text.text.length);
+  }
+  assert.match(sections[0].text.text, /^\*長い節\*\n• /);
+  assert.match(sections.at(-1).text.text, /…$/);
+
+  const many = repo.post(`x\n${"---\n".repeat(60)}`);
+  assert.equal(many.status, 0, many.stderr);
+  assert.match(many.stdout, /（Block Kit:）\nnull\n$/);
+});
+
+test("slack-post sends plain text when Slack rejects the blocks", (t) => {
+  const repo = slackRepo(t, SLACK_CONFIG);
+  const bin = tempDir(t);
+  const log = path.join(bin, "curl.log");
+  // chat.postMessage の代わり。REJECT_BLOCKS=1 なら、blocks のある本文に invalid_blocks を返す
+  writeFileSync(
+    path.join(bin, "curl"),
+    `#!/usr/bin/env bash
+out=
+data=
+while [ $# -gt 0 ]; do
+  case $1 in
+  -o) out=$2; shift ;;
+  --data-binary) data=$2; shift ;;
+  esac
+  shift
+done
+printf '%s\\n' "$data" >>"$CURL_LOG"
+if [ "$REJECT_BLOCKS" = 1 ] && printf '%s' "$data" | grep -q '"blocks"'; then
+  echo '{"ok":false,"error":"invalid_blocks"}' >"$out"
+else
+  echo '{"ok":true,"ts":"1.2"}' >"$out"
+fi
+printf 200
+`,
+  );
+  chmodSync(path.join(bin, "curl"), 0o755);
+  const env = (reject) => ({
+    REPO_PATROL: "1",
+    PATH: `${bin}:${process.env.PATH}`,
+    CURL_LOG: log,
+    REJECT_BLOCKS: reject,
+  });
+  const sent = () =>
+    readFileSync(log, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+
+  const accepted = repo.post("{{mention}} x\n- #1\n", env("0"));
+  assert.equal(accepted.status, 0, accepted.stderr);
+  assert.match(accepted.stdout, /投稿した（ts=1\.2）/);
+  const [rich] = sent();
+  assert.equal(rich.channel, "C0123ABCD");
+  assert.equal(rich.text, "<!channel> x");
+  assert.equal(rich.blocks.length, 3);
+
+  rmSync(log);
+  const rejected = repo.post("{{mention}} x\n- #1\n", env("1"));
+  assert.equal(rejected.status, 0, rejected.stderr);
+  assert.match(rejected.stderr, /invalid_blocks/);
+  const [first, second] = sent();
+  assert.ok(first.blocks);
+  assert.equal(second.blocks, undefined);
+  assert.equal(
+    second.text,
+    "<!channel> x\n• <https://github.com/o/r/issues/1|#1>",
+  );
+});
+
 const BASE_PACKAGE = {
   name: "app",
   scripts: { check: "biome check ." },
