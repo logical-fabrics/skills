@@ -4,41 +4,44 @@
 #
 # - 宛先は、リポジトリの .claude/repo-patrol.md の「## Slack チャンネル」に書いたチャンネル ID か #チャンネル名だけ
 #   （巡回は .claude を書き換えられないので、宛先を変えられない）。トークンは cloud environment の network secret（host slack.com）が付ける
-# - 本文の & < > はすべてエスケープする（Issue のタイトルなどに含まれる <!channel> やリンク記法を無効にする）
-# - メンションは、本文の先頭にある {{mention}} を @channel に置き換えたものだけ。
-#   先頭以外の {{mention}}（Issue のタイトルに書かれたものなど）はそのまま文字として送る
+# - 本文は slack-message.mjs が Block Kit にする（書式・エスケープ・メンション・リンクの決まりはそちらに書いた）。
+#   #番号は「## リポジトリ」の Issue / PR へのリンクになる
+# - Block Kit が拒否されたら（invalid_blocks など）、同じ内容を文字だけで送り直す
 # - REPO_PATROL=1 でなければ投稿せず、宛先と送る本文を表示する
 # - 一時的なエラー（HTTP 429・5xx・通信の失敗・ratelimited など）だけ Retry-After を守って 3 回まで試し、だめなら exit 1
 set -euo pipefail
 
 file=$1
-mention="<!channel>"
+scripts=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+config="$(git rev-parse --show-toplevel)/.claude/repo-patrol.md"
 
-render() {
-  jq -Rrs --arg mention "$mention" '
-    gsub("&"; "&amp;") | gsub("<"; "&lt;") | gsub(">"; "&gt;")
-    | if startswith("{{mention}}") then $mention + .[11:] else . end
-  ' "$file"
+# 設定の「## <名前>」の節にある、最初の空でない行（バッククォートと空白を除く）
+config_value() {
+  awk -v heading="## $1" '
+    /^## / { line = $0; sub(/[[:space:]]+$/, "", line); in_section = (line == heading); next }
+    in_section && NF { gsub(/[`[:space:]]/, ""); print; exit }
+  ' "$config" 2>/dev/null || true
 }
 
-config="$(git rev-parse --show-toplevel)/.claude/repo-patrol.md"
-channel=$(awk '
-  /^## / { in_section = ($0 ~ /^## Slack チャンネル[[:space:]]*$/); next }
-  in_section && NF { gsub(/[`[:space:]]/, ""); print; exit }
-' "$config" 2>/dev/null || true)
+channel=$(config_value "Slack チャンネル")
 if ! [[ $channel =~ ^([CG][A-Z0-9]{6,}|#[a-z0-9][a-z0-9._-]{0,79})$ ]]; then
   echo "$config の「## Slack チャンネル」にチャンネル ID か #チャンネル名がない: '$channel'" >&2
   exit 1
 fi
+repo=$(config_value "リポジトリ")
+
+messages=$(node "$scripts/slack-message.mjs" "$file" "$channel" "$repo")
 
 if [ "${REPO_PATROL:-}" != 1 ]; then
   echo "（REPO_PATROL=1 ではないので投稿しない。宛先: ${channel}。送る本文:）"
-  render
+  jq -r .plain.text <<<"$messages"
+  echo "（Block Kit:）"
+  jq .rich.blocks <<<"$messages"
   exit 0
 fi
 
-payload=$(jq -n --arg channel "$channel" --arg text "$(render)" \
-  '{ channel: $channel, text: $text, unfurl_links: false, unfurl_media: false }')
+payload=$(jq -c .rich <<<"$messages")
+plain=$(jq -c .plain <<<"$messages")
 
 headers=$(mktemp)
 body=$(mktemp)
@@ -55,6 +58,15 @@ for attempt in 1 2 3; do
   fi
   error=$(jq -r '.error // empty' "$body" 2>/dev/null || true)
   error="${error:-http_$code}"
+  case $error in
+  invalid_blocks | invalid_blocks_format | msg_blocks_too_long)
+    if [ "$payload" != "$plain" ]; then
+      echo "Block Kit が拒否された（${error}）ので、文字だけで送り直す" >&2
+      payload=$plain
+      continue
+    fi
+    ;;
+  esac
   transient=0
   case $code in
   000 | 429 | 5??) transient=1 ;;
