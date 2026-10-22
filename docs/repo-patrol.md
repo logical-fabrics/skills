@@ -7,7 +7,7 @@ Claude Code の scheduled tasks（旧 routines）で、リポジトリを毎日 
 - Dependabot の npm 系の更新を 1 本の PR（巡回 PR、ブランチ `claude/patrol-deps`）にまとめ、CI を最後まで見届ける
 - 30 日を過ぎた Issue と PR を、理由のコメントと `patrol-closed` ラベルを付けて閉じる（1 日 10 件まで。7 日前に予告する）
 - 既定ブランチの CI の状態を見る
-- 結果を、リポジトリの設定に書いた Slack チャンネルに毎回 1 投稿する。要対応のときは @channel を付ける。何もない日も 1 行投稿するので、投稿がなければ巡回が止まっていると分かる
+- 人が見るべきもの（マージ待ち・要判断・CI の失敗・閉じる予定）がある日だけ、リポジトリの設定に書いた Slack チャンネルに 1 投稿する。新しく対応が要るときは @channel を付ける。何もない日は投稿しないので、巡回が動いているかは scheduled task の最終実行で見る
 
 しないこと: マージ、本番昇格、デプロイ、コードの修正、npm 系以外（GitHub Actions・cargo など）の更新の取り込み、アラートの dismiss、リポジトリ設定の変更。マージは人がする。
 
@@ -17,7 +17,7 @@ Claude Code の scheduled tasks（旧 routines）で、リポジトリを毎日 
 logical-fabrics/skills（正本）── コピー ──> 各リポジトリの .claude/skills/repo-patrol/ と .claude/repo-patrol.md
 claude.ai の scheduled task（リポジトリごとに 1 つ・毎朝）── clone ──> 各リポジトリ
    ├─ GitHub（Claude GitHub App 経由・REST だけ）: 巡回 PR、コメント、close
-   └─ Slack（Slack アプリのボット名義・プロジェクトのチャンネル）: 毎回 1 投稿、要対応のときだけ @channel
+   └─ Slack（Slack アプリのボット名義・プロジェクトのチャンネル）: 報告がある日に 1 投稿、新しい要対応のときだけ @channel
 ```
 
 - scheduled task はリポジトリごとに 1 つ作る。複数のリポジトリを付けたセッションでは `.claude/settings.json` の hooks が読まれず、guard が効かないため
@@ -56,7 +56,7 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
 1. claude.ai の Team Owner が、Scheduled tasks と GitHub 連携（ブラウザの GitHub App 方式）を有効にしていることを確かめる（https://claude.ai/admin-settings/capabilities）
 2. https://claude.ai/customize/connectors で、GitHub がブラウザの App 方式で接続されていることを確かめる。`/web-setup` で接続していたら切断し、ブラウザで接続し直す
 3. Slack アプリを作る。Bot Token Scopes は `chat:write` だけにする（`chat:write.public`・`chat:write.customize`・`channels:join` は付けない）。ワークスペースにインストールする。投稿先は各プロジェクトのチャンネルで、招待はリポジトリの導入のときに行う
-4. 投稿が止まったことに気づけるよう、各プロジェクトのチャンネルで投稿を確かめる人を決める（Slack の `/remind` で毎朝促してもよい）
+4. 巡回が止まったことに気づけるよう、scheduled task の持ち主が https://claude.ai/code/routines で最終実行の日時と結果をときどき確かめる（何もない日は Slack に投稿しないので、投稿の有無では分からない）
 5. https://claude.ai/code で cloud environment「repo-patrol」を作る。Personal のまま共有せず、ほかの用途に使わない
    - Network access: Trusted のまま（network secret のホストは許可リストなしで届く）
    - Network secret: host `slack.com`、値は Slack のボットトークン
@@ -127,7 +127,7 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
 
 9. Run now で実行し、トランスクリプトで次を確かめる
    - 手順 1 の guard の確認で、push が guard に止められている
-   - プロジェクトのチャンネルにボット名義で 1 回投稿される（要対応があれば @channel が付く）
+   - 報告することがあれば、プロジェクトのチャンネルにボット名義で 1 回投稿される（新しい要対応があれば @channel が付く）。なければ、実行ログの最後に投稿しなかったことが書かれている
    - GitHub への書き込みが、巡回 PR・コメント・close の範囲に収まっている
 
 ## 設定ファイル（`.claude/repo-patrol.md`）
