@@ -104,10 +104,16 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
 6. `.claude/skills/repo-patrol/scripts/stale.sh <owner/repo> list` で閉じる候補を出し、残したいものに `keep` を付ける。初回にまとめて閉じるものを人が確かめるため
 7. PR を作り、CI が通ってからマージする
 8. https://claude.ai/code で、このリポジトリ用の cloud environment（例: `repo-patrol-<リポジトリ名>`）を作る。Personal のまま共有せず、巡回のほかには使わない
-   - Network access: Trusted のまま（network secret のホストは許可リストなしで届く）
+   - Network access: Trusted のまま（network secret のホストは許可リストなしで届く）。npm のレジストリ以外から取る依存（`package.json` に tarball の URL を書いたものなど）があれば、Custom にして「Also include default list of common package managers」にチェックを入れ、そのホストだけを Allowed domains に足す。ジョブのログの転送先（`*.blob.core.windows.net`）のような広いワイルドカードは足さない（誰でも作れる保存先へ書き出せる通り道になる）
    - Network secret: host `slack.com`、値は Slack のボットトークン。環境ごとに入れるので、トークンを替えたら全部の環境を直す
-   - Environment variables: `TZ=Asia/Tokyo`、`BASH_DEFAULT_TIMEOUT_MS=600000`。`REPO_PATROL=1` は手順 9 の確認のあとで足す（先に置くと、guard が確認のコマンドを止める）。`GH_TOKEN` や `GITHUB_TOKEN` は置かない
-   - Setup script: 下の型の先頭の 2 つの値を、このリポジトリの Node のメジャー（engines や CI と同じ）と、`packageManager` の pnpm の版にする。pnpm を `packageManager` と同じ版にしておくと、pnpm の版の自動切り替えが起きない（古い pnpm から切り替わると lockfile が書き換わることがある）。Java などほかに要るものは後ろに足す。5 分を超えるとスナップショットされない
+   - Environment variables: 下のように 1 行に 1 つずつ書く（読点・空白・引用符を入れない）。`REPO_PATROL=1` は手順 9 の確認のあとで足す（先に置くと、guard が確認のコマンドを止める）。`GH_TOKEN` や `GITHUB_TOKEN` は置かない
+
+     ```text
+     TZ=Asia/Tokyo
+     BASH_DEFAULT_TIMEOUT_MS=600000
+     ```
+
+   - Setup script: 下の型を欄にまるごと貼り、先頭の 2 つの値だけを、このリポジトリの Node のメジャー（engines や CI と同じ）と、`packageManager` の pnpm の版に書き換える。pnpm を `packageManager` と同じ版にしておくと、pnpm の版の自動切り替えが起きない（古い pnpm から切り替わると lockfile が書き換わることがある）。Java などほかに要るものは後ろに足す。5 分を超えるとスナップショットされない
 
      ```bash
      #!/bin/bash
@@ -137,14 +143,15 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
      if [ -n "$PNPM_VERSION" ]; then pnpm -v; fi
      ```
 
-9. この環境で手動のクラウドセッションを開き、次を確かめて記録する。終わったら Environment variables に `REPO_PATROL=1` を足す
+9. この環境で手動のクラウドセッションを開き（リポジトリはこの 1 つだけ）、次を確かめて記録する
    - `node -v`・`pnpm -v` が setup script で入れた版になっている（`java -version` は必要なリポジトリだけ）
-   - 設定の「セットアップ」のコマンドを流したあと、`git status` に差分がない
-   - `gh api -i user` の応答に `X-OAuth-Scopes` がない（App 経由である）。あれば「準備」の手順 2 に戻る
+   - 設定の「セットアップ」のコマンドを流したあと、`git status` に差分がない。失敗したら、手順 8 の Allowed domains か、「セットアップ」の書き方（下の「設定ファイル」）を見直す
+   - `gh api -i user` の応答の `X-OAuth-Scopes` の値が空である（App 経由。ヘッダーそのものは付く）。`repo` などの権限の名前が並べば `/web-setup` の個人トークンなので、「準備」の手順 2 に戻る
    - `curl -s https://slack.com/api/auth.test` が `"ok":true`
    - Dependabot アラートの API（`gh api repos/<owner>/<repo>/dependabot/alerts`）と `pnpm audit --json` が使えるか
    - ジョブのログ（`gh api repos/<owner>/<repo>/actions/jobs/<id>/logs`）が取れるか
    - Claude Code の版（hook の `onFailure` は v2.1.295 以降）と、Bash 以外に GitHub に書き込めるツールがあるか
+   - 終わったら Environment variables に `REPO_PATROL=1` を足し、新しいセッションで `git push --dry-run origin HEAD:refs/heads/develop` が guard に止められることを確かめる（値がちょうど `1` でないと guard は動かない）
 10. scheduled task を作る（https://claude.ai/code/routines）
     - project からは作らない（project のスレッドはリポジトリの hooks を読まない）
     - リポジトリはこの 1 つだけ。環境は手順 8 で作ったもの。コネクタはすべて外す
@@ -189,7 +196,7 @@ testing, E2E Tests（ワークフローの `name:`。CI がなければ「なし
 
 ## セットアップ
 
-検証の前に実行するコマンド。例: `pnpm install --frozen-lockfile`（pnpm は環境の setup script で入れるので `corepack enable` は要らない。Node 25 以上には corepack がない）
+検証の前に実行するコマンド。例: `pnpm install --frozen-lockfile`（pnpm は環境の setup script で入れるので `corepack enable` は要らない。Node 25 以上には corepack がない）。検証に native addon が要らなければ `--ignore-scripts` を付ける（依存の install script を巡回の中で動かさずに済み、クラウドで native addon のビルドが途中のダウンロードで失敗することも避けられる）
 
 ## 事前検査
 
