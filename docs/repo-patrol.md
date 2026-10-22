@@ -15,12 +15,13 @@ Claude Code の scheduled tasks（旧 routines）で、リポジトリを毎日 
 
 ```text
 logical-fabrics/skills（正本）── コピー ──> 各リポジトリの .claude/skills/repo-patrol/ と .claude/repo-patrol.md
-claude.ai の scheduled task（リポジトリごとに 1 つ・毎朝）── clone ──> 各リポジトリ
+claude.ai の scheduled task（リポジトリごとに 1 つ・毎朝・リポジトリごとの cloud environment）── clone ──> 各リポジトリ
    ├─ GitHub（Claude GitHub App 経由・REST だけ）: 巡回 PR、コメント、close
    └─ Slack（Slack アプリのボット名義・プロジェクトのチャンネル）: 報告がある日に 1 投稿、新しい要対応のときだけ @channel
 ```
 
 - scheduled task はリポジトリごとに 1 つ作る。複数のリポジトリを付けたセッションでは `.claude/settings.json` の hooks が読まれず、guard が効かないため
+- cloud environment もリポジトリごとに作る（Node と pnpm の版がまったく同じリポジトリどうしは共用してよい）。setup script の結果は環境ごとに 1 つのスナップショットとして使い回され、巡回は Node や pnpm を切り替えられない（setup script で変えた PATH はセッションに残らず、guard も止める）ため
 - 巡回は `REPO_PATROL=1` を置いた cloud environment でだけ動く。guard もこの変数があるときだけ判定するので、人のセッションには影響しない
 - クラウドの GitHub プロキシは GraphQL を拒否する。スクリプトはすべて `gh api` の REST で書いてある
 
@@ -57,18 +58,6 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
 2. https://claude.ai/customize/connectors で、GitHub がブラウザの App 方式で接続されていることを確かめる。`/web-setup` で接続していたら切断し、ブラウザで接続し直す
 3. Slack アプリを作る。Bot Token Scopes は `chat:write` だけにする（`chat:write.public`・`chat:write.customize`・`channels:join` は付けない）。ワークスペースにインストールする。投稿先は各プロジェクトのチャンネルで、招待はリポジトリの導入のときに行う
 4. 巡回が止まったことに気づけるよう、scheduled task の持ち主が https://claude.ai/code/routines で最終実行の日時と結果をときどき確かめる（何もない日は Slack に投稿しないので、投稿の有無では分からない）
-5. https://claude.ai/code で cloud environment「repo-patrol」を作る。Personal のまま共有せず、ほかの用途に使わない
-   - Network access: Trusted のまま（network secret のホストは許可リストなしで届く）
-   - Network secret: host `slack.com`、値は Slack のボットトークン
-   - Environment variables: `REPO_PATROL=1`、`TZ=Asia/Tokyo`、`BASH_DEFAULT_TIMEOUT_MS=600000`。`GH_TOKEN` や `GITHUB_TOKEN` は置かない
-   - Setup script: リポジトリが必要とする Node の版を入れて既定にする（Claude の Bash と hook から見える場所に置く）。5 分以内に終える
-6. この環境で手動のクラウドセッションを開き、次を確かめて記録する
-   - `node -v`・`pnpm -v`・`java -version`（必要なリポジトリだけ）
-   - `gh api -i user` の応答に `X-OAuth-Scopes` がない（App 経由である）。あれば手順 2 に戻る
-   - `curl -s https://slack.com/api/auth.test` が `"ok":true`
-   - Dependabot アラートの API（`gh api repos/<owner>/<repo>/dependabot/alerts`）と `pnpm audit --json` が使えるか
-   - ジョブのログ（`gh api repos/<owner>/<repo>/actions/jobs/<id>/logs`）が取れるか
-   - Claude Code の版（hook の `onFailure` は v2.1.295 以降）と、Bash 以外に GitHub に書き込めるツールがあるか
 
 ## リポジトリへの導入
 
@@ -114,21 +103,63 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
 5. ラベル `keep` と `patrol-closed` を作る（`gh label create keep`、`gh label create patrol-closed`）
 6. `.claude/skills/repo-patrol/scripts/stale.sh <owner/repo> list` で閉じる候補を出し、残したいものに `keep` を付ける。初回にまとめて閉じるものを人が確かめるため
 7. PR を作り、CI が通ってからマージする
-8. scheduled task を作る（https://claude.ai/code/routines）
-   - project からは作らない（project のスレッドはリポジトリの hooks を読まない）
-   - リポジトリはこの 1 つだけ。環境は repo-patrol。コネクタはすべて外す
-   - スケジュール: 毎日、始業ごろ。ほかのリポジトリと 20 分ずつずらす（例: 09:00、09:20、09:40）。早朝にすると、@channel の通知が寝ている時間に届く
-   - プロンプト:
+8. https://claude.ai/code で、このリポジトリ用の cloud environment（例: `repo-patrol-<リポジトリ名>`）を作る。Personal のまま共有せず、巡回のほかには使わない
+   - Network access: Trusted のまま（network secret のホストは許可リストなしで届く）
+   - Network secret: host `slack.com`、値は Slack のボットトークン。環境ごとに入れるので、トークンを替えたら全部の環境を直す
+   - Environment variables: `TZ=Asia/Tokyo`、`BASH_DEFAULT_TIMEOUT_MS=600000`。`REPO_PATROL=1` は手順 9 の確認のあとで足す（先に置くと、guard が確認のコマンドを止める）。`GH_TOKEN` や `GITHUB_TOKEN` は置かない
+   - Setup script: 下の型の先頭の 2 つの値を、このリポジトリの Node のメジャー（engines や CI と同じ）と、`packageManager` の pnpm の版にする。pnpm を `packageManager` と同じ版にしておくと、pnpm の版の自動切り替えが起きない（古い pnpm から切り替わると lockfile が書き換わることがある）。Java などほかに要るものは後ろに足す。5 分を超えるとスナップショットされない
 
-     ```text
-     .claude/skills/repo-patrol/SKILL.md を読んで、そのとおりに巡回する。設定は .claude/repo-patrol.md。
-     これは無人の定期実行。マージ、本番昇格、リポジトリ設定の変更はしない。
+     ```bash
+     #!/bin/bash
+     set -euo pipefail
+     NODE_MAJOR=26        # リポジトリの engines・CI と同じメジャー
+     PNPM_VERSION=12.6.0  # packageManager と同じ版。pnpm を使わないなら空にする
+     dir=/opt/patrol-node
+     v=$(curl -fsSL https://nodejs.org/dist/index.json | jq -r --arg m "v$NODE_MAJOR." 'map(select(.version | startswith($m)))[0].version')
+     f="node-$v-linux-x64.tar.xz"
+     cd /tmp
+     curl -fsSLO "https://nodejs.org/dist/$v/$f"
+     curl -fsSL "https://nodejs.org/dist/$v/SHASUMS256.txt" | grep " $f\$" | sha256sum -c -
+     mkdir -p "$dir"
+     tar -xJf "$f" -C "$dir" --strip-components=1
+     rm "$f"
+     if [ -n "$PNPM_VERSION" ]; then
+       "$dir/bin/npm" install -g --prefix "$dir" "pnpm@$PNPM_VERSION"
+     fi
+     # setup script で変えた PATH はセッションに残らないので、いま各コマンドが見つかる場所を差し替える
+     default_bin=$(dirname "$(command -v node)")
+     for tool in node npm npx pnpm; do
+       [ -e "$dir/bin/$tool" ] || continue
+       current=$(command -v "$tool" || true)
+       ln -sf "$dir/bin/$tool" "$(dirname "${current:-$default_bin/$tool}")/$tool"
+     done
+     node -v
+     if [ -n "$PNPM_VERSION" ]; then pnpm -v; fi
      ```
 
-9. Run now で実行し、トランスクリプトで次を確かめる
-   - 手順 1 の guard の確認で、push が guard に止められている
-   - 報告することがあれば、プロジェクトのチャンネルにボット名義で 1 回投稿される（新しい要対応があれば @channel が付く）。なければ、実行ログの最後に投稿しなかったことが書かれている
-   - GitHub への書き込みが、巡回 PR・コメント・close の範囲に収まっている
+9. この環境で手動のクラウドセッションを開き、次を確かめて記録する。終わったら Environment variables に `REPO_PATROL=1` を足す
+   - `node -v`・`pnpm -v` が setup script で入れた版になっている（`java -version` は必要なリポジトリだけ）
+   - 設定の「セットアップ」のコマンドを流したあと、`git status` に差分がない
+   - `gh api -i user` の応答に `X-OAuth-Scopes` がない（App 経由である）。あれば「準備」の手順 2 に戻る
+   - `curl -s https://slack.com/api/auth.test` が `"ok":true`
+   - Dependabot アラートの API（`gh api repos/<owner>/<repo>/dependabot/alerts`）と `pnpm audit --json` が使えるか
+   - ジョブのログ（`gh api repos/<owner>/<repo>/actions/jobs/<id>/logs`）が取れるか
+   - Claude Code の版（hook の `onFailure` は v2.1.295 以降）と、Bash 以外に GitHub に書き込めるツールがあるか
+10. scheduled task を作る（https://claude.ai/code/routines）
+    - project からは作らない（project のスレッドはリポジトリの hooks を読まない）
+    - リポジトリはこの 1 つだけ。環境は手順 8 で作ったもの。コネクタはすべて外す
+    - スケジュール: 毎日、始業ごろ。ほかのリポジトリと 20 分ずつずらす（例: 09:00、09:20、09:40）。早朝にすると、@channel の通知が寝ている時間に届く
+    - プロンプト:
+
+      ```text
+      .claude/skills/repo-patrol/SKILL.md を読んで、そのとおりに巡回する。設定は .claude/repo-patrol.md。
+      これは無人の定期実行。マージ、本番昇格、リポジトリ設定の変更はしない。
+      ```
+
+11. Run now で実行し、トランスクリプトで次を確かめる
+    - SKILL.md の手順 1 の guard の確認で、push が guard に止められている
+    - 報告することがあれば、プロジェクトのチャンネルにボット名義で 1 回投稿される（新しい要対応があれば @channel が付く）。なければ、実行ログの最後に投稿しなかったことが書かれている
+    - GitHub への書き込みが、巡回 PR・コメント・close の範囲に収まっている
 
 ## 設定ファイル（`.claude/repo-patrol.md`）
 
@@ -158,7 +189,7 @@ testing, E2E Tests（ワークフローの `name:`。CI がなければ「なし
 
 ## セットアップ
 
-検証の前に実行するコマンド。例: `corepack enable`、`pnpm install --frozen-lockfile`
+検証の前に実行するコマンド。例: `pnpm install --frozen-lockfile`（pnpm は環境の setup script で入れるので `corepack enable` は要らない。Node 25 以上には corepack がない）
 
 ## 事前検査
 
