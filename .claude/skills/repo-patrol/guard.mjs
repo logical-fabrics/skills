@@ -796,6 +796,21 @@ function checkPnpm(args, ctx) {
     }
     return gate(ctx);
   }
+  // 推移依存を lockfile だけで範囲内の最新にする。版や範囲は推移依存には付けられない
+  if (subcommand === "update") {
+    const names = more.slice(0, -3);
+    if (
+      names.length === 0 ||
+      more.slice(-3).join(" ") !==
+        "--no-save --lockfile-only --ignore-scripts" ||
+      !names.every((name) => /^(?:@[\w][\w.-]*\/)?[\w][\w.-]*$/.test(name))
+    ) {
+      return block(
+        "pnpm update は「パッケージ名 ... --no-save --lockfile-only --ignore-scripts」だけ（版や範囲は付けない）",
+      );
+    }
+    return gate(ctx);
+  }
   if (subcommand === "run") {
     if (more.length !== 1 || !/^[A-Za-z0-9][\w:.-]*$/.test(more[0])) {
       return block(

@@ -55,7 +55,7 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 - 使えるコマンド:
   - git: `fetch origin`、`remote set-head origin -a`、`checkout -B claude/patrol-deps origin/<BASE>`（`<BASE>` は既定ブランチだけ）、`add`、`commit -F /tmp/repo-patrol/<ファイル>`、下の表の push、読み取り（status・diff・log・show・rev-parse・merge-base・ls-files）、`config user.name` / `user.email`
   - `gh api`（下の「GitHub の操作」の形。読めるのは `repos/<REPO>/...` と `user` だけ）
-  - pnpm: `install --frozen-lockfile [--ignore-scripts]`、`install --lockfile-only --ignore-scripts`、`run <スクリプト名>`（引数やオプションは付けない。前に `--filter <名前>` は付けてよい）、`audit`、`why`。npm: `view`、`audit`、`install --package-lock-only --ignore-scripts`、`ci`。`corepack enable`
+  - pnpm: `install --frozen-lockfile [--ignore-scripts]`、`install --lockfile-only --ignore-scripts`、`update <名前> ... --no-save --lockfile-only --ignore-scripts`（推移依存。版や範囲は付けない）、`run <スクリプト名>`（引数やオプションは付けない。前に `--filter <名前>` は付けてよい）、`audit`、`why`。npm: `view`、`audit`、`install --package-lock-only --ignore-scripts`、`ci`。`corepack enable`
   - `.claude/skills/<skill>/scripts/` のスクリプト（直接か、オプションなしの `bash` / `node` で）。`slack-post.sh` に渡せるのは `/tmp/repo-patrol/` のファイルだけ
   - 読み取り: `cat`・`head`・`tail`・`grep`・`jq`・`ls`・`echo`・`printf`・`date`・`test`・`wc`・`cut`・`tr`・`diff`・`comm`。読めるのはリポジトリと `/tmp/repo-patrol/` の中だけ。並べ替えは `jq` で行う
   - `mkdir`（`/tmp/repo-patrol/` の中）、`cd`（リポジトリの中）
@@ -122,7 +122,7 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 2. 人がマージせずに閉じた巡回 PR（`pulls?state=closed&head=<owner>:claude/patrol-deps` のうち作成者が自分で `merged_at` が null のもの）の機械可読ブロックにある版は提案しない
 3. 取り込まない Dependabot の PR（メジャー更新、見送り中、7 日未満しかない）には、まだ自分の repo-patrol コメントがなければ、理由と見直す条件を 1 回だけコメントする。PR は作成から 30 日で巡回が閉じる（次の版が出れば Dependabot が出し直す）ことも書き、「open のまま残す」とは書かない。コメント済みのものは「見送り中」として扱う
 4. 候補がなければ手順 5 へ。あれば `git checkout -B claude/patrol-deps origin/<BASE>`
-5. package.json の版を書き換え、lockfile だけを更新する（pnpm: `pnpm install --lockfile-only --ignore-scripts`、npm: `npm install --package-lock-only --ignore-scripts`）。依存のコードを動かす前に中身を確かめるため。書き換えは `references/dependency-triage.md` の「lockfile への適用」の 2 段で行い、lockfile の解決先が意図した版であることを確かめる
+5. package.json の版を書き換え、lockfile だけを更新する（pnpm: `pnpm install --lockfile-only --ignore-scripts`、npm: `npm install --package-lock-only --ignore-scripts`）。依存のコードを動かす前に中身を確かめるため。書き換えは `references/dependency-triage.md` の「lockfile への適用」の 2 段で行い、lockfile の解決先が意図した版であることを確かめる。推移依存は同じ文書の「推移依存の更新」に従い、package.json を変えない
 6. `node .claude/skills/repo-patrol/scripts/check-diff.mjs origin/<BASE> <設定の追加パス>` が exit 0 になること。設定に「事前検査」があれば、それも通す
 7. 設定の「セットアップ」と「検証」を流す
 8. 5〜7 のどこかで失敗したら push しない。何が失敗したかを要判断として報告する（直さない）
