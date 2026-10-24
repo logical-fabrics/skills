@@ -17,7 +17,12 @@
 
 - 公開日: `npm view <name> time --json` で各版の公開時刻を見る。境界ちょうどの版は避ける
 - インストールスクリプト: `npm view <name>@<version> scripts --json` に `preinstall` / `install` / `postinstall` があれば、取り込まずに要判断にする
-- 公開者: 久しぶりのリリースや公開者が変わった版は、`npm view <name>@<version> _npmUser maintainers --json` を見て、変わっていれば要判断にする
+- 公開者: `npm view <name>@<version> _npmUser maintainers dist.attestations --json` を、今の版と新しい版で比べる。次のどれかなら要判断にする
+  - 新しい版の `_npmUser` が、今の版の `maintainers` にいない
+  - 今の版に provenance（`dist.attestations`）があるのに、新しい版にない
+  - 今の版は `GitHub Actions`（trusted publishing）が公開しているのに、新しい版は人が公開している
+
+  人から `GitHub Actions` に変わり、新しい版に provenance があるもの（trusted publishing への移行）は通す。`GitHub Actions` として公開された版は、npm 側に登録したリポジトリとワークフローからしか出せないので、盗まれたトークンで人の名前で公開される版より確かめやすい
 
 ## lockfile への適用
 

@@ -750,3 +750,150 @@ test("stale.sh close closes first, caps at 10 a day and keeps the order", (t) =>
   assert.match(calls[1], /^api -X POST repos\/o\/r\/issues\/1\/labels/);
   assert.match(calls[2], /^api -X POST repos\/o\/r\/issues\/1\/comments/);
 });
+
+function auditSummary(t, report) {
+  const file = path.join(tempDir(t), "audit.json");
+  writeFileSync(
+    file,
+    typeof report === "string" ? report : JSON.stringify(report),
+  );
+  return spawnSync("node", [path.join(scriptsDir, "audit-summary.mjs"), file], {
+    encoding: "utf8",
+  });
+}
+
+test("audit-summary lists every installed version and marks direct dependencies", (t) => {
+  const result = auditSummary(t, {
+    advisories: {
+      1: {
+        id: 1,
+        module_name: "fast-uri",
+        severity: "low",
+        github_advisory_id: "GHSA-dddd-eeee-ffff",
+        vulnerable_versions: "<3.1.9",
+        patched_versions: ">=3.1.9",
+        findings: [
+          {
+            version: "3.1.8",
+            paths: [
+              "a>b>c>fast-uri",
+              "a>b>d>fast-uri",
+              "a>e>fast-uri",
+              "a>f>fast-uri",
+            ],
+          },
+        ],
+      },
+      2: {
+        id: 2,
+        module_name: "zod",
+        severity: "high",
+        github_advisory_id: "GHSA-aaaa-bbbb-cccc",
+        vulnerable_versions: "<4.6.6",
+        patched_versions: ">=4.6.6",
+        title: "memory",
+        // 先頭の finding は推移依存。直接依存の版はその後ろにある
+        findings: [
+          { version: "3.25.76", paths: ["apps__mobile>expo>@expo/cli>zod"] },
+          { version: "4.4.3", paths: ["apps__web>ai>zod", ".>zod"] },
+        ],
+      },
+    },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  const lines = result.stdout.trimEnd().split("\n");
+  assert.equal(
+    lines[0],
+    "zod\thigh\tGHSA-aaaa-bbbb-cccc\t対象: <4.6.6\t修正: >=4.6.6\tmemory",
+  );
+  assert.equal(lines[1], "  4.4.3\t直接\t.>zod ; apps__web>ai>zod");
+  assert.equal(lines[2], "  3.25.76\t推移\tapps__mobile>expo>@expo/cli>zod");
+  assert.match(lines[3], /^fast-uri\tlow\t/);
+  assert.equal(
+    lines[4],
+    "  3.1.8\t推移\ta>b>c>fast-uri ; a>b>d>fast-uri ; a>e>fast-uri ほか 1 件",
+  );
+  assert.equal(lines[5], "advisory 2 件（直接依存に当たるもの 1 件）");
+});
+
+test("audit-summary reads npm reports and skips advisories inherited from dependencies", (t) => {
+  const result = auditSummary(t, {
+    auditReportVersion: 2,
+    vulnerabilities: {
+      ai: {
+        name: "ai",
+        severity: "high",
+        isDirect: true,
+        via: ["zod"],
+        nodes: ["node_modules/ai"],
+      },
+      zod: {
+        name: "zod",
+        severity: "high",
+        isDirect: true,
+        via: [
+          {
+            source: 1,
+            name: "zod",
+            url: "https://github.com/advisories/GHSA-aaaa-bbbb-cccc",
+            severity: "high",
+            range: "<4.6.6",
+          },
+        ],
+        nodes: ["node_modules/zod"],
+      },
+    },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(
+    result.stdout,
+    "zod\thigh\tGHSA-aaaa-bbbb-cccc\t対象: <4.6.6\n  ?\t直接\tnode_modules/zod\nadvisory 1 件（直接依存に当たるもの 1 件）\n",
+  );
+});
+
+test("audit-summary fails when the report is not an audit result", (t) => {
+  for (const report of [
+    "not json",
+    { error: { code: "ERR_PNPM_AUDIT_BAD_RESPONSE" } },
+    { metadata: {} },
+  ]) {
+    const result = auditSummary(t, report);
+    assert.equal(result.status, 2, JSON.stringify(report));
+  }
+});
+
+// wait-checks.sh が呼ぶ REST をまねる。チェックもワークフローも付いていないコミットを返す。
+function noChecksGh(t, commitAgeSeconds) {
+  const dir = tempDir(t);
+  writeFileSync(
+    path.join(dir, "gh"),
+    `#!/usr/bin/env bash
+case "$*" in
+  *"/check-runs"*) echo '[]' ;;
+  *"/status"*) echo '{"state":"pending","statuses":[]}' ;;
+  *"actions/runs"*) echo '[]' ;;
+  *"commits/"*) echo "$(( $(date +%s) - ${commitAgeSeconds} ))" ;;
+  *"pulls/"*) echo '{"state":"open","mergeable_state":"clean","head":{"sha":"abcdef1234567"}}' ;;
+  *) echo "unexpected: $*" >&2; exit 1 ;;
+esac
+`,
+  );
+  chmodSync(path.join(dir, "gh"), 0o755);
+  return { PATH: `${dir}:${process.env.PATH}` };
+}
+
+test("wait-checks.sh reports no checks soon when no workflow is expected", (t) => {
+  const env = noChecksGh(t, 180);
+  const none = runScript("wait-checks.sh", ["o/r", "1", "-", "0"], { env });
+  assert.equal(none.status, 5, none.stdout + none.stderr);
+
+  // 待つワークフローがあるときは、10 分たつまで起動を待つ
+  const waiting = runScript("wait-checks.sh", ["o/r", "1", "testing", "0"], {
+    env,
+  });
+  assert.equal(waiting.status, 3, waiting.stdout + waiting.stderr);
+  assert.match(
+    waiting.stdout,
+    /pending\ttesting\tワークフローが起動していない/,
+  );
+});

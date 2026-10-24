@@ -44,6 +44,7 @@ const OWN_SCRIPTS = [
   "repo-patrol/scripts/check-diff.mjs",
   "repo-patrol/scripts/slack-post.sh",
   "repo-patrol/scripts/session-url.sh",
+  "repo-patrol/scripts/audit-summary.mjs",
   "dependabot-weekly/scripts/pkgdiff.mjs",
 ];
 
@@ -250,8 +251,11 @@ test("only committed skill scripts run, without interpreter options", (t) => {
     "./x.sh",
     "bash .claude/skills/repo-patrol/scripts/stale.sh other/repo list",
     ".claude/skills/repo-patrol/scripts/wait-checks.sh other/repo 1 -",
+    "node .claude/skills/repo-patrol/scripts/audit-summary.mjs /etc/passwd",
   ]);
+  const audit = fixture.writeJson("audit.json", { advisories: {} });
   fixture.assertAllowed([
+    `node .claude/skills/repo-patrol/scripts/audit-summary.mjs ${audit}`,
     "bash .claude/skills/repo-patrol/scripts/stale.sh o/r list",
     "bash .claude/skills/repo-patrol/scripts/stale.sh O/R close",
     ".claude/skills/repo-patrol/scripts/wait-checks.sh o/r 12 testing",
