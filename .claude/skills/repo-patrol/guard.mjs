@@ -594,6 +594,27 @@ function checkGit(args, ctx) {
         ? null
         : block(`git checkout は -B ${PATROL_BRANCH} ${base} だけ`);
     }
+    // check-diff を通らなかった更新を戻すため。install は check-diff で止まるので、ほかに戻す手段がない
+    case "restore": {
+      const paths = rest.filter(
+        (arg) => !["--staged", "--worktree", "-S", "-W", "--"].includes(arg),
+      );
+      return paths.length > 0 &&
+        paths.every((arg) => {
+          const relative = relativeInside(ctx.root, path.resolve(ctx.cwd, arg));
+          return (
+            /^[\w.@][\w./@-]*$/.test(arg) &&
+            relative !== null &&
+            !hasProtectedSegment(relative) &&
+            isDependencyFile(relative, ctx.extras) &&
+            ctx.isTracked(relative)
+          );
+        })
+        ? null
+        : block(
+            "git restore は [--staged] [--worktree] と追跡済みの依存ファイルだけ",
+          );
+    }
     case "add":
       return rest.every(
         (arg) =>

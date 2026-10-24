@@ -376,7 +376,7 @@ const BUMPED_LOCK = [
   "",
 ].join("\n");
 
-function createRepo(t) {
+function createRepo(t, baseLock = BASE_LOCK) {
   const dir = tempDir(t);
   const git = (...args) =>
     execFileSync("git", args, { cwd: dir, encoding: "utf8" });
@@ -387,7 +387,7 @@ function createRepo(t) {
     path.join(dir, "package.json"),
     JSON.stringify(BASE_PACKAGE, null, 2),
   );
-  writeFileSync(path.join(dir, "pnpm-lock.yaml"), BASE_LOCK);
+  writeFileSync(path.join(dir, "pnpm-lock.yaml"), baseLock);
   mkdirSync(path.join(dir, "src"));
   writeFileSync(path.join(dir, "src", "a.ts"), "export {};\n");
   git("add", "-A");
@@ -422,6 +422,28 @@ test("check-diff accepts version bumps of existing dependencies", (t) => {
   repo.writeLock(BUMPED_LOCK);
   const result = repo.check();
   assert.equal(result.status, 0, result.stdout);
+});
+
+test("check-diff accepts an existing alias whose peers change", (t) => {
+  // d の依存 url-v1 は url を指す別名。peer の版が変わると、親の鍵と別名の値の括弧が書き換わる
+  const aliased = (react) =>
+    BASE_LOCK.replace(
+      "  d@1.0.0: {}",
+      `  d@1.0.0(react@${react}):\n    dependencies:\n      url-v1: url@0.11.4(react@${react})`,
+    );
+  const repo = createRepo(t, aliased("19.2.7"));
+  repo.writeLock(aliased("19.2.8"));
+  const result = repo.check();
+  assert.equal(result.status, 0, result.stdout);
+
+  // 同じ別名でも、ほかのパッケージの依存に現れたら増えている
+  repo.writeLock(
+    aliased("19.2.7").replace(
+      "  a@1.2.0: {}",
+      "  a@1.2.0:\n    dependencies:\n      url-v1: url@0.11.4",
+    ),
+  );
+  assert.equal(repo.check().status, 1);
 });
 
 // packages: の末尾（snapshots: の前）にパッケージの行を差し込む。

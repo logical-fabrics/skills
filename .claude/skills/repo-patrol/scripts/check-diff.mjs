@@ -309,41 +309,68 @@ function checkLockfile(file) {
 // 追加・変更された行（before になかった行）が、pnpm の書く形だけかを見る。
 function checkPnpmLines(beforeText, afterText) {
   const existing = new Set(beforeText.split("\n"));
+  const aliases = new Set();
+  for (const entry of pnpmLines(beforeText)) {
+    const target = aliasTarget(entry);
+    if (target) aliases.add(aliasId(entry, target));
+  }
   const problems = [];
-  let section = null;
-  let specifier = null;
-  for (const line of afterText.split("\n")) {
-    if (/^\S/.test(line)) section = line.split(":")[0];
-    const keyValue = line.match(PNPM_KEY_VALUE);
-    const key = keyValue ? unquote(keyValue[1]) : null;
-    const value = keyValue?.[2];
-    // importers の依存は「名前: / specifier: / version:」の順に並ぶ。鍵だけの行で区切る
-    if (key === "specifier") specifier = unquote(value ?? "");
-    else if (keyValue && value === undefined) specifier = null;
+  for (const entry of pnpmLines(afterText)) {
+    const { line } = entry;
     if (line.trim() === "" || existing.has(line)) continue;
-    const reason =
-      pnpmLineProblem(line) ?? aliasProblem(section, key, value, specifier);
+    const reason = pnpmLineProblem(line) ?? aliasProblem(entry, aliases);
     if (reason) problems.push(`${reason}: ${line.trim()}`);
   }
   return problems;
 }
 
-// 依存の版の値が、別のパッケージ（name@version）を指していないか。
-function aliasProblem(section, key, value, specifier) {
+// pnpm-lock.yaml の各行を、節・親（節の直下の鍵の名前）・鍵・値・直前の specifier と一緒に返す。
+function* pnpmLines(text) {
+  let section = null;
+  let parent = null;
+  let specifier = null;
+  for (const line of text.split("\n")) {
+    if (/^\S/.test(line)) section = line.split(":")[0];
+    const keyValue = line.match(PNPM_KEY_VALUE);
+    const key = keyValue ? unquote(keyValue[1]) : null;
+    const value = keyValue?.[2];
+    // 親の版と peer の括弧は外す（依存の版を上げると親の鍵の peer も変わる）
+    if (/^ {2}\S/.test(line)) parent = key?.match(/^@?[^@]*/)[0] ?? null;
+    // importers の依存は「名前: / specifier: / version:」の順に並ぶ。鍵だけの行で区切る
+    if (key === "specifier") specifier = unquote(value ?? "");
+    else if (keyValue && value === undefined) specifier = null;
+    yield { line, section, parent, key, value, specifier };
+  }
+}
+
+// 依存の版の値が、鍵と別の名前のパッケージ（name@version）を指していれば、その名前。
+function aliasTarget({ key, value }) {
   if (key === null || value === undefined) return null;
   if (key === "specifier" || key === "deprecated") return null;
-  const text = unquote(value);
-  const alias = text.match(ALIAS_VALUE);
-  if (section === "importers" && key === "version") {
+  const alias = unquote(value).match(ALIAS_VALUE);
+  return alias && alias[1] !== key ? alias[1] : null;
+}
+
+// 別名は、同じ親の同じ鍵が同じパッケージを指していれば、版や peer の括弧が変わっても同じものとみなす。
+function aliasId({ section, parent, key }, target) {
+  return [section, parent, key, target].join("\0");
+}
+
+// 依存の版の値が、別のパッケージ（name@version）を指していないか。
+function aliasProblem(entry, aliases) {
+  const { section, key, value, specifier } = entry;
+  if (section === "importers" && key === "version" && value !== undefined) {
+    const text = unquote(value);
     if (isPlainVersion(text)) return null;
     // package.json が npm: alias のときだけ、importers の版は alias 先の名前付きになる
+    const alias = text.match(ALIAS_VALUE);
     if (alias && specifier?.startsWith(`npm:${alias[1]}@`)) return null;
     return "package.json の指定と別のパッケージを指す版がある";
   }
-  if (alias && alias[1] !== key) {
-    return "別名の依存が増えている（要判断）";
-  }
-  return null;
+  const target = aliasTarget(entry);
+  return target && !aliases.has(aliasId(entry, target))
+    ? "別名の依存が増えている（要判断）"
+    : null;
 }
 
 function unquote(value) {
