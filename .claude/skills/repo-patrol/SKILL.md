@@ -106,7 +106,8 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 
 - open の PR を、巡回 PR・Dependabot の PR・人の PR に分ける。巡回 PR は、head が `claude/patrol-deps`、head のリポジトリが `<REPO>`、作成者が自分のもの
 - Dependabot の PR を、npm 系（変更ファイルが package.json と pnpm / npm の lockfile）と、それ以外（GitHub Actions・cargo・docker など）に分ける
-- セキュリティ情報: Dependabot アラートを読む。403 なら、設定の「lockfile の場所」ごとに `pnpm audit --json`（npm なら `npm audit --json`）で代わりに見る。どちらも取れなければ「セキュリティ情報を取得できなかった」と報告する
+- セキュリティ情報: Dependabot アラートを読む（403 なら飛ばす）。アラートが読めても、設定の「lockfile の場所」ごとに audit を取る（`pnpm audit --json > /tmp/repo-patrol/audit-<名前>.json`、npm なら `npm audit --json`）。アラートに出ない advisory や、公開から日が浅くまだアラートになっていない advisory が audit には出る。どちらも取れなければ「セキュリティ情報を取得できなかった」と報告する
+- audit の結果は `node .claude/skills/repo-patrol/scripts/audit-summary.mjs /tmp/repo-patrol/audit-<名前>.json` で読む。advisory ごとに入っている版をすべて並べ、直接依存か推移依存かを出す。同じ advisory が直接依存と推移依存の両方に当たることがあるので、jq で findings の先頭だけを見て判断しない。版ごとに扱いを決める（直接依存は `references/dependency-triage.md` の「lockfile への適用」、推移依存は「推移依存の更新」）
 
 ### 3. 巡回 PR を追う
 

@@ -14,7 +14,12 @@ minutes=${4:-9}
 
 deadline=$(($(date +%s) + minutes * 60))
 # コミットからワークフローが出そろうまで待つ秒数。過ぎても出ていなければ「起動していない」とみなす。
-grace=600
+# 待つワークフローがない（-）ときに出てくるのは外部のチェック（Vercel など）だけで、push の直後に付くので短くする。
+if [ "$workflows" = - ]; then
+  grace=120
+else
+  grace=600
+fi
 
 api() {
   gh api "$@" || {

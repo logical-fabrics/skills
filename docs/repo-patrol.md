@@ -248,5 +248,5 @@ Slack の宛先は「Slack チャンネル」に書いたものだけで、`slac
 - scheduled task は持ち主の claude.ai アカウントに属し、チームでは共有できない。持ち主が退職・休止すると止まる。この手順書で誰でも作り直せる
 - 持ち主のサブスクリプションの利用枠を消費する
 - scheduled tasks は research preview で、挙動が変わることがある。毎回の guard の確認と GitHub 側の設定で、変わっても安全側に倒れるようにしている
-- Claude GitHub App には Dependabot アラートの権限がないので、アラートの API は 403 になる。その場合は audit で代わりに見る
+- Claude GitHub App には Dependabot アラートの権限がないので、アラートの API は 403 になる。巡回はアラートが読めるときも audit を取り、`audit-summary.mjs` で版ごとに直接依存か推移依存かを見る
 - Actions のジョブログはクラウドから取れないことがある。その場合は失敗したステップ名とリンクを報告する
