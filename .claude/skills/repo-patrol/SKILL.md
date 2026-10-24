@@ -53,7 +53,7 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
   - 環境変数の値は表示しない（`REPO_PATROL` などは hook が効いていることで分かる）
 - 引用符: クエリ文字列を含むエンドポイントや jq の式は引用符で囲む。ダブルクォートの中に `$`・`` ` ``・`\` は書けないので、jq の式は単一引用符で囲む
 - 使えるコマンド:
-  - git: `fetch origin`、`remote set-head origin -a`、`checkout -B claude/patrol-deps origin/<BASE>`（`<BASE>` は既定ブランチだけ）、`add`、`commit -F /tmp/repo-patrol/<ファイル>`、下の表の push、読み取り（status・diff・log・show・rev-parse・merge-base・ls-files）、`config user.name` / `user.email`
+  - git: `fetch origin`、`remote set-head origin -a`、`checkout -B claude/patrol-deps origin/<BASE>`（`<BASE>` は既定ブランチだけ）、`restore [--staged] [--worktree] <依存ファイル>`（追跡済みの依存ファイルを戻すだけ）、`add`、`commit -F /tmp/repo-patrol/<ファイル>`、下の表の push、読み取り（status・diff・log・show・rev-parse・merge-base・ls-files）、`config user.name` / `user.email`
   - `gh api`（下の「GitHub の操作」の形。読めるのは `repos/<REPO>/...` と `user` だけ）
   - pnpm: `install --frozen-lockfile [--ignore-scripts]`、`install --lockfile-only --ignore-scripts`、`update <名前> ... --no-save --lockfile-only --ignore-scripts`（推移依存。版や範囲は付けない）、`run <スクリプト名>`（引数やオプションは付けない。前に `--filter <名前>` は付けてよい）、`audit`、`why`。npm: `view`、`audit`、`install --package-lock-only --ignore-scripts`、`ci`。`corepack enable`
   - `.claude/skills/<skill>/scripts/` のスクリプト（直接か、オプションなしの `bash` / `node` で）。`slack-post.sh` に渡せるのは `/tmp/repo-patrol/` のファイルだけ
@@ -125,7 +125,7 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 5. package.json の版を書き換え、lockfile だけを更新する（pnpm: `pnpm install --lockfile-only --ignore-scripts`、npm: `npm install --package-lock-only --ignore-scripts`）。依存のコードを動かす前に中身を確かめるため。書き換えは `references/dependency-triage.md` の「lockfile への適用」の 2 段で行い、lockfile の解決先が意図した版であることを確かめる。推移依存は同じ文書の「推移依存の更新」に従い、package.json を変えない
 6. `node .claude/skills/repo-patrol/scripts/check-diff.mjs origin/<BASE> <設定の追加パス>` が exit 0 になること。設定に「事前検査」があれば、それも通す
 7. 設定の「セットアップ」と「検証」を流す
-8. 5〜7 のどこかで失敗したら push しない。何が失敗したかを要判断として報告する（直さない）
+8. 5・6 で通らない候補があれば、`git restore <変えた依存ファイル>` で戻し、その候補を除いて 5 からやり直す（作業ツリーが check-diff を通らない間は、guard が install を止める）。外した候補は、何が通らなかったかを要判断として報告する（直さない）。7 で失敗したら push せず、何が失敗したかを要判断として報告する（直さない）
 9. コミットする。メッセージは `/tmp/repo-patrol/commit.txt` に書き、`git commit -F /tmp/repo-patrol/commit.txt`
 10. push の直前に、open の巡回 PR がないことをもう一度確かめてから push する
 11. PR を作る（作り直しのときは PATCH で本文を直す）。パッケージ名はバッククォートで囲む。本文に入れるもの:
