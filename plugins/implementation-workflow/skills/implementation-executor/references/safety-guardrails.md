@@ -12,7 +12,7 @@ planner / executor / auditor と委任 worker に共通の正本。各 `SKILL.md
 - user changes の revert。
 - 委任 worker による git add / commit / stash / reset / checkout -- / worktree 操作。委任プロンプトで明示的に禁止し、ベースライン比較は stash ではなく `git show HEAD:<path>` か別 worktree で行わせる。
 - secret、認証情報、支払い情報の log / artifact / AI prompt 混入。
-- ユーザーの依頼や明示的な合意なしに、repo の内容を外部ホスティング（Claude Code の artifact、Codex app の Sites 等）へ publish すること。例外は `abstract-plan.html` を非公開の artifact として publish・更新することだけ。
+- ユーザーの依頼や明示的な合意なしに、repo の内容を外部ホスティング（Claude Code の artifact、Codex app の Sites 等）へ publish すること。例外は planner の `abstract-plan.html` を非公開の artifact として publish・更新することだけ。
 - publish したページの共有範囲を、ユーザーの明示的な指示なしに広げること。共有先を組織内に限定できない環境では、顧客の設計や非公開情報を含むページを共有しない。
 
 許可:

@@ -43,11 +43,11 @@ docs/implementation/
 
 `abstract-plan.html` の正本は repo の file。人間が読む入口は host ごとに次のとおり:
 
-- Claude Code: Artifact tool が使える環境では、作成・更新のたびに同じ file を非公開の artifact として publish し、URL を active plan の `## Implementation Handoff` に記録する。2 回目以降は記録済み URL を更新し、新しい artifact を増やさない。artifact の作り方（design guidance の読み込みなど）は host の Artifact tool の指示に従う。
-- Codex: Sites は人間が app 側で起動する機能で、agent の tool ではない。file を作り、継続的に参照される plan なら Sites での共有を提案する。URL が返れば同じ場所に記録する。
+- Claude Code: Artifact tool が使える時は、`docs/implementation/abstract-plan.html` を保存先に指定して artifact を作り、非公開で publish する。見た目と図は組み込み design skill に任せる。URL を active plan の `## Implementation Handoff` に記録し、更新は同じ URL へ再 publish する。新しい artifact を増やさない。
+- Codex: file を作り、継続的に参照される plan なら Sites での共有を提案する。Sites は hosting であり、公開範囲を選ぶ操作が要るため、agent からは publish しない。URL が返れば同じ場所に記録する。
 - Claude Code は既定で publish し、Codex は file を渡して提案にとどめる。これは意図した host 固有差分。詳細は `host-adapters.md`。
 
-publish 直後の artifact は作成者だけが見られる。共有範囲を広げる操作（link 共有、組織への公開など）は、ユーザーの明示的な指示がある場合だけ行う。publish できない環境でも作業を止めず、file だけで完結させる。
+publish 直後の artifact は作成者だけが見られる。共有範囲を広げる操作（link 共有、組織への公開など）は、ユーザーの明示的な指示がある場合だけ行う。publish できない環境（`host-adapters.md`）でも作業を止めず、file だけで完結させる。
 
 archive は後から判断を追うための薄い記録にする。
 

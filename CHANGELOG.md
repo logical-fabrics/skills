@@ -9,6 +9,7 @@
 - Added executor behavior evals: small fixes and a feature with its tests are done without subagents, and a medium-risk slice gets an independent review. All three pass. `docs/release-process.md` now documents `claude plugin eval`.
 - The bundled `verification-worker` now runs Haiku at `low` effort. The validator no longer treats the `haiku` alias as effort-less, since it resolves to Haiku 5.5.
 - Consolidated `docs/model-routing-research.md` into the current rationale only and rewrote `docs/prompt-guide.md` in the same short style.
+- `abstract-plan.html` now relies on built-in host features instead of hand-written HTML. In Claude Code the planner creates it with the Artifact tool, whose built-in design skill picks the styling and diagrams; the skill keeps only the content requirements. When the user wants the plan as a team-editable document and Claude Docs is connected, Claude Docs may be used instead. The list of environments that cannot publish now includes `-p`, the Agent SDK, and the GitHub Action. Codex keeps the file and suggests Sites without publishing.
 - Migration: update to 0.12.0 and restart the host. Existing plans need no changes.
 
 ## 0.11.0

@@ -94,15 +94,14 @@ Goal:
 - active plan が長く、コード変数や実装詳細を読まないと全体判断できない。
 - 実装担当者だけでなく、ユーザーや reviewer の合意形成が必要。
 
-必須:
+内容の必須:
 
 - 最初の画面で目的、状態、全体像が分かる。
-- Mermaid などの図を使う。
-- 人間がコードを読まない前提で、アーキテクチャ、判断、リスク、検証を説明する。
-- コード変数名や細かい関数名を露出しすぎない。
+- architecture や flow を図で示す。
+- 人間がコードを読まない前提で、アーキテクチャ、判断、リスク、検証を説明する。コード変数名や細かい関数名を出しすぎない。
 - active plan またはユーザー明示 plan と矛盾しない。
 
-視覚的な階層、余白、色、図、カード表現は使ってよい。装飾は理解を速くする範囲に限り、実装者向け Markdown plan の簡潔さを置き換えない。
+見た目と図の作り方は host の既製機能に任せ、この skill では配色・レイアウト・図の形式を指定しない。Claude Code では Artifact tool の組み込み design skill が配色、タイポグラフィ、図を決め、repo の design system があればそれを優先する。
 
 軽微な修正では作らない。過剰な成果物は workflow の UX を悪くする。「軽微」と言えるのは、次セッションで迷うほどの判断、未解決リスク、複数領域の変更、ユーザー向け体験の分岐がない場合だけ。
 
@@ -111,6 +110,6 @@ Goal:
 - `Next Action Contract` または final response に `abstract-plan.html: 不要` と理由を書く。
 - 理由は「単純だから」ではなく、影響範囲、判断の有無、次セッションの再開容易性に基づいて書く。
 
-既定の保存先は `docs/implementation/abstract-plan.html`。完了後に source of truth として残す必要がなければ archive または削除候補にする。
+保存先は `docs/implementation/abstract-plan.html`。完了後に source of truth として残す必要がなければ archive または削除候補にする。
 
-Claude Code で Artifact tool が使える場合は、同じ内容を非公開の artifact として publish し、URL を `## Implementation Handoff` に 1 行で記録する。以後の更新は同じ URL へ行う。Codex では file を渡し、必要なら Sites での共有を提案する。どちらも file が正本。条件と制約は `artifact-lifecycle.md` と `host-adapters.md`。
+作り方と共有は host ごとに違う（`artifact-lifecycle.md` の Human-facing Sharing）。Claude Code で Artifact tool が使える時は、artifact として作って非公開で publish し、URL を `## Implementation Handoff` に 1 行で記録する。HTML を手で組み立てない。

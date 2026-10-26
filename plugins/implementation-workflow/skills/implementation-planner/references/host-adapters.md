@@ -31,11 +31,12 @@
 
 | Host | 経路 | 既定 | 主な制約 |
 | --- | --- | --- | --- |
-| Claude Code | artifact | Artifact tool が使えれば非公開で publish し、URL を handoff に記録 | 共有範囲の拡大は明示指示がある時だけ。Pro / Max の共有は public link のみ、組織内限定共有は Team / Enterprise |
-| Codex | app の Sites | file を渡し、継続参照される plan なら共有を提案 | 人間が app 側で起動する。本番デプロイとして作られる |
+| Claude Code | artifact | Artifact tool で作り、非公開で publish し、URL を handoff に記録 | 共有範囲の拡大は明示指示がある時だけ。組織内限定の共有は Team / Enterprise、Pro / Max は public link のみ |
+| Codex | Sites | file を渡し、継続参照される plan なら共有を提案 | 公開範囲の選択が要る hosting なので agent からは publish しない |
 
 - 顧客の設計や非公開の architecture を含むページは、組織内に限定できない環境では共有しない。作成者だけが見る非公開 publish は問題ない。
-- 組織 policy（zero data retention、CMEK、HIPAA）、Bedrock / Vertex / Foundry 経由、API key や gateway token のセッション、CI 実行では artifact を publish できない。file だけで完結させる。
+- 次の環境では artifact を publish できない。file だけで完結させる: 組織 policy（Zero Data Retention、CMEK、HIPAA）、Bedrock / Vertex / Foundry 経由、API key や gateway token のセッション、`-p` / Agent SDK / GitHub Action での実行、組織や設定で artifact が無効な時。
+- ユーザーが計画を「チームで読んで編集する文書」として求め、Claude Docs connector が接続されている時は、`abstract-plan.html` の代わりに Claude Docs で作ってよい。repo の active plan は変えない。
 
 Codex:
 

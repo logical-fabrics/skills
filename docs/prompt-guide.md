@@ -173,7 +173,7 @@ DB schema 変更を含むので、YAGNI と migration/rollback を厳しく見�
 
 - 明示 plan や repo の慣習がなければ、`docs/implementation/current.md` を active plan にする。
 - `abstract-plan.html` は人間向けの合意形成が必要な計画でだけ作る。正本は repo の file。
-- Claude Code では `abstract-plan.html` を非公開の artifact として publish し、URL を `Implementation Handoff` に残す。以後の更新も同じ URL に出す。
+- Claude Code では `abstract-plan.html` を Artifact tool で作り、非公開で publish し、URL を `Implementation Handoff` に残す。見た目と図は組み込み design skill に任せ、以後の更新も同じ URL に出す。
 - artifact の共有範囲は、依頼された時だけ広げる。
 - Codex では file を渡し、必要なら app の Sites での共有を提案する。
 - P0/P1 がなくなるまで計画をレビューする。
