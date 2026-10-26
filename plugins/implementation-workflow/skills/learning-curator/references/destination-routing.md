@@ -11,16 +11,14 @@
 | conditional multi-step workflow | existing skill と reference | trigger は frontmatter description、手順は body / reference |
 | dangerous action / machine-checkable invariant | hook、test、linter、type/schema constraint | prose guidance は rationale として併用可 |
 | current feature の一時 decision / unfinished work | active plan / handoff | durable behavioral rule にしない |
-| personal preference / machine-local fact | host-native personal memory, user rule, local file | explicit request が必要。team repo へ勝手に commit しない |
+| personal preference / machine-local fact | host-native memory（Claude Code は auto memory、`/memory` で確認） | repo には書かない。team repo へ勝手に commit しない |
 | 複数 repository で再利用する workflow | shared plugin skill | shared plugin 自体の変更依頼がある場合だけ。current repo だけの事実を混ぜない |
 
 ## AGENTS.md and CLAUDE.md
 
-1. repository root と current path から上位へ既存ファイルを探す。
-2. symlink と import (`@path`) を確認する。
-3. repo が canonical source を宣言していれば従う。
-4. 両方が独立して存在し方針が不明なら、同じ rule を二重追加しない。既存 cross-host convention を調べ、選択による差が実質的に残る時だけ user に確認する。
-5. 常時読む価値がある rule だけを置く。multi-step / path-specific content は skill / scoped rule へ移す。
+- Claude Code は `CLAUDE.md` が無い時だけ `AGENTS.md` を直接読む。両方ある repo は `CLAUDE.md` に `@AGENTS.md` を import するか、documented setting で読ませる。repo が canonical source を宣言していれば従う。
+- symlink 越しの Edit / Write は拒否される。symlink の target を編集する。
+- 同じ rule を二重追加しない。常時読む価値がある rule だけを置き、multi-step / path-specific content は skill / scoped rule（`.claude/rules/*.md` の `paths:`）へ移す。
 
 ## Skills
 
@@ -48,7 +46,7 @@ Prompt correction detection は semantic truth ではないので、既定では
 ## Native memory
 
 - Codex memories は background-generated state で、即時・deterministic な control surface ではない。plugin は `~/.codex/memories/` を直接編集しない。
-- Claude Code auto memory は corrections / preferences を保持できるが、context であり enforcement ではない。mandatory behavior は instruction または hook に置く。
+- Claude Code auto memory は既定で有効で、`~/.claude/projects/<repo>/memory/` に machine-local に保存される。他の machine とは共有されない。「覚えて」は、user が `CLAUDE.md` 等を指名しない限りここへ入る。`/memory` で閲覧・編集できる。context であり enforcement ではないので、mandatory behavior は instruction または hook に置く。
 - host-native memory が無効、非共有、遅延していても team-shared invariant が失われないようにする。
 - secret、credential、raw transcript は保存しない。
 

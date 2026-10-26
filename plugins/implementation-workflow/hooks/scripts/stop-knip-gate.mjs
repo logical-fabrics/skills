@@ -1,29 +1,38 @@
 #!/usr/bin/env node
-import path from "node:path";
 import {
-  consumeEditedFiles,
+  clearState,
   isStopHookActive,
-  markKnipBlocked,
-  wasKnipBlocked,
-} from "./edit-state.mjs";
+  readState,
+  writeState,
+} from "./hook-state.mjs";
 import {
+  dependencyGraphChanged,
   fail,
   findProjectRoot,
   hasKnip,
   loadPackageJson,
   readHookInput,
   runCommand,
+  snapshotDependencyGraph,
 } from "./hook-utils.mjs";
 
 const input = readHookInput();
 const root = findProjectRoot(input);
 
+const baseline = readState(input, root, "knip", "snapshot.json");
 const continuationAfterBlock =
-  isStopHookActive(input) && wasKnipBlocked(input, root);
-const changedFiles = consumeEditedFiles(input, root);
+  isStopHookActive(input) && readState(input, root, "knip", "blocked") === true;
+clearState(input, root, "knip");
+
+// A fix made after a block may touch any source file, so the recheck does not
+// depend on dependency-graph changes. Without a baseline (hook added mid-session
+// or no session identity) there is nothing to compare, so fail open.
 if (isStopHookActive(input)) {
-  if (!continuationAfterBlock || changedFiles.length === 0) process.exit(0);
-} else if (!changedFiles.some(shouldRunKnipForChangedFile)) {
+  if (!continuationAfterBlock) process.exit(0);
+} else if (
+  !baseline ||
+  !dependencyGraphChanged(baseline, snapshotDependencyGraph(root))
+) {
   process.exit(0);
 }
 
@@ -36,11 +45,11 @@ const result = runCommand(root, "knip", [], 110_000);
 if (result.status !== 0) {
   if (isStopHookActive(input)) {
     reportNonBlocking(
-      "Knip recheck still failed after dependency-graph edits. The turn will stop without another block.",
+      "Knip recheck still failed after the block. The turn will stop without another block.",
       [result.stdout, result.stderr].filter(Boolean).join("\n"),
     );
   }
-  markKnipBlocked(input, root);
+  writeState(input, root, "knip", "blocked", true);
   fail(
     "Knip hook found dependency, export, file, or configuration issues before stopping.",
     [result.stdout, result.stderr].filter(Boolean).join("\n"),
@@ -48,9 +57,7 @@ if (result.status !== 0) {
 }
 
 if (isStopHookActive(input)) {
-  reportNonBlocking(
-    "Knip recheck passed after dependency-graph edits made during the continuation.",
-  );
+  reportNonBlocking("Knip recheck passed after the continuation.");
 }
 
 process.exit(0);
@@ -59,46 +66,4 @@ function reportNonBlocking(message, details = "") {
   const body = details.trim() ? `${message}\n\n${details.trim()}` : message;
   process.stdout.write(`${JSON.stringify({ systemMessage: body })}\n`);
   process.exit(0);
-}
-
-function shouldRunKnipForChangedFile(file) {
-  const base = path.basename(file);
-  const normalized = file.replaceAll("\\", "/");
-
-  if (
-    [
-      "package.json",
-      "pnpm-lock.yaml",
-      "package-lock.json",
-      "yarn.lock",
-      "bun.lock",
-      "bun.lockb",
-      "knip.json",
-      "knip.jsonc",
-      "knip.ts",
-      "knip.js",
-      "tsconfig.json",
-      "tsconfig.base.json",
-    ].includes(base)
-  ) {
-    return true;
-  }
-
-  if (
-    /^(vite|next|nuxt|astro|svelte|webpack|rollup|tsup|vitest)\.config\./.test(
-      base,
-    )
-  ) {
-    return true;
-  }
-
-  if (/^tsconfig\..+\.json$/.test(base)) {
-    return true;
-  }
-
-  if (normalized.includes("/index.") || normalized.startsWith("index.")) {
-    return true;
-  }
-
-  return false;
 }

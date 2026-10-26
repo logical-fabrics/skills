@@ -62,8 +62,4 @@ UI verification evidence:
 - selected full E2E / release gate は原則 closure 前に一度実行する。その後の修正が対象導線、shared fixture、runtime、test setup に影響した場合だけ再実行する。
 - full suite の一部が失敗したら、failing spec を targeted に直して確認し、最後に必要な closure gate を再実行する。
 
-Playwright を使う場合:
-
-- web-first assertion を使う。
-- `getByRole`、`getByLabel`、`getByText` などユーザー視点 locator を優先する。
-- trace、screenshot、video を失敗分析に使えるようにする。
+Playwright を使う場合は、失敗分析に使えるよう trace を残す設定にする。

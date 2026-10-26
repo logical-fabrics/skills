@@ -111,21 +111,16 @@ Before / After 例（内部都合・行動指示 → 結果中心・中立提示
 
 ## Accessibility And Interaction
 
-- keyboard 操作、focus、label、role、contrast、target size、form error を確認する。
-- hover-only UI にしない。touch、keyboard、screen reader、拡大表示で成立するかを見る。
-- focus を見えるようにする。モーダル、drawer、menu、toast、validation error は focus 移動と戻り先を設計する。
-- target size と余白は、誤操作と手の移動の両方で考える。小さすぎる操作、近すぎる破壊的操作を避ける。
+基準は `accessibility.md`。
 
 ## Verification
 
-- Verification Plan は changed behavior と risk に比例させる。level、targeted browser smoke、targeted E2E、full E2E の区別は executor `testing-verification.md` を canonical policy とする。
-- Web UI は affected route の changed flow を実ブラウザまたは targeted E2E で確認する。無関係なハッピーパスを毎回足さない。
+- level、browser 確認、screenshot、viewport の選び方は executor `testing-verification.md` に従う。
 - 変更した component と文言について、存在理由、理解可能性、ユーザー価値、削除可否を確認する。画面全体の棚卸しは UI audit または redesign scope の場合だけ行う。
-- screenshot は視覚判断が必要な変更に使う。desktop / mobile 両方は、responsive behavior、breakpoint、touch interaction、長い日本語、狭い container に影響する場合だけ plan に入れる。
-- 不自然な改行、単語分断、助詞だけの行、句読点だけの行、文字切れ、重なり、ボタン内テキストの窮屈さを見る。
+- 単語分断、助詞だけの行、句読点だけの行を見る。
 - 変更箇所を上の各節で照合する:
   - Action Placement: 判断材料の近く、読了後の自然な位置に CTA があるか。
   - Result-Centered Copy: 文言が行動を誘導していないか（Before / After 参照）。何を決めているか、何が変わるか、誰に見えるか、通知されるか、戻せるかが必要十分に分かるか。内部状態、保存先、分類名、バックエンド処理、データ再利用、必須理由入力が主役になっていないか。10 回目の操作でノイズにならず、初回や高リスク操作で不足しないか。
   - Work Progress After Actions: 操作後に対象、状態、次アクションのどれが変わって見えるか。キュー型 UI では対象がキューから外れるか次へ進むか。押しても業務上何も進まない「保留」などが出ていないか。
   - Layout: desktop で関連情報と操作が離れず、視線移動とマウス移動が過剰でないか。mobile で主要 CTA が内容から遠すぎず、長い説明ボタンで比較やタップがしづらくないか。
-- route / query、navigation、work state を変更する場合は URL と画面状態を合わせ、関係する browser back、reload、direct URL、URL share を確認する。対象喪失、誤対象、入力消失は P0/P1 gate とする。copy や isolated style の変更には URL-state matrix を持ち込まない。
+- route / query、navigation、work state を変更する場合は URL と画面状態を合わせる。対象喪失、誤対象、入力消失は P0/P1 gate とする。

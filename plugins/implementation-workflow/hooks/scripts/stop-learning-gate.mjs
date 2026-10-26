@@ -1,22 +1,15 @@
 #!/usr/bin/env node
+import { clearState, isStopHookActive, readState } from "./hook-state.mjs";
 import { findProjectRoot, readHookInput } from "./hook-utils.mjs";
-import {
-  clearLearningSignal,
-  isStopHookActive,
-  readLearningSignal,
-} from "./learning-state.mjs";
 
 const input = readHookInput();
-if (input.hook_event_name && input.hook_event_name !== "Stop") {
-  process.exit(0);
-}
 
 const root = findProjectRoot(input);
-const signal = readLearningSignal(input, root);
+const signal = readState(input, root, "learning", "pending.json");
 if (signal?.level !== "explicit-persistence") process.exit(0);
 
 if (isStopHookActive(input)) {
-  clearLearningSignal(input, root);
+  clearState(input, root, "learning");
   process.exit(0);
 }
 
@@ -25,7 +18,7 @@ const lastMessage =
     ? input.last_assistant_message
     : "";
 if (/Learning outcome:\s*\S/i.test(lastMessage)) {
-  clearLearningSignal(input, root);
+  clearState(input, root, "learning");
   process.exit(0);
 }
 

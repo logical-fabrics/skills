@@ -5,7 +5,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/hooks/scripts/user-prompt-learning.mjs\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/snapshot-dependency-graph.mjs\"",
+            "timeout": 10,
+            "statusMessage": "Recording dependency-graph baseline"
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/user-prompt-learning.mjs\"",
             "timeout": 10,
             "statusMessage": "Checking for correction learning signals"
           }
@@ -14,13 +20,13 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|MultiEdit|Write|apply_patch|Bash",
+        "matcher": "Edit|MultiEdit|Write|apply_patch",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/hooks/scripts/post-edit-biome.mjs\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/post-edit-biome.mjs\"",
             "timeout": 30,
-            "statusMessage": "Tracking edits and running Biome when applicable"
+            "statusMessage": "Running Biome on edited files"
           }
         ]
       }
@@ -30,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/hooks/scripts/stop-knip-gate.mjs\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/stop-knip-gate.mjs\"",
             "timeout": 120,
             "statusMessage": "Checking Knip when dependency graph changed"
           }
@@ -40,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/hooks/scripts/stop-learning-gate.mjs\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/stop-learning-gate.mjs\"",
             "timeout": 10,
             "statusMessage": "Checking explicit learning requests"
           }

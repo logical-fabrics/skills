@@ -16,7 +16,7 @@ Adoption: cross-host command hook、prompt / last-message input、one-shot Stop 
 
 ### Claude Code memory and Hookify
 
-Claude Code 公式 docs は、同じ mistake の二度目、code review で判明した repo knowledge、前 session と同じ correction を `CLAUDE.md` の候補にし、multi-step / path-specific content は skill / scoped rule へ移す。Auto memory は correction を保持できるが enforcement ではない。Anthropic の公式 Hookify plugin は conversation の frustration / correction を分析し、regex-based warn / block rules を作る。ただし one-time accident と hypothetical discussion は分け、rule 作成前に user selection を入れる。
+Claude Code 公式 docs は、同じ mistake の二度目、code review で判明した repo knowledge、前 session と同じ correction を `CLAUDE.md` の候補にし、multi-step / path-specific content は skill / scoped rule へ移す。Auto memory は correction を保持できるが、machine-local で enforcement でもない。この skill は auto memory を補完し、team 共有・version 管理される repo guidance だけを扱う。Anthropic の公式 Hookify plugin は conversation の frustration / correction を分析し、regex-based warn / block rules を作る。ただし one-time accident と hypothetical discussion は分け、rule 作成前に user selection を入れる。
 
 - [Claude Code memory](https://code.claude.com/docs/en/memory)
 - [Claude Code hooks](https://code.claude.com/docs/en/hooks)
