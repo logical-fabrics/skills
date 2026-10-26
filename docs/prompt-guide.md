@@ -5,8 +5,8 @@
 | やりたいこと | 期待する skill | 自然文プロンプト例 |
 | --- | --- | --- |
 | 既存実装を見直す | `implementation-auditor` | `現在の実装を見直して、UX・設計・テスト・過剰設計の問題を洗い出して` |
-| 実装計画を作る | `implementation-planner` | `この機能の実装計画を作って。docs/implementation/current.md にまとめて` |
-| 計画を実装する | `implementation-executor` | `docs/implementation/current.md の次の slice を実装して、検証までやって` |
+| 実装計画を作る | `implementation-planner` | `この機能の実装計画を作って` |
+| 計画を実装する | `implementation-executor` | `この作業の plan の次の slice を実装して、検証までやって` |
 | 人間の訂正を future session に残す | `learning-curator` | `今の訂正、再発防止して` |
 
 - Codex でも Claude Code でも、普通の自然文で依頼すれば skill が発火する。特別な書式は要らない。
@@ -24,7 +24,7 @@
 
 - Plan の goal は、レビュー指摘がなくなるまで計画を仕上げるためのもので、実装開始を意味しない。
 - Execute の goal は、accepted slice を実装・検証・handoff 更新までやりきるために使う。
-- goal には目的、成功条件、制約、検証条件だけを書く。計画の詳細は明示 plan か `docs/implementation/current.md` に置く。
+- goal には目的、成功条件、制約、検証条件だけを書く。計画の詳細は明示 plan か `docs/implementation/<slug>.md` に置く。
 
 ## 迷ったら
 
@@ -119,7 +119,7 @@ learning trigger にしないもの:
 ```
 
 ```text
-最近の実装が複雑になってきたので、立ち返りレビューをして。今すぐ直すべきものと、docs/implementation/current.md に backlog 化すべきものを分けて。
+最近の実装が複雑になってきたので、立ち返りレビューをして。今すぐ直すべきものと、active plan に backlog 化すべきものを分けて。
 ```
 
 期待する動き:
@@ -158,7 +158,7 @@ learning trigger にしないもの:
 ```
 
 ```text
-この不具合を直す計画を作って。軽微なら abstract-plan.html は不要。docs/implementation/current.md を active plan にして。
+この不具合を直す計画を作って。軽微なら abstract-plan.html は不要。plan は docs/implementation/ に作業ごとに置いて。
 ```
 
 ```text
@@ -171,7 +171,7 @@ DB schema 変更を含むので、YAGNI と migration/rollback を厳しく見�
 
 期待する動き:
 
-- 明示 plan や repo の慣習がなければ、`docs/implementation/current.md` を active plan にする。
+- 明示 plan や repo の慣習がなければ、作業ごとの `docs/implementation/<slug>.md` を active plan にする。branch で code と一緒に commit する。
 - `abstract-plan.html` は人間向けの合意形成が必要な計画でだけ作る。正本は repo の file。
 - Claude Code では `abstract-plan.html` を Artifact tool で作り、非公開で publish し、URL を `Implementation Handoff` に残す。見た目と図は組み込み design skill に任せ、以後の更新も同じ URL に出す。
 - artifact の共有範囲は、依頼された時だけ広げる。
@@ -187,7 +187,7 @@ active plan を狭い slice で実装する時に使う。
 例:
 
 ```text
-docs/implementation/current.md の Implementation Handoff を読んで、次の最小 slice を実装して。検証までやって。
+この branch の plan の Implementation Handoff を読んで、次の最小 slice を実装して。検証までやって。
 ```
 
 ```text
@@ -211,7 +211,7 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 ```
 
 ```text
-前回の続き。current.md の未完了項目から、P1 を潰す最小の修正を実装して。
+前回の続き。plan の未完了項目から、P1 を潰す最小の修正を実装して。
 ```
 
 期待する動き:
@@ -233,7 +233,7 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 - UI 検証をした時は、確認した route、viewport、browser/tool、state、未確認の state、残リスクを報告する。screenshot / trace の path は価値がある時だけ添える。
 - accepted slice 内では、局所的な stale plan の修正、実装、risk-based review、修正、再検証までやりきる。
 - 完了するのは、未解決 P0/P1 がなく、acceptance criteria の evidence が揃った時だけ。
-- 完了時は必要に応じて `current.md` の handoff を更新する。
+- 完了時は必要に応じて active plan の handoff を更新する。
 - 最後の `Next Action Contract` で、続けるなら次の最小 slice を、止めるなら人間判断が要る理由を示す。
 
 共通の出口形式。正本は plugin の `implementation-planner/references/output-contracts.md` で、以下は利用者向けの転記:
@@ -255,7 +255,7 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 セッションを終える時は、次のように頼む。
 
 ```text
-ここまでの作業を docs/implementation/current.md の Implementation Handoff に反映して。次のセッションが迷わず再開できるようにして。
+ここまでの作業を active plan の Implementation Handoff に反映して。次のセッションが迷わず再開できるようにして。
 ```
 
 handoff に入る内容:
@@ -302,9 +302,9 @@ handoff に入る内容:
 ```
 
 ```text
-audit の P1 だけを対象に、docs/implementation/current.md に実装計画を作って。
+audit の P1 だけを対象に、実装計画を作って。
 ```
 
 ```text
-current.md の Step 1 だけ実装して。DB schema と production 設定には触らない。
+plan の Step 1 だけ実装して。DB schema と production 設定には触らない。
 ```

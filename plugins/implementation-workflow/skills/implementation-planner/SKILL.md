@@ -1,6 +1,6 @@
 ---
 name: implementation-planner
-description: Create, review, and improve Japanese implementation plans for another LLM or engineer to execute. Use when the user asks in Japanese or English for an implementation plan, implementation-plan.md, docs/implementation/current.md, abstract-plan.html, a plan before coding, a handoff plan, or a review/refinement of an existing plan. Japanese natural-language triggers include "実装計画を作って", "計画を立てて", "current.md にまとめて", "実装前に設計して", "この計画をレビューして", "実装方針を整理して". Do not use for direct implementation, ordinary code review, README writing, pure brainstorming, or simple bug fixes unless the user explicitly asks for a plan first.
+description: Create, review, and improve Japanese implementation plans for another LLM or engineer to execute. Use when the user asks in Japanese or English for an implementation plan, implementation-plan.md, docs/implementation/<slug>.md, docs/implementation/current.md, abstract-plan.html, a plan before coding, a handoff plan, or a review/refinement of an existing plan. Japanese natural-language triggers include "実装計画を作って", "計画を立てて", "current.md にまとめて", "実装前に設計して", "この計画をレビューして", "実装方針を整理して". Do not use for direct implementation, ordinary code review, README writing, pure brainstorming, or simple bug fixes unless the user explicitly asks for a plan first.
 ---
 
 # Implementation Planner
@@ -14,7 +14,7 @@ description: Create, review, and improve Japanese implementation plans for anoth
 Allowed:
 - 現在の repo、docs、schema、route、UI、test、package、設定を読む。
 - 必要に応じて公式 docs、Context7、web、ライブ画面を確認する。
-- 既存 repo 慣習、ユーザー指定、または `docs/implementation/current.md` に実装計画を作る。
+- 既存 repo 慣習、ユーザー指定、または作業ごとの `docs/implementation/<slug>.md` に実装計画を作る。
 - 必要な場合は人間向け `abstract-plan.html` を作る。
 - 複数観点レビューを行い、P0/P1/P2 findings を整理する。
 
@@ -30,7 +30,7 @@ Disallowed unless explicitly requested:
 
 - 日本語を既定にする。
 - 既存 repo の実態を最優先する。default stack は greenfield または未確定時だけ使う。
-- source of truth の優先順位は `references/source-of-truth.md` に従う。ユーザーが plan ファイルを明示したら、それをその依頼の source of truth にする。`docs/implementation/current.md` への統合は継続運用が必要な場合だけ提案する。
+- source of truth の優先順位は `references/source-of-truth.md` に従う。ユーザーが plan ファイルを明示したら、それをその依頼の source of truth にする。active plan への統合は継続運用が必要な場合だけ提案する。
 - package / library / SDK / CLI は原則 latest を採用する。設計時に current docs と registry / package manager の latest を確認する。既存 version から上げられるなら upgrade step と検証を plan に入れる。latest を使わない場合だけ、互換性制約、リスク、解除条件を書く。
 - 計画には対象ファイル、手順、検証、停止条件を書く。
 - active plan は実装者の入口として書く。採用した判断、実装手順、検証、未解決判断だけを残し、経緯や議論の記録は削る。詳細は `references/output-contracts.md`。
@@ -76,7 +76,7 @@ Disallowed unless explicitly requested:
 - `references/source-of-truth.md`: 判断の優先順位。
 - `references/planning-process.md`: 計画ループ、freshness、route selection。
 - `references/artifact-lifecycle.md`: 成果物の置き場所、active plan、archive、session handoff。
-- `references/output-contracts.md`: `current.md`、明示 plan、`abstract-plan.html` の成果物契約と `Next Action Contract` の正本。
+- `references/output-contracts.md`: active plan、明示 plan、`abstract-plan.html` の成果物契約と `Next Action Contract` の正本。
 - `references/review-rubric.md`: P0/P1/P2、reviewer roles、改善ループ。
 - `references/ask-user.md`: Decision Interview の正本。通過テスト、checkpoint、Decision Log。
 

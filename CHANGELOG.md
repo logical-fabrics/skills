@@ -10,7 +10,9 @@
 - The bundled `verification-worker` now runs Haiku at `low` effort. The validator no longer treats the `haiku` alias as effort-less, since it resolves to Haiku 5.5.
 - Consolidated `docs/model-routing-research.md` into the current rationale only and rewrote `docs/prompt-guide.md` in the same short style.
 - `abstract-plan.html` now relies on built-in host features instead of hand-written HTML. In Claude Code the planner creates it with the Artifact tool, whose built-in design skill picks the styling and diagrams; the skill keeps only the content requirements. When the user wants the plan as a team-editable document and Claude Docs is connected, Claude Docs may be used instead. The list of environments that cannot publish now includes `-p`, the Agent SDK, and the GitHub Action. Codex keeps the file and suggests Sites without publishing.
-- Migration: update to 0.12.0 and restart the host. Existing plans need no changes.
+- Plans are now one file per work item, `docs/implementation/<slug>.md`, committed on the work's branch, instead of one shared `current.md`. Parallel branches and teammates no longer edit the same plan file, and cloud sessions still pick the plan up from the clone. `docs/implementation/README.md` no longer lists active plans. The executor finds the plan from the user's choice, the repo convention, the current branch name, or the only active plan, and asks when that is ambiguous.
+- `abstract-plan.html` is no longer tracked in the repo. Claude Code keeps it as an artifact outside the repo; Codex and hosts without artifacts write `docs/implementation/<slug>.abstract-plan.html` and exclude it through `.git/info/exclude`.
+- Migration: update to 0.12.0 and restart the host. Repos that already use `docs/implementation/current.md` keep it as their convention. To switch, rename it to `<slug>.md` and stop tracking `abstract-plan.html`.
 
 ## 0.11.0
 

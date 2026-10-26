@@ -1,6 +1,6 @@
 ---
 name: implementation-executor
-description: Execute an existing Japanese implementation plan safely and incrementally. Use when the user asks in Japanese or English to implement, execute, build, fix, or continue from docs/implementation/current.md, implementation-plan.md, abstract-plan.html, Implementation Handoff, or an approved implementation plan. Japanese natural-language triggers include "current.md の次を実装して", "計画を実装して", "この plan を実行して", "前回の続きから実装して", "P1 を潰して", "検証までやって". Do not use for creating a plan from scratch, broad brainstorming, ordinary code review, deployment-only work, or destructive production operations unless explicitly requested.
+description: Execute an existing Japanese implementation plan safely and incrementally. Use when the user asks in Japanese or English to implement, execute, build, fix, or continue from docs/implementation/<slug>.md, docs/implementation/current.md, implementation-plan.md, abstract-plan.html, Implementation Handoff, or an approved implementation plan. Japanese natural-language triggers include "current.md の次を実装して", "計画を実装して", "この plan を実行して", "前回の続きから実装して", "P1 を潰して", "検証までやって". Do not use for creating a plan from scratch, broad brainstorming, ordinary code review, deployment-only work, or destructive production operations unless explicitly requested.
 ---
 
 # Implementation Executor
@@ -26,8 +26,8 @@ Disallowed unless explicitly requested:
 
 ## Core Rules
 
-- source of truth は、ユーザーの最新依頼と明示 plan / scope、現在の repo 実態、repo 既存慣習、`docs/implementation/current.md` の順に確認する。古い plan は停止理由ではなく検証対象であり、絶対視しない。
-- ユーザーが plan ファイルを明示したら、それを今回の source of truth にする。`docs/implementation/current.md` への統合は継続運用が必要な場合だけ提案する。
+- source of truth は、ユーザーの最新依頼と明示 plan / scope、現在の repo 実態、repo 既存慣習、作業ごとの `docs/implementation/<slug>.md` の順に確認する。古い plan は停止理由ではなく検証対象であり、絶対視しない。
+- ユーザーが plan ファイルを明示したら、それを今回の source of truth にする。active plan への統合は継続運用が必要な場合だけ提案する。
 - 依頼された scope を成果物とする。勝手に狭めず、広げず、別の作業に置き換えない。依頼が誤っていると判断したら 1 文で述べ、依頼どおりの範囲をやりきる。
 - ユーザーや他エージェントの未コミット変更を戻さない。
 - 実装は最小の coherent slice にする。既存の stack、命名、format、test、UI pattern を優先する。

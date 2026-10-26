@@ -31,8 +31,8 @@
     "defaultPrompt": [
       "現在の実装を見直して、UX・設計・テスト・過剰設計の問題を洗い出して",
       "実装計画を作って",
-      "docs/implementation/current.md に実装計画をまとめて",
-      "current.md の次の slice を実装して、検証までやって",
+      "この機能の実装計画を docs/implementation/ にまとめて",
+      "この作業の plan の次の slice を実装して、検証までやって",
       "現在の実装を見直して改善点を出して",
       "この implementation-plan.md を実装して",
       "この計画をレビューして改善して",

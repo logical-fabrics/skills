@@ -14,7 +14,7 @@ Lightweight route でよい（すべて満たす時）:
 - ユーザーが永続 plan を求めていない。
 - 次セッションへの引き継ぎが、チャット上の要約と検証結果で足りる。
 
-この route では `docs/implementation/current.md` も `abstract-plan.html` も作らず、短い方針、変更対象、検証だけを示す。
+この route では plan file も `abstract-plan.html` も作らず、短い方針、変更対象、検証だけを示す。
 
 Planner が必要:
 
@@ -41,6 +41,6 @@ repo、一次情報、実行確認で解ける unknown は聞かずに調査す�
 - TODO / unknown / assumption が残っていないか。
 - 議論履歴、途中案、解消済み reviewer memo、古い差分説明が、現在の実行内容を読みにくくしていないか。
 - `abstract-plan.html` と `implementation-plan.md` が矛盾していないか。
-- active-looking plan が複数残っておらず、`docs/implementation/current.md` または repo 慣習上の active plan が明確か。
+- active-looking plan が複数残っておらず、この作業の active plan（`docs/implementation/<slug>.md` または repo 慣習上の plan）が明確か。別の作業の plan を編集していないか。
 
 P0/P1 の矛盾があれば、実装計画を更新してから handoff する。

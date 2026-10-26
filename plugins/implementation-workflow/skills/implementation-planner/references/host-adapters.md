@@ -27,12 +27,12 @@
 
 ## abstract-plan.html の共有チャネル
 
-正本は repo の `docs/implementation/abstract-plan.html`。運用ルールは `artifact-lifecycle.md` の Human-facing Sharing に従う。
+正本は active plan で、`abstract-plan.html` は repo で追跡しない。運用ルールは `artifact-lifecycle.md` の Human-facing Sharing に従う。
 
 | Host | 経路 | 既定 | 主な制約 |
 | --- | --- | --- | --- |
 | Claude Code | artifact | Artifact tool で作り、非公開で publish し、URL を handoff に記録 | 共有範囲の拡大は明示指示がある時だけ。組織内限定の共有は Team / Enterprise、Pro / Max は public link のみ |
-| Codex | Sites | file を渡し、継続参照される plan なら共有を提案 | 公開範囲の選択が要る hosting なので agent からは publish しない |
+| Codex | Sites | `.git/info/exclude` で外した local file を渡し、継続参照される plan なら共有を提案 | 公開範囲の選択が要る hosting なので agent からは publish しない |
 
 - 顧客の設計や非公開の architecture を含むページは、組織内に限定できない環境では共有しない。作成者だけが見る非公開 publish は問題ない。
 - 次の環境では artifact を publish できない。file だけで完結させる: 組織 policy（Zero Data Retention、CMEK、HIPAA）、Bedrock / Vertex / Foundry 経由、API key や gateway token のセッション、`-p` / Agent SDK / GitHub Action での実行、組織や設定で artifact が無効な時。

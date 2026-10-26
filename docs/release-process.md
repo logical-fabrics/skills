@@ -85,7 +85,7 @@ claude plugin eval plugins/implementation-workflow --allow-tools Bash Write Edit
 model routing の能力、価格、availability、retention、effort は vendor の公式一次情報を正とする。ローカル smoke は plugin の routing、lane 境界、component discovery、決定的な hook behavior の退行確認に限定し、model 間の品質・cost-performance benchmark は要求しない。
 
 - 軽微な修正では planner が重くなりすぎない。
-- 複数領域の実装では、ユーザー明示 plan または repo 慣習がなければ `docs/implementation/current.md` が active plan になる。
+- 複数領域の実装では、ユーザー明示 plan または repo 慣習がなければ 作業ごとの `docs/implementation/<slug>.md` が active plan になり、`abstract-plan.html` は repo で追跡されない。
 - audit は不要なファイルを増やさず、必要時だけ improvement backlog へ接続する。
 - executor は stale plan を検出できる。
 - executor は repo / docs / 実行確認で解ける recoverable stale を自己修復して、accepted slice を続行できる。

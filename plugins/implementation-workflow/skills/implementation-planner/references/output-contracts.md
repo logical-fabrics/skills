@@ -2,7 +2,7 @@
 
 ## Active plan file
 
-置き場所の優先順位（明示 plan file、repo 慣習、`docs/implementation/current.md`）は `artifact-lifecycle.md` の Placement に従う。単発の `implementation-plan-v2.md` や `final.md` を repo root に増やさない。
+置き場所の優先順位（明示 plan file、repo 慣習、作業ごとの `docs/implementation/<slug>.md`）は `artifact-lifecycle.md` の Placement に従う。単発の `implementation-plan-v2.md` や `final.md` を repo root に増やさない。
 
 ## Lightweight output
 
@@ -18,7 +18,7 @@
 
 ## implementation-plan content
 
-実装担当 LLM / engineer 向け。`current.md`（active plan）と同一の section 契約であり、別テンプレートを増やさない。必須 section（`##` 見出し）:
+実装担当 LLM / engineer 向け。active plan と同一の section 契約であり、別テンプレートを増やさない。必須 section（`##` 見出し）:
 
 - `## Status`: `draft` / `approved` / `in-progress` / `blocked` / `done` / `superseded`
 - `## Last updated`
@@ -110,6 +110,6 @@ Goal:
 - `Next Action Contract` または final response に `abstract-plan.html: 不要` と理由を書く。
 - 理由は「単純だから」ではなく、影響範囲、判断の有無、次セッションの再開容易性に基づいて書く。
 
-保存先は `docs/implementation/abstract-plan.html`。完了後に source of truth として残す必要がなければ archive または削除候補にする。
+repo で追跡しない。保存先は `artifact-lifecycle.md` の Human-facing Sharing に従う。
 
 作り方と共有は host ごとに違う（`artifact-lifecycle.md` の Human-facing Sharing）。Claude Code で Artifact tool が使える時は、artifact として作って非公開で publish し、URL を `## Implementation Handoff` に 1 行で記録する。HTML を手で組み立てない。

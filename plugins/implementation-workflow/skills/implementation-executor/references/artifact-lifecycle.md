@@ -6,7 +6,7 @@
 
 実装開始時:
 
-- ユーザー明示 plan、repo 慣習上の active plan、`docs/implementation/current.md` の有無を確認する。
+- plan を次の順で特定する: ユーザー明示 plan、repo 慣習上の active plan、現在の branch 名に合う `docs/implementation/<slug>.md`、`docs/implementation/` 直下に active plan が 1 つだけならそれ。複数あって決まらなければユーザーに確認する。別の作業の plan は編集しない。
 - `## Status`、`## Last updated`、`## Current State`、`## Next actions`、`## Implementation Handoff` を読む。
 - 古い計画、別名 plan、archive を source of truth にしない。ユーザーが明示した plan は今回の source of truth にする。
 

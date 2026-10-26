@@ -36,11 +36,11 @@ Logical Fabrics のエンジニア向けに配布する Codex / Claude Code 共�
 ```
 
 ```text
-この機能の実装計画を作って。docs/implementation/current.md にまとめて
+この機能の実装計画を作って
 ```
 
 ```text
-docs/implementation/current.md の次の slice を実装して、検証までやって
+この作業の plan の次の slice を実装して、検証までやって
 ```
 
 ```text
@@ -138,15 +138,18 @@ plugins/
 ```text
 docs/implementation/
   README.md
-  current.md
-  abstract-plan.html
+  <slug>.md
   archive/
+    YYYY-MM-DD-<slug>.md
 ```
 
-- 既存 repo に慣習やユーザー明示 plan がない場合、`current.md` が既定の active plan。
+- 既存 repo に慣習やユーザー明示 plan がない場合、作業ごとの `<slug>.md` が active plan。branch で code と一緒に commit し、複数人・複数 branch でも同じ file を取り合わない。
+- 進行中 plan の一覧 file は作らない（merge conflict の元になる）。
+- `abstract-plan.html` は repo で追跡しない。Claude Code では artifact、それ以外は `.git/info/exclude` で外した local file。
 - 新しいセッションは、会話履歴ではなく明確な active plan と現在の repo を source of truth にする。
 - 古い plan は横に増やさず、必要なものだけ `archive/` に薄く残す。
 - `abstract-plan.html` は人間向け合意形成が必要な場合だけ作る。
+- 既存の `current.md` 運用は repo 慣習として尊重する。
 - `implementation-plan-v2.md`、`final.md`、`final-final.md` のようなファイル増殖は禁止。
 
 新しい plugin を追加する場合は、その plugin 固有の成果物 lifecycle を plugin docs または references に明記します。

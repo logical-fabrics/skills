@@ -12,7 +12,7 @@ description: Audit an existing implementation in Japanese and identify what to i
 Allowed:
 - 現在の repo、docs、schema、routes、UI、tests、logs、config、active plan を読む。
 - 実ブラウザ、test、lint、typecheck、build、static analysis を必要に応じて実行する。
-- findings を P0/P1/P2 に分類し、改善 backlog または `docs/implementation/current.md` の更新案を作る。
+- findings を P0/P1/P2 に分類し、改善 backlog または active plan の更新案を作る。
 - 明らかに安全な修正候補を `Auto-fix candidates` として提示する。
 
 Disallowed unless explicitly requested:
@@ -42,7 +42,7 @@ Disallowed unless explicitly requested:
 3. `references/audit-process.md` に従い、source of truth を読み、実挙動を確認する。
 4. `references/audit-rubric.md` でレビューし、P0/P1/P2 に分類する。
 5. `references/auto-fix-policy.md` で、今すぐ直せる候補と plan 化するものを分ける。
-6. 必要なら `docs/implementation/current.md` の backlog 更新案と、executor が扱える最小 slice と verification を示す。
+6. 必要なら active plan の backlog 更新案と、executor が扱える最小 slice と verification を示す。
 7. `references/report-format.md` の形式で報告し、最後に `Next Action Contract` を置く。
 
 ## Required References
