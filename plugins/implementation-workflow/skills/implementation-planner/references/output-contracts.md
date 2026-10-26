@@ -2,7 +2,7 @@
 
 ## Active plan file
 
-置き場所の優先順位（明示 plan file、repo 慣習、作業ごとの `docs/implementation/<slug>.md`）は `artifact-lifecycle.md` の Placement に従う。単発の `implementation-plan-v2.md` や `final.md` を repo root に増やさない。
+置き場所の優先順位（明示 plan、repo 慣習、host ごとの既定）は `artifact-lifecycle.md` の Placement に従う。単発の `implementation-plan-v2.md` や `final.md` を repo root に増やさない。
 
 ## Lightweight output
 
@@ -84,7 +84,7 @@ Goal:
 
 ## abstract-plan.html
 
-人間向け。Markdown 計画の焼き直しではなく、人間が数分で全体像、判断、リスク、検証方針を確認するための成果物。
+人間向けの概要。Claude Code では独立した file にせず、plan の artifact の先頭に置く。Markdown 計画の焼き直しではなく、人間が数分で全体像、判断、リスク、検証方針を確認するための成果物。
 
 次のいずれかを含む計画では、ユーザーが明示的に不要と言わない限り作成または更新する:
 
@@ -101,7 +101,7 @@ Goal:
 - 人間がコードを読まない前提で、アーキテクチャ、判断、リスク、検証を説明する。コード変数名や細かい関数名を出しすぎない。
 - active plan またはユーザー明示 plan と矛盾しない。
 
-見た目と図の作り方は host の既製機能に任せ、この skill では配色・レイアウト・図の形式を指定しない。Claude Code では Artifact tool の組み込み design skill が配色、タイポグラフィ、図を決め、repo の design system があればそれを優先する。
+見た目は host の既製機能に任せ、この skill では配色・レイアウトを指定しない。Claude Code では plan の artifact の先頭に置き、図は Mermaid で書く。
 
 軽微な修正では作らない。過剰な成果物は workflow の UX を悪くする。「軽微」と言えるのは、次セッションで迷うほどの判断、未解決リスク、複数領域の変更、ユーザー向け体験の分岐がない場合だけ。
 
@@ -110,6 +110,4 @@ Goal:
 - `Next Action Contract` または final response に `abstract-plan.html: 不要` と理由を書く。
 - 理由は「単純だから」ではなく、影響範囲、判断の有無、次セッションの再開容易性に基づいて書く。
 
-repo で追跡しない。保存先は `artifact-lifecycle.md` の Human-facing Sharing に従う。
-
-作り方と共有は host ごとに違う（`artifact-lifecycle.md` の Human-facing Sharing）。Claude Code で Artifact tool が使える時は、artifact として作って非公開で publish し、URL を `## Implementation Handoff` に 1 行で記録する。HTML を手で組み立てない。
+repo で追跡しない。置き場所と共有は host ごとに違う（`artifact-lifecycle.md` の Human-facing Sharing）。

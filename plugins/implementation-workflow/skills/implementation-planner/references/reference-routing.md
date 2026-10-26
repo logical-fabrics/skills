@@ -82,7 +82,7 @@ Codex / Claude Code behavior:
 
 - `source-of-truth.md`: 判断の優先順位。
 - `planning-process.md`: 計画ループ、freshness、route selection。
-- `artifact-lifecycle.md`: 成果物の置き場所、active plan、archive、session handoff。
+- `artifact-lifecycle.md`: 成果物の置き場所、active plan、完了時の扱い、session handoff。
 - `output-contracts.md`: 成果物契約と `Next Action Contract` の正本。
 - `review-rubric.md`: P0/P1/P2、reviewer roles、改善ループ。
 - `ask-user.md`: Decision Interview の正本。通過テスト、checkpoint、質問フォーマット、Decision Log。

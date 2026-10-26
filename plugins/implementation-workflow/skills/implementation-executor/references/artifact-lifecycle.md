@@ -1,21 +1,21 @@
 # Artifact Lifecycle
 
-成果物の置き場所、active plan の section 契約、archive、cleanup の正本は planner の `../../implementation-planner/references/artifact-lifecycle.md` と `../../implementation-planner/references/output-contracts.md`。ここには Execute lane 固有の差分だけを書く。
+成果物の置き場所、active plan の section 契約、完了時の扱い、cleanup の正本は planner の `../../implementation-planner/references/artifact-lifecycle.md` と `../../implementation-planner/references/output-contracts.md`。ここには Execute lane 固有の差分だけを書く。
 
 ## Execute Lane Delta
 
 実装開始時:
 
-- plan を次の順で特定する: ユーザー明示 plan、repo 慣習上の active plan、現在の branch 名に合う `docs/implementation/<slug>.md`、`docs/implementation/` 直下に active plan が 1 つだけならそれ。複数あって決まらなければユーザーに確認する。別の作業の plan は編集しない。
+- plan を次の順で特定する: ユーザー明示 plan（file または artifact URL）、repo 慣習上の active plan、Claude Code では Artifact tool の list で title が `<repo>-<slug>` に合う artifact、local の `docs/implementation/<slug>.md`。`<slug>` は現在の branch 名に合わせる。候補が 1 つに決まらなければユーザーに確認する。別の作業の plan は編集しない。
 - `## Status`、`## Last updated`、`## Current State`、`## Next actions`、`## Implementation Handoff` を読む。
-- 古い計画、別名 plan、archive を source of truth にしない。ユーザーが明示した plan は今回の source of truth にする。
+- 古い計画、別名 plan、done や superseded の plan を source of truth にしない。ユーザーが明示した plan は今回の source of truth にする。
 
 実装終了時:
 
 - 完了した slice を `## Current State`（completed）と `## Step-by-step Implementation` の checkbox に反映する。
 - 次の最小 slice を `## Next actions` に書く。
 - 通った / 失敗した verification を `## Verification Plan` に書く。
-- scope、UX、schema、infra、security、cost、production behavior が変わったら plan を更新する。Claude Code で `abstract-plan.html` を更新したら、handoff に記録済みの artifact URL へ再 publish する。
+- scope、UX、schema、infra、security、cost、production behavior が変わったら plan を更新する。artifact の plan は Artifact tool の read で読み戻した内容を編集し、同じ URL へ再 publish する。plan を repo に commit しない。
 - `## Implementation Handoff` の中に次の `Next Action Contract` block をそのまま埋める。独立した `##` section にせず、散文で要約しない。
 
 ```md

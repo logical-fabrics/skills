@@ -18,7 +18,7 @@
 ## Review
 
 - 社員が初見で導入できるか。
-- セッションをまたいでも、ユーザー明示 plan、repo 慣習上の active plan、または作業ごとの `docs/implementation/<slug>.md` から再開できるか。別の作業の plan と衝突しないか。
+- セッションをまたいでも、ユーザー明示 plan、repo 慣習上の active plan、または作業ごとの plan（artifact または local file）から再開できるか。plan が PR に入っていないか。
 - 古い plan や audit report が増殖しないか。
 - audit / plan / execute の lane 境界を勝手に越えず、各 lane の最後に次 action が明確か。
 - repo / docs / 実行確認で解ける unknown をユーザーに戻しすぎていないか。

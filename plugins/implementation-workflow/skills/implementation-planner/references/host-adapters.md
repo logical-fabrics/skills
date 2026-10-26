@@ -25,18 +25,18 @@
 - planner が subagent として動いている場合はユーザーへ直接質問できない。質問 block を最終出力として親エージェントへ返し、自分では待たない。
 - Codex では mode を自己判定しない。まず `request_user_input` を呼び、unavailable エラーならテキスト質問へフォールバックする。
 
-## abstract-plan.html の共有チャネル
+## plan と abstract-plan.html の置き場
 
-正本は active plan で、`abstract-plan.html` は repo で追跡しない。運用ルールは `artifact-lifecycle.md` の Human-facing Sharing に従う。
+どちらも repo で追跡しない。運用ルールは `artifact-lifecycle.md` の Human-facing Sharing に従う。
 
 | Host | 経路 | 既定 | 主な制約 |
 | --- | --- | --- | --- |
-| Claude Code | artifact | Artifact tool で作り、非公開で publish し、URL を handoff に記録 | 共有範囲の拡大は明示指示がある時だけ。組織内限定の共有は Team / Enterprise、Pro / Max は public link のみ |
-| Codex | Sites | `.git/info/exclude` で外した local file を渡し、継続参照される plan なら共有を提案 | 公開範囲の選択が要る hosting なので agent からは publish しない |
+| Claude Code | artifact | plan を Markdown の artifact として非公開で publish し、概要はその先頭に置く | 共有範囲の拡大は明示指示がある時だけ。組織内限定の共有は Team / Enterprise、Pro / Max は public link のみ |
+| Codex | local file / Sites | `.git/info/exclude` で外した local file に置き、継続参照される plan なら Sites での共有を提案 | 公開範囲の選択が要る hosting なので agent からは publish しない |
 
 - 顧客の設計や非公開の architecture を含むページは、組織内に限定できない環境では共有しない。作成者だけが見る非公開 publish は問題ない。
-- 次の環境では artifact を publish できない。file だけで完結させる: 組織 policy（Zero Data Retention、CMEK、HIPAA）、Bedrock / Vertex / Foundry 経由、API key や gateway token のセッション、`-p` / Agent SDK / GitHub Action での実行、組織や設定で artifact が無効な時。
-- ユーザーが計画を「チームで読んで編集する文書」として求め、Claude Docs connector が接続されている時は、`abstract-plan.html` の代わりに Claude Docs で作ってよい。repo の active plan は変えない。
+- 次の環境では artifact を publish できない。Codex と同じ local file で完結させる: 組織 policy（Zero Data Retention、CMEK、HIPAA）、Bedrock / Vertex / Foundry 経由、API key や gateway token のセッション、`-p` / Agent SDK / GitHub Action での実行、組織や設定で artifact が無効な時。
+- ユーザーが計画を「チームで読んで編集する文書」として求め、Claude Docs connector が接続されている時は、plan の artifact の代わりに Claude Docs で作ってよい。Claude Docs connector で読み戻せるので、executor はそこから再開する。
 
 Codex:
 

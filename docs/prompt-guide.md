@@ -24,7 +24,7 @@
 
 - Plan の goal は、レビュー指摘がなくなるまで計画を仕上げるためのもので、実装開始を意味しない。
 - Execute の goal は、accepted slice を実装・検証・handoff 更新までやりきるために使う。
-- goal には目的、成功条件、制約、検証条件だけを書く。計画の詳細は明示 plan か `docs/implementation/<slug>.md` に置く。
+- goal には目的、成功条件、制約、検証条件だけを書く。計画の詳細は明示 plan か作業ごとの plan に置く。
 
 ## 迷ったら
 
@@ -158,11 +158,11 @@ learning trigger にしないもの:
 ```
 
 ```text
-この不具合を直す計画を作って。軽微なら abstract-plan.html は不要。plan は docs/implementation/ に作業ごとに置いて。
+この不具合を直す計画を作って。軽微なら abstract-plan.html は不要。plan は作業ごとに作って。
 ```
 
 ```text
-abstract-plan.html の artifact を組織内に共有できる状態にして。
+この plan の artifact をチームメイトが編集できるように共有して。
 ```
 
 ```text
@@ -171,9 +171,8 @@ DB schema 変更を含むので、YAGNI と migration/rollback を厳しく見�
 
 期待する動き:
 
-- 明示 plan や repo の慣習がなければ、作業ごとの `docs/implementation/<slug>.md` を active plan にする。branch で code と一緒に commit する。
-- `abstract-plan.html` は人間向けの合意形成が必要な計画でだけ作る。正本は repo の file。
-- Claude Code では `abstract-plan.html` を Artifact tool で作り、非公開で publish し、URL を `Implementation Handoff` に残す。見た目と図は組み込み design skill に任せ、以後の更新も同じ URL に出す。
+- 明示 plan や repo の慣習がなければ、作業ごとの plan を作る。Claude Code では Markdown の artifact、それ以外では `.git/info/exclude` で外した `docs/implementation/<slug>.md`。PR には入れない。
+- `abstract-plan.html` は人間向けの合意形成が必要な計画でだけ作る。Claude Code では plan の artifact の先頭に概要として置き、図は Mermaid で書く。更新は同じ URL に出す。
 - artifact の共有範囲は、依頼された時だけ広げる。
 - Codex では file を渡し、必要なら app の Sites での共有を提案する。
 - P0/P1 がなくなるまで計画をレビューする。

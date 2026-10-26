@@ -40,7 +40,7 @@ repo、一次情報、実行確認で解ける unknown は聞かずに調査す�
 - package / library / SDK / CLI version が latest 原則に沿っているか。上げられる dependency の upgrade が実装 step と検証に入っているか。
 - TODO / unknown / assumption が残っていないか。
 - 議論履歴、途中案、解消済み reviewer memo、古い差分説明が、現在の実行内容を読みにくくしていないか。
-- `abstract-plan.html` と `implementation-plan.md` が矛盾していないか。
-- active-looking plan が複数残っておらず、この作業の active plan（`docs/implementation/<slug>.md` または repo 慣習上の plan）が明確か。別の作業の plan を編集していないか。
+- 人間向けの概要（`abstract-plan.html`）と plan 本体が矛盾していないか。
+- active-looking plan が複数残っておらず、この作業の active plan（`artifact-lifecycle.md` の Placement）が明確か。plan を repo に commit していないか。別の作業の plan を編集していないか。
 
 P0/P1 の矛盾があれば、実装計画を更新してから handoff する。

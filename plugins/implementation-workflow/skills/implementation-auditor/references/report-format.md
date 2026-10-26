@@ -54,4 +54,4 @@ Recommended format:
 
 - `Next Action Contract` は次の入口を示すだけで、Plan / Execute へ自動遷移しない。
 - 通常は `Goal recommended: no`。長時間の Execute が明らかに必要な場合だけ、次 lane 候補として `/goal` 用の短い draft を残す。
-- 永続化する場合は、上記を 該当作業の active plan（`docs/implementation/<slug>.md`）の `Quality Review Findings` または `Improvement Backlog` に統合する。
+- 永続化する場合は、上記を 該当作業の active plan の `Quality Review Findings` または `Improvement Backlog` に統合する。

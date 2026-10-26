@@ -133,23 +133,20 @@ plugins/
 
 `implementation-workflow` は、開発が複数セッションにまたがる前提で動きます。
 
-ユーザーが plan ファイルを明示しておらず、既存プロジェクトに慣習もない場合、計画成果物は以下に集約します。
+plan は PR に入れず、repo で追跡しません。ユーザーが plan を明示しておらず、既存プロジェクトに慣習もない場合、置き場は host ごとに次のとおりです。
 
-```text
-docs/implementation/
-  README.md
-  <slug>.md
-  archive/
-    YYYY-MM-DD-<slug>.md
-```
+| Host | plan | 人間向けの概要（`abstract-plan.html`） |
+| --- | --- | --- |
+| Claude Code（Artifact tool あり） | 作業ごとの Markdown の artifact（非公開、title は `<repo>-<slug>`） | 同じ artifact の先頭。図は Mermaid |
+| Codex、artifact が使えない環境 | local file `docs/implementation/<slug>.md`（`.git/info/exclude` で除外） | `docs/implementation/<slug>.abstract-plan.html` |
 
-- 既存 repo に慣習やユーザー明示 plan がない場合、作業ごとの `<slug>.md` が active plan。branch で code と一緒に commit し、複数人・複数 branch でも同じ file を取り合わない。
-- 進行中 plan の一覧 file は作らない（merge conflict の元になる）。
-- `abstract-plan.html` は repo で追跡しない。Claude Code では artifact、それ以外は `.git/info/exclude` で外した local file。
+- 1 つの作業に plan は 1 つ。`<slug>` は branch 名に揃え、複数人・複数 branch で同じ plan を取り合わない。
+- Claude Code の plan は cloud session からも Artifact tool で読み戻せる。local file は別のマシンに届かない。
+- チームメイトへの artifact の共有は、ユーザーが指示した時だけ行う。
 - 新しいセッションは、会話履歴ではなく明確な active plan と現在の repo を source of truth にする。
-- 古い plan は横に増やさず、必要なものだけ `archive/` に薄く残す。
+- 作業が終わったら plan の `Status` を `done` にして薄く畳む。
 - `abstract-plan.html` は人間向け合意形成が必要な場合だけ作る。
-- 既存の `current.md` 運用は repo 慣習として尊重する。
+- 既存の `current.md` を追跡する運用は repo 慣習として尊重する。
 - `implementation-plan-v2.md`、`final.md`、`final-final.md` のようなファイル増殖は禁止。
 
 新しい plugin を追加する場合は、その plugin 固有の成果物 lifecycle を plugin docs または references に明記します。

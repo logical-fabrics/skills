@@ -1,6 +1,6 @@
 # Artifact Lifecycle
 
-成果物の置き場所、active plan、archive、cleanup の正本は `../../implementation-planner/references/artifact-lifecycle.md`。ここには Audit lane 固有の差分だけを書く。
+成果物の置き場所、active plan、完了時の扱い、cleanup の正本は `../../implementation-planner/references/artifact-lifecycle.md`。ここには Audit lane 固有の差分だけを書く。
 
 ## Audit Lane Delta
 

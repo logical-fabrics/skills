@@ -1,6 +1,6 @@
 ---
 name: implementation-planner
-description: Create, review, and improve Japanese implementation plans for another LLM or engineer to execute. Use when the user asks in Japanese or English for an implementation plan, implementation-plan.md, docs/implementation/<slug>.md, docs/implementation/current.md, abstract-plan.html, a plan before coding, a handoff plan, or a review/refinement of an existing plan. Japanese natural-language triggers include "実装計画を作って", "計画を立てて", "current.md にまとめて", "実装前に設計して", "この計画をレビューして", "実装方針を整理して". Do not use for direct implementation, ordinary code review, README writing, pure brainstorming, or simple bug fixes unless the user explicitly asks for a plan first.
+description: Create, review, and improve Japanese implementation plans for another LLM or engineer to execute. Use when the user asks in Japanese or English for an implementation plan, implementation-plan.md, a plan artifact, docs/implementation/<slug>.md, docs/implementation/current.md, abstract-plan.html, a plan before coding, a handoff plan, or a review/refinement of an existing plan. Japanese natural-language triggers include "実装計画を作って", "計画を立てて", "current.md にまとめて", "実装前に設計して", "この計画をレビューして", "実装方針を整理して". Do not use for direct implementation, ordinary code review, README writing, pure brainstorming, or simple bug fixes unless the user explicitly asks for a plan first.
 ---
 
 # Implementation Planner
@@ -14,8 +14,8 @@ description: Create, review, and improve Japanese implementation plans for anoth
 Allowed:
 - 現在の repo、docs、schema、route、UI、test、package、設定を読む。
 - 必要に応じて公式 docs、Context7、web、ライブ画面を確認する。
-- 既存 repo 慣習、ユーザー指定、または作業ごとの `docs/implementation/<slug>.md` に実装計画を作る。
-- 必要な場合は人間向け `abstract-plan.html` を作る。
+- 既存 repo 慣習、ユーザー指定、または作業ごとの plan（Claude Code では artifact、それ以外では repo で追跡しない local file）に実装計画を作る。plan は PR に入れない。
+- 必要な場合は人間向けの概要（`abstract-plan.html`）を作る。Claude Code では plan の artifact の先頭に置く。
 - 複数観点レビューを行い、P0/P1/P2 findings を整理する。
 
 Disallowed unless explicitly requested:
@@ -59,7 +59,7 @@ Disallowed unless explicitly requested:
 5. 追加・更新・設定変更する package / library / SDK / CLI の latest と current docs を確認する（Core Rules の latest 原則）。
 6. material unknown を Research / AskUser / Blocked に分類する。
 7. `references/ask-user.md` の 3 テストを通過した判断があれば、plan 起草前に Checkpoint A（Intent Interview）を行う。なければ黙ってスキップする。
-8. `references/artifact-lifecycle.md` で保存場所、active plan、archive 方針を決める。
+8. `references/artifact-lifecycle.md` で保存場所、active plan、完了時の扱いを決める。
 9. `references/output-contracts.md` に従って計画成果物を作る。
 10. `references/review-rubric.md` で low / medium / high risk を選び、必要な reviewer を決める。
 11. implementation / adversarial と、発火した UX、simplicity、schema、security、delivery、AI の観点だけをレビューする。
@@ -75,7 +75,7 @@ Disallowed unless explicitly requested:
 
 - `references/source-of-truth.md`: 判断の優先順位。
 - `references/planning-process.md`: 計画ループ、freshness、route selection。
-- `references/artifact-lifecycle.md`: 成果物の置き場所、active plan、archive、session handoff。
+- `references/artifact-lifecycle.md`: 成果物の置き場所、active plan、完了時の扱い、session handoff。
 - `references/output-contracts.md`: active plan、明示 plan、`abstract-plan.html` の成果物契約と `Next Action Contract` の正本。
 - `references/review-rubric.md`: P0/P1/P2、reviewer roles、改善ループ。
 - `references/ask-user.md`: Decision Interview の正本。通過テスト、checkpoint、Decision Log。
