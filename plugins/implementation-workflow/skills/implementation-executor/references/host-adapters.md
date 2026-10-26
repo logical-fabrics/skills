@@ -22,7 +22,7 @@ Claude Code:
 
 - manifest は `.claude-plugin/plugin.json`。plugin skill は namespace 付きで扱う。thin slash command alias は配布せず、skill の自然文 trigger と description を入口にする。
 - Opus 5.5 などは指示がなくても subagent を起動する。この plugin は委任を促す指示を足さず、Delegation Value Test の「main が直接やる」に当たる作業では起動しない。
-- `plugins/implementation-workflow/agents/` の bundled agents は Claude Code 専用: `implementation-worker`（`sonnet` / `medium`。長い・難しい diagnostic は invocation で `high`）、`adversarial-reviewer`（`opus` / `medium`）、`verification-worker`（`haiku`）。いずれも leaf で、Agent tool を持たない。
+- `plugins/implementation-workflow/agents/` の bundled agents は Claude Code 専用: `implementation-worker`（`sonnet` / `medium`。長い・難しい diagnostic は invocation で `high`）、`adversarial-reviewer`（`opus` / `medium`）、`verification-worker`（`haiku` / `low`）。いずれも leaf で、Agent tool を持たない。
 - fork（`subagent_type: "fork"`、skill の `context: fork`）は親の会話と model を引き継ぎ、fork mode は既定で有効。探索の続きには向くが、独立 review には使わない。
 - model の解決順は invocation の `model` → agent definition → `CLAUDE_CODE_SUBAGENT_MODEL` → main。fork でない subagent は invocation の `effort` で definition の `effort` を上書きでき、`CLAUDE_CODE_EFFORT_LEVEL` はその両方より優先する。definition の既定で足りる時は effort を渡さない。組織の上限で実効値が変わり得るので、確認できない値は `unverified`（要求したが実効値を確認できない）とする。
 - 入れ子の深さと同時数の上限 `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` / `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` はユーザーが設定し、plugin 側では変えない。bundled agents は leaf なので入れ子を作らない。

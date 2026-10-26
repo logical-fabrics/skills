@@ -71,6 +71,15 @@ claude plugin details implementation-workflow
 
 ## 4. Behavior smoke test
 
+bundled eval は `claude plugin eval` で実行する。shell を使う case があるため、Linux では bubblewrap と socat が必要。
+
+```bash
+claude plugin eval plugins/implementation-workflow --allow-tools Bash Write Edit --no-publish
+```
+
+- `08`〜`10` は executor の委任方針（小さな修正と feature + test は main が直接やる、medium risk は独立 review を入れる）を確認する。
+- skill や description を変えたら、変更前の commit でも同じ case を回し、score を比べる。1 run の差は揺れとして扱う。
+
 小さな fixture repo または実プロジェクトで、以下を確認する。
 
 model routing の能力、価格、availability、retention、effort は vendor の公式一次情報を正とする。ローカル smoke は plugin の routing、lane 境界、component discovery、決定的な hook behavior の退行確認に限定し、model 間の品質・cost-performance benchmark は要求しない。

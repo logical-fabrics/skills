@@ -31,8 +31,8 @@ const supportedAgentEfforts = new Set([
 ]);
 // Models that do not accept the effort parameter. Setting effort on these is a
 // silent no-op, so the routing intent has to be expressed by narrowing the task.
+// The `haiku` alias now resolves to Haiku 5.5, which accepts effort.
 const effortlessAgentModels = new Set([
-  "haiku",
   "claude-haiku-4-5",
   "claude-haiku-4-5-20251001",
 ]);

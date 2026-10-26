@@ -67,7 +67,7 @@ Plugin の挙動変更依頼では、workspace の AGENTS.md / CLAUDE.md を変�
 - `MERGE`: 重複する複数の rule を、より具体的な一つへ統合する。
 - `NOOP`: one-off、already covered、not accepted、not verified、unsafe、または scope 不明。
 
-localized delta を原則とし、既存 rule ID や heading は維持して全文再生成しない。新しい evidence が既存 rule を否定する場合は append せず refine し、矛盾を残さない。
+localized delta を原則とする。既存 rule ID や heading は維持し、全文再生成しない。新しい evidence が既存 rule を否定する場合は append せず refine し、矛盾を残さない。
 
 ## Enforce and govern
 
@@ -76,15 +76,10 @@ localized delta を原則とし、既存 rule ID や heading は維持して全�
 - Hook / test / linter / type constraint: observable な危険 action や invariant を deterministic に検知する。
 - Version control: team-shared learning の provenance、review、rollback を提供する。
 
-「二度と」と言えるのは、対象 behavior が deterministic に観測でき、guardrail と regression fixture が通る範囲だけ。自然言語 rule だけの場合は「recurrence risk を下げる」と表現する。
+「二度と」と言えるのは、対象 behavior を deterministic に観測でき、guardrail と regression fixture が通る範囲だけ。自然言語 rule だけなら「recurrence risk を下げる」と書く。
 
 ## Provenance without transcript retention
 
-既存 artifact が metadata schema を持つ場合は、以下だけを残す:
-
-- origin type: human correction / accepted review / deterministic failure。
-- date または change reference。
-- scope と rationale。
-- verification command / fixture。
+既存 artifact が metadata schema を持つ場合は、次だけを残す: origin type（human correction / accepted review / deterministic failure）、date または change reference、scope と rationale、verification command / fixture。
 
 prompt 全文、感情表現、transcript path、secret は残さない。既存 artifact が plain bullet convention なら、新しい registry や ID system を作らず、その convention に合わせる。

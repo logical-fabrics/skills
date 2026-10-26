@@ -19,7 +19,7 @@ ID: GPT-6 Astra=`gpt-6-astra`、GPT-6.1 Sol=`gpt-6.1-sol`、GPT-6 Luna=`gpt-6-lu
 | Task / role | Codex | Claude Code | 上げる条件 |
 | --- | --- | --- | --- |
 | main を新しく選ぶよう求められた | GPT-6.1 Sol（client の既定 effort）。最難関の end-to-end 作業は Astra `low` | Opus 5.5 `medium`。長時間・最難関の一連作業は Fable 5.1 `high` | 難しい判断は下の高難度 role へ |
-| 既知 command の実行、抽出、明確な read-only 確認 | Luna `high`（定型なら `medium`） | Haiku 5.5 `medium`（bundled `verification-worker`） | log の因果関係を追うなら通常 worker |
+| 既知 command の実行、抽出、明確な read-only 確認 | Luna `high`（定型なら `medium`） | Haiku 5.5 `low`（bundled `verification-worker`）。判断を伴う read-only 作業は `medium` | log の因果関係を追うなら通常 worker |
 | 期待 diff と確認方法が明確な機械的編集 | Luna `high` | Sonnet 5.5 `medium`（bundled `implementation-worker`） | 推測が要る変更なら通常 worker |
 | scope・期待結果・確認方法が明確な実装 / 探索 / debugging | GPT-6.1 Sol `medium` | Sonnet 5.5 `medium`、長い・難しいものは `high` | 複雑な制御フローや edge case は GPT-6.1 Sol `high` / Opus 5.5 `high` |
 | 独立した bug-finding / code review | GPT-6.1 Sol `high`（fresh context） | Opus 5.5 `medium`（bundled `adversarial-reviewer`） | 高リスク・深い設計判断は高難度 role |

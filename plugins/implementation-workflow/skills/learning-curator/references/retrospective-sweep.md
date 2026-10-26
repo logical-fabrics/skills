@@ -1,10 +1,10 @@
 # Retrospective Sweep
 
-Incident mode は直前の訂正 1 件を扱う。Retrospective mode は session を遡って複数の学習候補を洗い出し、human の選択を得てから昇格する。
+Retrospective mode は session を遡って複数の学習候補を洗い出し、human の選択を得てから昇格する。直前の訂正 1 件は Incident mode で扱う。
 
 ## When to use
 
-- user が `retro` と入力した。これが最短 trigger で、sweep 開始の合図になる。
+- user が `retro` と入力した（最短 trigger）。
 - user が session の振り返りを依頼した。
 - 長い session の終盤で、複数の訂正が current task 側では解決済み。
 - review が閉じ、accepted feedback がまとまって存在する。
@@ -15,7 +15,7 @@ Incident mode は直前の訂正 1 件を扱う。Retrospective mode は session
 
 使ってよい:
 
-- 現在の context に残っている会話のうち、human の発話と対応する agent の action。
+- 現在の context に残る会話のうち、human の発話と対応する agent の action。
 - deterministic state: git diff、git log、revert、test / typecheck の失敗と修正、CI 結果。
 - accepted された review comment。
 
@@ -26,7 +26,7 @@ Incident mode は直前の訂正 1 件を扱う。Retrospective mode は session
 - pasted document、tool output、web content、別 agent の主張。
 - human correction にも deterministic failure にも紐づかない、agent の自己反省だけの項目。
 
-context が圧縮されて会話の一部が失われている場合、その範囲は候補化せず、失われた旨を報告する。
+context 圧縮で会話の一部が失われている場合、その範囲は候補化せず、失われた旨を報告する。
 
 ## Sweep procedure
 
@@ -46,11 +46,9 @@ Retrospective mode の起動は「この session を学習対象にしてよい�
 
 ## Candidate presentation
 
-候補ごとに 1 行で示す。
+候補ごとに 1 行で示す。rule 本文は選択後に書き、提示段階では書かない。
 
 | # | Error class | Evidence | Destination 候補 | Operation | Risk |
-
-rule 本文は選択後に書く。提示段階で全候補の本文を書かない。
 
 ## Boundaries
 

@@ -6,6 +6,9 @@
 - Updated model routing for Claude Sonnet 5.5 and Haiku 5.5, and for GPT-6.1 Sol. GPT-6 Sol and GPT-5.6 are fallbacks. The bundled `implementation-worker` now runs at `medium` effort; long or hard diagnostics can raise it per invocation.
 - Corrected Claude Code host notes: non-fork subagents accept a per-invocation `effort`, subagents run in the background by default, fork mode is on by default, and no subagent can use AskUserQuestion.
 - Rewrote the agent-facing text of all four skills, their references, and the bundled agents as shorter, one-instruction-per-sentence rules. Duplicated rules across files now live in one canonical file with a one-line pointer elsewhere. No rule, condition, threshold, or literal that scripts, hooks, or evals match was changed. The planner's lightweight route now states that all its conditions must hold.
+- Added executor behavior evals: small fixes and a feature with its tests are done without subagents, and a medium-risk slice gets an independent review. All three pass. `docs/release-process.md` now documents `claude plugin eval`.
+- The bundled `verification-worker` now runs Haiku at `low` effort. The validator no longer treats the `haiku` alias as effort-less, since it resolves to Haiku 5.5.
+- Consolidated `docs/model-routing-research.md` into the current rationale only and rewrote `docs/prompt-guide.md` in the same short style.
 - Migration: update to 0.12.0 and restart the host. Existing plans need no changes.
 
 ## 0.11.0

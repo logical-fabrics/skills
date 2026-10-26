@@ -1,98 +1,53 @@
-# Model routing の調査と採用方針
+# Model routing の根拠
 
-確認日: 2026-09-05。対象: implementation-workflow の model / effort / delegation 指示。運用上の正本は [model-routing.md](../plugins/implementation-workflow/skills/implementation-executor/references/model-routing.md)、host 機構の正本は [host-adapters.md](../plugins/implementation-workflow/skills/implementation-executor/references/host-adapters.md)。
+確認日: 2026-10-26。対象は implementation-workflow の model / effort / 委任の指示。運用の正本は [model-routing.md](../plugins/implementation-workflow/skills/implementation-executor/references/model-routing.md)、[review-and-parallelism.md](../plugins/implementation-workflow/skills/implementation-executor/references/review-and-parallelism.md)、[host-adapters.md](../plugins/implementation-workflow/skills/implementation-executor/references/host-adapters.md)。この file は現行方針の根拠だけを置く。経緯は [CHANGELOG.md](../CHANGELOG.md) を参照。
 
 ## 結論
 
-作業別の推奨 pair は残し、coding worker の `xhigh` 固定と全 spawn の明示 override 強制を外す。既存 main の設定は維持し、必要な品質を満たす pair を、現在の host が提供する設定面で適用する。実効値と要求値を区別することが最優先の修正である。
+- coding は main 1 体で調査・実装・test・修正まで通すことを既定にする。委任は、別 context に隔離できる作業量が overhead を明確に上回る時だけにする。
+- 工程（実装 / test / 確認）で agent を分けない。自分の作業の再確認を subagent に委任しない。risk 表が求める独立 review は fresh context で残す。
+- worker の起点は Claude Code が Sonnet 5.5 `medium` / Haiku 5.5、reviewer が Opus 5.5 `medium`。Codex は GPT-6.1 Sol を通常 worker と main の起点にし、Luna を定型作業に使う。
+- routing 表は公式推奨に沿った起点で、実測の最適値ではない。要求値と実効値を区別し、結果は diff と acceptance evidence で受理する。
 
-公式資料から一意の「最適な pair」は決まらない。以下は未計測の万能な最適値ではなく、公式推奨に沿った初期方針である。品質の受入条件を維持し、実作業で不足・過剰が分かった時だけ調整する。
-
-## 確認した根拠
+## 現行の根拠
 
 | 根拠 | 確認内容 | この repo の判断 |
 | --- | --- | --- |
-| [Codex models](https://learn.chatgpt.com/docs/models) | 明確な作業は low、通常は medium、難しい分析は high / extra high。max と ultra は通常作業には不要 | 書き込みの有無だけでは effort を決めない |
-| [Codex subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents) | worker ごとに model / effort を設定でき、継承も正式な経路。custom file は spawn 設定をさらに上書きできる | explicit / definition / inherited と effective pair を区別する |
-| [Terra](https://developers.openai.com/api/docs/models/gpt-5.6-terra) / [Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna) | cost / workload の違いがあり、API は medium を既定として複数 effort を提供 | Terra medium を通常 worker、Luna low / medium を明確な leaf の起点とする |
-| [Opus 5 prompting](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5) | 低 effort でも code review / bug-finding が強い。medium が全用途で最適とはしていない | bundled reviewer の Opus medium を維持し、高リスク判断とは分ける |
-| [Claude effort](https://platform.claude.com/docs/en/build-with-claude/effort) | model ごとの推奨があり、effort は厳密な token budget ではない | 一律の最大化や同名 level の vendor 間比較を避ける |
-| [Fable 5.1 prompting](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1) | low も小型 model の高 effort と比較する候補。低 effort では検索を減らす傾向がある | Fable を escalation 専用に閉じ込めず、task evidence と設定可能性がある時の代替候補とする |
-| [Claude subagents](https://code.claude.com/docs/en/sub-agents) / [model config](https://code.claude.com/docs/en/model-config) | version、provider alias、環境変数、allowlist、thinking 設定が実効値に影響する | frontmatter だけで選択成功としない |
-| [Agent SDK TypeScript](https://code.claude.com/docs/en/agent-sdk/typescript) | AgentInput と AgentDefinition は別型。定義側の model / effort の自由度を通常 tool 入力へ転用できない | 現在の tool schema を優先し、effort のためだけの別 CLI / SDK 起動はしない |
+| [When to fold subagents into your main agent loop](https://claude.com/resources/articles/building-agents-when-to-fold-subagents-into-your-main-agent-loop)（2026-10-22） | skill と tool を持つ単一 agent は、多くの場合 subagent 構成と同等以上の品質を低い cost と latency で出す。subagent が残る条件は、context 肥大による測定可能な劣化、fresh context での並列作業、tool 選択や指示の衝突。互いの出力に連鎖する、同じ data を触る、一緒に呼ばれる specialist は統合する | main 1 体を既定にし、委任は Delegation Value Test を通った時だけにする |
+| [Building multi-agent systems](https://claude.com/blog/building-multi-agent-systems-when-and-how-to-use-them) | multi-agent は同じ task で 3〜10 倍の token を使う。問題の種類ではなく context で分ける。feature を扱う agent がその test も扱う。verification は context の受け渡しが少なく分けやすい | 工程での分割を禁止する。独立 review は risk 表に残す |
+| [Prompting Claude Opus 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5) | 数回の tool call で終わる作業や、自分の作業の検証・再確認に subagent を使わない。1 体で足りるなら 1 体。明示的な検証指示は over-verification を招く | 自己確認の委任を禁止する（contract の `self_check_delegation: none`）。短い check は main が実行する |
+| [Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) | 最新 model は指示なしで subagent を起動し、直接の grep で足りる場面でも起動し得る。抑制例は「単純な task、順番に依存する作業、1 ファイル編集、context を維持する作業は直接やる」 | Claude Code では委任を促す文言を書かず、main が直接やる条件を明記する |
+| [Prompting Claude Opus 5.5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5) | 既定 effort は `medium` で、Opus 5 の `high` と同等以上。code review は Opus 5 より多くの bug を少ない誤検知で見つける。「think carefully」系の指示は削除を推奨 | reviewer は Opus 5.5 `medium`。推論の代替指示を skill に書かない |
+| [Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview) / [Claude effort](https://platform.claude.com/docs/en/build-with-claude/effort) | Sonnet 5.5 は既定 `high`、明確な agentic coding は `medium`、難しい・長い task は `high`。Haiku 5.5 は既定 `medium`。Fable 5.1 は既定 `high`。`xhigh` / `max` は測定できる品質差がある時。effort は厳密な token budget ではない | worker は Sonnet 5.5 `medium`、軽量 worker は Haiku 5.5。一律の最大化や同名 level の model 間比較をしない |
+| [Fable 5.1 prompting](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1#consider-all-effort-levels) | low の task cost と品質が Opus / Sonnet に競争力を持つ場合がある。低 effort では検索を減らす傾向がある | Fable 5.1 の低 effort を通常実装の候補に残す。常に安いとは扱わない |
+| [Claude Code subagents](https://code.claude.com/docs/en/sub-agents) | 計画・実装・test が context を共有する時、素早い局所変更、latency が重要な時は main で行う。fork は親の context と model を引き継ぎ、fork mode は既定で有効。subagent は既定で background。AskUserQuestion はどの subagent も使えない。fork でない subagent は invocation で `effort` を指定でき、`CLAUDE_CODE_EFFORT_LEVEL` が優先する。深さ・同時数は環境変数で制限できる | 独立 review に fork を使わない。ユーザー判断が要る作業は main で扱う。上限設定はユーザーに委ねる |
+| [Claude Code model config](https://code.claude.com/docs/en/model-config) | version、provider alias、環境変数、allowlist、thinking 設定が実効値に影響する | frontmatter や指定だけで選択成功としない。確認できない値は `unverified` とする |
+| [Codex models](https://learn.chatgpt.com/docs/models) | Astra は長い複合 workflow、Sol は難しい coding や判断、Luna は良い結果が明確な定型作業。既定 effort は client の既定から始める。`ultra` は subagents による並列化で、多くの task には不要 | 書き込みの有無だけで effort を決めない。`ultra` を失敗時の次の effort にしない |
+| [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) | `gpt-6.1-sol` は Astra に近い性能を低い cost で出す。GPT-6 Sol は前世代。API 既定は `medium` で `none` 非対応。Enterprise / Edu は admin が有効化するまで使えない | Codex の通常 worker と main を GPT-6.1 Sol にし、GPT-6 Sol → GPT-5.6 の順で fallback する |
+| [OpenAI latest model guide](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-6-astra) | Astra は複数評価で出力 token と推定 task cost が下がる場合がある | Astra の低 effort を最難関作業の候補に残す |
+| [Codex subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents) | ユーザー、`AGENTS.md`、skill が求めた時に subagent を起動する。read-heavy な並列を推奨し、write-heavy な並列は衝突しやすい。worker ごとに model / effort を設定でき、継承も正式な経路。custom agent file の明示値が優先する。`agents.enabled` は既定 true、同時数は `agents.max_concurrent_threads_per_session` | skill が起動を許可するのは Delegation Value Test を通った作業だけ。明示・definition・継承と実効値を区別する。上限設定はユーザーに委ねる |
 
-## 現在の host で確認したこと
+「GPT-Sol 6.1」という名称は公式資料にない。公式名は GPT-6.1 Sol。
 
-CLI version / help、bundled catalog、公開 tool schema を確認した。モデル比較用の推論実験は行っていない。
-
-- Codex CLI は `0.153.2`。`codex debug models --bundled` の Astra / Sol の default reasoning は `low`、Terra / Luna は `medium`。これは binary 同梱値であり、account availability や実行中 app の default の証拠ではない。
-- 同 catalog の Astra / Sol / Terra は `low` / `medium` / `high` / `xhigh` / `max` / `ultra`、Luna は `ultra` を含まない。API で対応してもこの catalog には `none` がない。API、binary、active tool を分ける必要がある。
-- この調査 session の `collaboration.spawn_agent` は `model` / `reasoning_effort` を受け付けるが、full-history fork と override の併用を禁止する。Astra / high / `fork_turns: "none"` で独立調査の dispatch が成功した。これは品質比較や全 host の動作保証ではない。
-- Claude Code は `2.1.261`。通常 Agent の per-call effort は公式型にない。Fable / full ID の通常 Agent override は公開 schema を確認できない限り利用可能と断定しない。
-- bundled agent は `sonnet` / `high`、`opus` / `medium`、`haiku` / effort なし。alias の解決先は固定しない。既存 3 definitions のまま通常作業を扱い、必要な高 effort の read-only profile がない時は制限を報告する。
+OpenAI の資料に「coding は単一 agent を既定にする」と明言した箇所は見つからなかった。write-heavy な並列への注意と「多くの task に Ultra は不要」は同じ方向を示す。
 
 ## 採用しない指示
 
-- 「全 coding worker を xhigh」: 公式の task 別 effort 推奨と合わず、必要性の evidence がない。
-- 「毎回 override。継承は選択失敗」: 適切な既存設定を捨て、fork の context 引き渡しを増やす。
+- 「全 coding worker を `xhigh`」: task 別の effort 推奨と合わず、必要性の evidence がない。
+- 「毎回 override し、継承は選択失敗とする」: 適切な既存設定を捨て、fork の context 引き渡しを増やす。
+- 「実装・test・確認を別 agent に分ける」: 同じ context を複製し、token と統合の手間が増える。
+- 「自分の作業を subagent にもう一度確認させる」: over-verification を招き、独立 review の代わりにもならない。
+- 「Opus 5 時代の `high` 設定を Opus 5.5 に持ち込む」: Opus 5.5 は `medium` で同等以上の品質を出す。
+- 「think carefully / step by step と書く」: 推論量は effort で調整する。
 - 「Fable low は常に安い」: task 全体の cost、検索不足、再試行、host の適用制限を無視する。
-- 「SDK なら指定できるので今の Agent tool にも渡す」: interface が異なる。
-- 「profile を使ったので model と effort は保証済み」: override / provider / allowlist で変わる。
-- 「高 effort reviewer がないので編集用 worker を流用」: review の権限境界を崩す。
+- 「API / SDK で指定できる parameter を通常の tool 呼び出しにも渡す」: interface が異なる。現在の tool schema を優先する。
+- 「profile を使ったので model と effort は保証済み」: override、provider、allowlist で変わる。
+- 「高 effort reviewer がないので編集用 worker を流用する」: review の権限境界を崩す。
 
-## 検証の範囲
+## 検証の範囲と限界
 
-0.9.0 の frozen-lockfile install、構造 validation、lint、hook test 19 件、Claude Code strict validation と inventory（4 skills / 3 agents / 3 hook events）は成功。公式仕様と diff による独立 scenario review で未解決 P0/P1 はない。配布先で不要な maintainer 資料を必須参照にしないことも確認した。
-
-scenario review は既存 main、機械的編集、複雑な review、継承、override、read-only profile 不足の指示上の整合確認であり、モデルを実行した比較試験ではない。Codex への 0.9.0 新規 install / 新規 session discovery、model 間の性能、task 全体の費用、全 provider の alias 解決、全 account の利用可否は未検証。資料の更新が揃わない場合は、能力の推奨は最新 model page、指定方法は該当 host docs と実際の schema を優先する。
-
-## 0.10.0: user-approved automatic routing policy
-
-通常実装を小型 model に固定する 0.9.0 の表を修正した。main が通常の要件確認・実装中に判断し、明確になった部分だけ軽量化する。context 隔離には強い worker も使え、未知の判断は main へ早期に戻す。現在の canonical policy は配布 reference を正とし、上の 0.9.0 調査記録は採用時点の履歴である。
-
-公式の Fable 5.1 prompting guide は low の task cost と quality が Opus / Sonnet に競争力を持つ場合を、Astra migration guide は複数評価で出力 token と推定 task cost が下がる場合を説明する。ただし通常アプリ全般の優位性やこの repo での最適性を実証したものではない。
-
-- https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1#consider-all-effort-levels
-- https://developers.openai.com/api/docs/guides/latest-model?model=gpt-6-astra
-
-結果は既存記録へ残し、次回の参考にする。永続 policy / agent / user 設定の自動学習・書換えは行わず、改善案を承認後に反映する。runtime が metadata を返さない値は unknown とする。
-
-0.10.0 検証: frozen-lockfile offline install、validate、lint、19 hook tests、Claude strict manifest validation、4 skills / 3 agents / 3 hook events の inventory を確認した。曖昧な feature の main 継続、明確な部分の委譲、想定外判断の即時返却、不明 metadata、host override、永続変更の承認境界は docs / diff で照合した。新規 installed session の behavior smoke とモデル間の時間・費用比較は未実施。
-
-## 0.11.0: Opus 5.5 / GPT-6 Sol・Luna 対応と記述の整理
-
-確認日: 2026-09-24。Claude Code `2.1.281`、Codex CLI `0.156.1`。
-
-| 根拠 | 確認内容 | この repo の判断 |
-| --- | --- | --- |
-| [Prompting Claude Opus 5.5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5) | 既定 effort は `medium`。`medium` で Opus 5 の `high` と同等以上。code review は Opus 5 より多くの bug を少ない誤検知で見つける。「think carefully」系の指示は削除を推奨 | reviewer は Opus 5.5 `medium`。推論の代替指示を skill に書かない |
-| [Claude effort](https://platform.claude.com/docs/en/build-with-claude/effort) | Sonnet 5 / Fable 5.1 の既定は `high`。`xhigh` / `max` は測定できる品質差がある時 | worker は Sonnet 5 `high` を維持 |
-| [Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) | 最新 model は subagent を指示なしで積極的に起動し、直接の grep で足りる場面でも起動し得る。抑制の prompt 例あり | Claude Code では委任を促す文言を削り、直接やる条件を明記 |
-| [Claude Code subagents](https://code.claude.com/docs/en/sub-agents) | fork は親の context と model を引き継ぐ。background subagent は AskUserQuestion を使えない | 独立 review に fork を使わない。bundled agent から executor skill の preload を外す |
-| [Codex subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents) | ユーザー、`AGENTS.md`、skill が求めた時に subagent を起動する。read-heavy な並列作業を推奨し、write-heavy な並列は衝突しやすい | Codex では Delegation Value Test を通った作業に限り skill が起動を許可する |
-| [Codex models](https://learn.chatgpt.com/docs/models) | Astra は長い複合 workflow、Sol は難しい coding や判断、Luna は良い結果が明確な定型作業。既定は Sol `medium` / Luna `high` / Astra `low`。`ultra` は subagents による並列化で、多くの task には不要 | routing 表を GPT-6 Astra / Sol / Luna に更新し、GPT-5.6 系は fallback に下げる |
-
-Codex CLI `0.156.1` の bundled catalog では、`gpt-6-sol`（"Workhorse model for coding and everyday work"）と `gpt-6-luna` が追加され、GPT-5.6 系は "Older" と表示される。GPT-6 の base instructions には、進捗 commentary の頻度、自律的な完遂、独立 read の並列化、skill がユーザー指示より優先されないことが含まれる。このため各 SKILL.md の Reporting Cadence 節を削除した。
-
-同時に、Claude Code では `abstract-plan.html` を非公開の artifact として publish することを既定にした。publish 直後は作成者しか見られず、共有範囲の拡大は明示指示がある時だけ行う。Codex の Sites は agent から起動できないため、提案にとどめる。
-
-検証は構造 validation、lint、hook test、Claude strict validation と inventory に限る。installed session での behavior smoke や model 間の費用比較は行っていない。
-
-## 0.12.0: coding の単一 agent 既定、Sonnet 5.5 / Haiku 5.5、GPT-6.1 Sol
-
-確認日: 2026-10-26。
-
-| 根拠 | 確認内容 | この repo の判断 |
-| --- | --- | --- |
-| [When to fold subagents into your main agent loop](https://claude.com/resources/articles/building-agents-when-to-fold-subagents-into-your-main-agent-loop)（2026-10-22） | skill と tool を持つ単一 agent は、多くの場合 subagent 構成と同等以上の品質を、より低い cost と latency で出す。subagent が残る条件は context 肥大による測定可能な劣化、fresh context での並列作業、tool 選択や指示の衝突。互いの出力に連鎖する、同じ data を触る、一緒に呼ばれる specialist は統合する | main 1 体を既定と明記し、委任は Delegation Value Test を通った時だけにする |
-| [Building multi-agent systems](https://claude.com/blog/building-multi-agent-systems-when-and-how-to-use-them) | multi-agent は同じ task で 3〜10 倍の token。問題の種類ではなく context で分ける。feature を扱う agent がその test も扱う。verification は context の受け渡しが少ないので分けやすい | 工程（実装 / test / 確認）での分割を禁止。独立 review は risk 表に残す |
-| [Prompting Claude Opus 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5) | 数回の tool call で終わる作業や、自分の作業の検証・再確認に subagent を使わない。1 体で足りるなら 1 体。明示的な検証指示は over-verification を招く | 自分の作業の再確認のための委任を禁止（contract の `self_check_delegation: none`）。短い check は main が実行する |
-| [Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) | 最新 model は指示なしで subagent を起動する。抑制 prompt 例は「単純な task、順番に依存する作業、1 ファイル編集、context を維持する作業は直接やる」 | 既存の「main が直接やる」条件を維持 |
-| [Claude Code subagents](https://code.claude.com/docs/en/sub-agents) | 計画・実装・test が context を共有する時、素早い局所変更、latency が重要な時は main で。subagent は既定で background、fork mode は既定で有効。AskUserQuestion はどの subagent も使えない。fork でない subagent は invocation で `effort` を指定でき、`CLAUDE_CODE_EFFORT_LEVEL` が優先する。深さ・同時数は環境変数で制限できる | host-adapters の effort 指定と AskUserQuestion の記述を修正。上限設定はユーザーに委ねる |
-| [Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview) / [Claude effort](https://platform.claude.com/docs/en/build-with-claude/effort) | Sonnet 5.5（既定 `high`、明確な agentic coding は `medium`、難しい・長い task は `high`）と Haiku 5.5（既定 `medium`、agentic coding も `medium`）が追加 | worker を Sonnet 5.5 `medium`、軽量 worker を Haiku 5.5 `medium` に更新。bundled `implementation-worker` の effort を `medium` に下げる |
-| [Codex models](https://learn.chatgpt.com/docs/models) / [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) | GPT-6.1 Sol（`gpt-6.1-sol`）は Astra に近い性能を低い cost で出す。GPT-6 Sol は前世代。Codex の既定 effort は client の既定から始める。API 既定は `medium` で `none` 非対応。Enterprise / Edu は admin が有効化するまで使えない | Codex の通常 worker と main を GPT-6.1 Sol に更新し、GPT-6 Sol → GPT-5.6 の順で fallback |
-| [Codex subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents) | read-heavy な並列を推奨、write-heavy な並列は衝突しやすい。`agents.enabled` は既定 true、同時数は `agents.max_concurrent_threads_per_session` | 既存方針を維持し、上限設定はユーザーに委ねる |
-
-「GPT-Sol 6.1」という名称は公式資料にない。公式名は GPT-6.1 Sol。OpenAI の資料に「coding は単一 agent を既定にする」と明言した箇所は見つからなかったが、write-heavy な並列への注意と「多くの task に Ultra は不要」は同じ方向を示す。
-
-検証は構造 validation、lint、hook test、Claude strict validation に限る。installed session での behavior smoke や model 間の費用比較は行っていない。
+- 確認したのは構造 validation、lint、hook test、Claude strict validation と inventory。
+- installed session での behavior smoke は未実施。
+- model 間の性能・時間・task 全体の費用比較は未実施。
+- 全 provider の alias 解決と全 account の model 利用可否は未確認。
+- 資料の更新が揃わない場合は、能力の推奨は最新の model page を、指定方法は該当 host の docs と実際の tool schema を優先する。

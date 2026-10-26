@@ -24,7 +24,7 @@ False positives:
 - quotation / pasted prompt: `例: "Don't use rm -rf"`
 - comparison text: `A ではなく B という方式を解説して。`
 
-Regex detector は false positive を除ききれない。hook output は candidate context とし、curator の promotion gate を第二の防壁にする。Stop outcome gate を有効にするのは、explicit persistence の high-precision pattern だけ。
+Regex detector は false positive を除ききれない。hook output は candidate context とし、curator の promotion gate を第二の防壁にする。Stop outcome gate の適用範囲は `destination-routing.md` の Hooks に従う（explicit persistence の high-precision pattern だけ）。
 
 ## Persistence fixtures
 
@@ -49,14 +49,7 @@ Guidance delta で確認する:
 
 ## Retrospective sweep checks
 
-Retrospective mode では追加で確認する:
-
-- 各候補が in-session の human correction、accepted feedback、deterministic failure のいずれかに紐づくか。agent の自己反省だけの候補がないか。
-- transcript file / session log を path から読んでいないか。
-- 候補提示 → user 選択 → 書き込み、の順序を守ったか。
-- 上限で切り捨てた候補の件数を報告したか。
-- 一度の sweep で deterministic guardrail を 2 件以上新設していないか。
-- context 圧縮で失われた範囲を、推測で候補化していないか。
+`retrospective-sweep.md` の Evidence sources、User selection（提示 → 選択 → 書き込みの順序）、Boundaries（guardrail 新設 1 件まで）に反していないか、上限で切り捨てた候補の件数を報告したかを確認する。
 
 ## Behavior replay
 
@@ -65,7 +58,7 @@ Retrospective mode では追加で確認する:
 1. Recurrence fixture: 過去と同じ mistake class を誘発する新しい context で、rule / skill / hook が適用される。
 2. Counterexample fixture: 類似しているが正当な action で、過剰に block / route しない。
 
-instruction-only learning は host behavior smoke、deterministic guardrail は unit / integration test で確認する。小標本で「永久に再発しない」と結論せず、観測した scope と未検証条件を報告する。
+instruction-only learning は host behavior smoke、deterministic guardrail は unit / integration test で確認する。小標本で「永久に再発しない」と結論しない。観測した scope と未検証条件を報告する。
 
 ## Closure evidence
 

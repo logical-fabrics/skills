@@ -8,19 +8,16 @@
 
 ## Review Domains
 
-UX:
+UX（基準の正本は planner `../../implementation-planner/references/ui-ux.md`。主成果物の代替は同 directory の `ai-ux.md`）:
 
-- 初見ユーザーが迷わないか。
-- 日常利用で操作が重くないか。
+- 初見ユーザーが迷わないか。日常利用で操作が重くないか。
 - 日本語、モバイル、改行、loading、empty、error、permission が破綻していないか。
-- ユーザーがページ、タブ、詳細画面、検索結果、管理対象、workflow step と認識する状態が URL に載っているか。local state だけで画面が切り替わり、戻る、リロード、直接アクセス、共有 URL が期待とずれる場合は P1 候補にする。
-- 認証、権限、onboarding、tenant selection などの gate で、開こうとした URL が保持されているか。権限不足や対象なしを無関係な default 画面への redirect で隠していないか。
-- planner `ui-ux.md` の canonical rubric に照らして、layout/action placement、result-centered copy、state/recovery、forms/accessibility が破綻していないか。
-- ユーザー入力、本人素材、ライブ生成、AI 生成結果などの主成果物が、別素材、seed、sample、mock、demo asset で代替されて成功扱いされていないか。明示表示があっても、ユーザー期待と異なる成果物を preview / published / sent / success に進めるなら finding にする。
-- 判断材料と CTA の距離、desktop の視線移動、導線ラベルの一貫性、操作後の結果説明、通知/共有/可逆性、不要な理由入力、操作後に仕事が進んだと分かるかを確認する。
-- ユーザー向け文言が行動を指示する言い方に寄っていないか、planner `ui-ux.md` の Result-Centered Copy で確認する。判断材料を中立に示す表現へ直せるなら finding にする。
-- キュー型 UI では、操作後に対象がキューから外れるか、次の対象に進むか、完了状態や戻り先が分かるかを確認する。
-- 「保留」など、押しても業務上の扱いが変わらない操作が選択肢になっていないか確認する。
+- URL And Navigation State: 画面状態（ページ、タブ、詳細画面、検索結果、管理対象、workflow step）が URL に載り、戻る、リロード、直接アクセス、共有 URL で期待どおりになるか（local state だけの画面切替は P1 候補）。認証、権限、onboarding、tenant selection などの gate が開こうとした URL を保持し、権限不足や対象なしを無関係な default 画面への redirect で隠していないか。
+- layout / action placement: 判断材料と CTA の距離、desktop の視線移動、導線ラベルの一貫性。
+- Result-Centered Copy: 操作後の結果説明、通知 / 共有 / 可逆性、不要な理由入力。行動を指示する文言を、判断材料を中立に示す表現へ直せるなら finding にする。
+- Work Progress After Actions: 操作後に仕事が進んだと分かるか。キュー型 UI で対象が外れるか次へ進むか。押しても業務上の扱いが変わらない「保留」などがないか。
+- state / recovery、forms / accessibility が破綻していないか。
+- 主成果物（ユーザー入力、本人素材、ライブ生成、AI 生成結果など）が別素材、seed、sample、mock、demo asset で代替されて成功扱いされていないか。明示表示があっても、期待と異なる成果物を preview / published / sent / success に進めるなら finding にする。
 
 Architecture:
 
@@ -51,7 +48,7 @@ Data / Auth / Security:
 Delivery / Operations:
 
 - CI/CD、staging、production、OGP、monitoring、analytics、Sentry、robots が必要に応じて整っているか。
-- logs、metrics、trace、business events で問題追跡できるか。
+- logs、metrics、trace、business events で問題を追跡できるか。
 - local dev、staging、production の起動経路が不必要に分岐していないか。platform 公式の統合 dev path があるのに、古い split dev server / proxy を標準にしていないか。
 
 AI:

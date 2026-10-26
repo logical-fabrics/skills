@@ -1,6 +1,6 @@
 # Prompt Guide
 
-`implementation-workflow` は、3 つの implementation lane と、lane 横断の learning loop で使う。
+`implementation-workflow` は、3 つの implementation lane（Audit / Plan / Execute）と、lane 横断の Learn で使う。
 
 | やりたいこと | 期待する skill | 自然文プロンプト例 |
 | --- | --- | --- |
@@ -9,13 +9,22 @@
 | 計画を実装する | `implementation-executor` | `docs/implementation/current.md の次の slice を実装して、検証までやって` |
 | 人間の訂正を future session に残す | `learning-curator` | `今の訂正、再発防止して` |
 
-Codex でも Claude Code でも、基本は自然文プロンプトで発火する想定。Claude Code では薄い slash command alias は配布しない。
+- Codex でも Claude Code でも、普通の自然文で依頼すれば skill が発火する。特別な書式は要らない。
+- Claude Code 向けの slash command alias は配布しない。
+- 進捗報告の頻度は host の標準に任せる。細かく見たい時はその旨を依頼に書く。
 
-作業中の進捗報告は各 host（Claude Code / Codex）の標準の振る舞いに任せる。細かく進捗を見たい場合は、その旨を依頼に書く。
+基本思想は「lane 内では止まらない。lane 境界は勝手に越えない」。
 
-基本思想は「lane 内では止まらない。lane 境界は勝手に越えない」。Audit は知るため、Plan は人間が方向性を確認するため、Execute は accepted slice をやりきるために分ける。各 lane の最後には `Next Action Contract` を出し、次に使う入口、理由、実行可能 slice、人間判断の要否、推奨 prompt を明示する。
+- Audit は現状を知るために使う。
+- Plan は人間が方向性を確認するために使う。
+- Execute は accepted slice をやりきるために使う。
+- 各 lane は最後に `Next Action Contract` を出す。
 
-長時間・複数 slice・検証ループを前提にする Plan / Execute では、Codex / Claude Code の `/goal` を使う。Plan の goal は「レビュー指摘がなくなるまで計画を完成させる」ためであり、実装開始を意味しない。Execute の goal は accepted slice を実装・検証・handoff 更新までやりきるために使う。Goal には長い計画全文を貼らず、目的、成功条件、制約、検証条件だけを書く。詳細は明示 plan または `docs/implementation/current.md` に置く。
+長時間・複数 slice・検証ループを前提にする Plan / Execute では `/goal` を使う。
+
+- Plan の goal は、レビュー指摘がなくなるまで計画を仕上げるためのもので、実装開始を意味しない。
+- Execute の goal は、accepted slice を実装・検証・handoff 更新までやりきるために使う。
+- goal には目的、成功条件、制約、検証条件だけを書く。計画の詳細は明示 plan か `docs/implementation/current.md` に置く。
 
 ## 迷ったら
 
@@ -27,35 +36,21 @@ Codex でも Claude Code でも、基本は自然文プロンプトで発火す�
 | agent の誤りを訂正した、同じ feedback を繰り返した、今後の rule にしたい | Learn |
 | セッションを終える、次回に引き継ぎたい | Session Handoff |
 
-Claude Code で自然文発火させたい場合も、特別な書式は不要。以下のように普通に依頼する。
+## Learn
 
-```text
-現在の実装を見直して
-```
+agent の誤りを直した後、同じ mistake class の再発を減らしたい時に使う。
 
-```text
-実装計画を作って
-```
+- 直前の訂正 1 件は Incident mode で扱う。短い trigger は `今の訂正、再発防止して`。
+- session 全体を振り返る時は Retrospective mode を使う。`retro` の一語で呼べる。
+- Retrospective mode は候補一覧を出し、選んだものだけを保存する。
+- 通常の訂正表現は UserPromptSubmit hook が候補として検知し、同じ turn に `learning-curator` の判断を足す。
+- `再発防止して`、`覚えて`、`次から`、`今後は`、`二度と`、`AGENTS.md に追記` のような明示的 durable intent があり、final response に learning outcome がない時だけ、Stop hook が一度だけ continuation を求める。
 
-```text
-current.md の次を実装して
-```
+例:
 
 ```text
 それは違う。対象は repo のルールではなく plugin の配布物。次から同じ scope mistake をしないように学びを残して
 ```
-
-最短の推奨形:
-
-```text
-今の訂正、再発防止して。
-```
-
-## Learn
-
-agent の誤りを直した後、同じ mistake class の再発を減らしたい時に使う。入口は 2 つある。直前の訂正 1 件を扱う Incident mode の短い推奨 trigger は `今の訂正、再発防止して`。session を遡って複数の候補を洗い出す Retrospective mode は `retro` の一語で呼べる。長い形なら `このセッションで直したことを振り返って、残す価値のある学びを候補として出して` のように依頼する。Retrospective mode では候補一覧が提示され、選んだものだけが保存される。通常の訂正表現は UserPromptSubmit hook が候補として検知し、`learning-curator` の判断を同じ turn に追加する。`再発防止して`、`覚えて`、`次から`、`今後は`、`二度と`、`AGENTS.md に追記` のような明示的 durable intent があり、final response に learning outcome がない場合だけ、Stop hook が一度だけ continuation を要求する。
-
-例:
 
 ```text
 今の訂正を次からも守れるようにルール化して。保存先は既存の AGENTS.md、CLAUDE.md、skill、hook を調べて最適なものを選んで。
@@ -80,15 +75,22 @@ retro
 期待する動き:
 
 - current task の誤りを先に直す。
-- regex 発火だけでは保存せず、accepted / correct / generalizable / actionable / scoped / novel / safe を確認する。
+- regex の発火だけでは保存しない。accepted / correct / generalizable / actionable / scoped / novel / safe を確認する。
 - 既存 guidance を検索し、`ADD` / `REFINE` / `MERGE` / `NOOP` の一つを選ぶ。
-- always-on rule は canonical `AGENTS.md` / `CLAUDE.md`、multi-step workflow は skill、machine-checkable な危険 behavior は hook / test / linter へ置く。
-- Codex の generated memory state は直接編集せず、host-native memory を mandatory team rule の唯一の保存先にしない。
+- always-on rule は canonical な `AGENTS.md` / `CLAUDE.md` に置く。
+- multi-step workflow は skill に置く。
+- machine-checkable な危険 behavior は hook / test / linter に置く。
+- Codex の generated memory state は直接編集しない。
+- host-native memory を mandatory team rule の唯一の保存先にしない。
 - raw prompt や transcript を永続化しない。
-- Retrospective mode では、候補は context に残る会話、git state、accepted review だけから作り、transcript file は読まない。候補を提示して選択を得るまで書き込まない。
-- 最後に `Learning outcome: ...` で変更先または NOOP 理由を報告する。
+- Retrospective mode の候補は、context に残る会話、git state、accepted review だけから作る。transcript file は読まない。
+- Retrospective mode では、候補を提示して選択を得るまで書き込まない。
+- 最後に `Learning outcome: ...` で変更先か NOOP の理由を報告する。
 
-通常の first-time bug fix、単発の要件変更、仮定の議論、引用文は learning trigger にしない。曖昧な最初の correction は自動保存せず、再発・accepted review・検証可能な高リスク invariant、または明示的 durable intent がある時に昇格する。
+learning trigger にしないもの:
+
+- 通常の first-time bug fix、単発の要件変更、仮定の議論、引用文。
+- 曖昧な最初の correction。再発、accepted review、検証可能な高リスク invariant、明示的 durable intent のどれかがある時に昇格する。
 
 ## Audit
 
@@ -122,12 +124,12 @@ retro
 
 期待する動き:
 
-- 原則として読み取り中心。
-- evidence 付きで findings を出す。
-- すぐ直せる小さなものは `Auto-fix candidates` に分けるが、audit 依頼だけでは編集しない。
+- 読み取りを中心にする。
+- findings には evidence を付ける。
+- すぐ直せる小さなものは `Auto-fix candidates` に分ける。audit の依頼だけでは編集しない。
 - 大きな変更は executor が扱える改善 slice に分ける。
 - 不要な audit ファイルを増やさない。
-- 最後に `Next Action Contract` を出し、Plan / Execute / Ask user / Accept risk / Done のどれに進むべきかを示す。
+- 最後の `Next Action Contract` で、Plan / Execute / Ask user / Accept risk / Done のどれに進むかを示す。
 
 ## Plan
 
@@ -169,15 +171,18 @@ DB schema 変更を含むので、YAGNI と migration/rollback を厳しく見�
 
 期待する動き:
 
-- 明示 plan や repo 慣習がなければ、`docs/implementation/current.md` を active plan にする。
-- 人間向け合意形成が必要な場合だけ `abstract-plan.html` を作る。正本は repo の file。Claude Code では同じ内容を非公開の artifact として publish し、URL を `Implementation Handoff` に残す（以後の更新も同じ URL）。共有範囲を広げるのは依頼したときだけ。Codex では file を渡し、必要なら app の Sites での共有を提案する。
-- P0/P1 がなくなるまで計画レビューする。
-- 不明点は調査し、調査で決められないことだけ選択肢付きで聞く。
-- Plan から Execute へは自動遷移しない。最後に `Next Action Contract` で、実行承認が必要か、次の最小 slice は何かを示す。
+- 明示 plan や repo の慣習がなければ、`docs/implementation/current.md` を active plan にする。
+- `abstract-plan.html` は人間向けの合意形成が必要な計画でだけ作る。正本は repo の file。
+- Claude Code では `abstract-plan.html` を非公開の artifact として publish し、URL を `Implementation Handoff` に残す。以後の更新も同じ URL に出す。
+- artifact の共有範囲は、依頼された時だけ広げる。
+- Codex では file を渡し、必要なら app の Sites での共有を提案する。
+- P0/P1 がなくなるまで計画をレビューする。
+- 不明点は調査する。調査で決められないことだけ選択肢付きで聞く。
+- Plan から Execute へは自動で進まない。最後の `Next Action Contract` で、実行承認の要否と次の最小 slice を示す。
 
 ## Execute
 
-すでにある active plan を狭い slice で実装する時に使う。
+active plan を狭い slice で実装する時に使う。
 
 例:
 
@@ -211,21 +216,27 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 
 期待する動き:
 
-- 最初に plan freshness を確認する。
-- 古い plan をそのまま信じない。
+- 最初に plan の freshness を確認し、古い plan をそのまま信じない。
 - 実装は最小 slice にする。
-- coding は main 1 体で実装・test・検証まで通すことを既定にする。小さく coherent で main に context が揃った作業は main が直接実装し、工程で agent を分けたり自分の作業を subagent に再確認させたりしない。広い探索、長い log / test 調査、独立 workstream、独立 review のように、別 context に隔離する価値が overhead を明確に上回る作業だけ委任する。Claude Code（Opus 5.5 など）は指示がなくても subagent を起動しがちなので抑え、Codex は `ultra` 以外ではこの条件を満たした時だけ subagent を起動する。正本は `implementation-executor/references/review-and-parallelism.md`。
-- low / medium / high risk は委任判断と分離する。risk は独立 review / verification の強さを決める。独立 review は実装者の会話を引き継がない fresh context で行い、fork は使わない。
-- model / effort は `implementation-executor/references/model-routing.md` に従う。既存 main の設定を尊重し、worker は scope・期待結果・確認方法に合う pair を選ぶ（例: Claude Code は Sonnet 5.5 worker / Opus 5.5 reviewer、Codex は GPT-6.1 Sol / Luna）。判断根拠は `docs/model-routing-research.md`。
-- 委任は flat な main → workers を既定にし、並列化は独立 workstream がある場合だけ行う。Codex `ultra`、Claude Code の `ultracode` / Workflow が orchestrate している workstream に manual fan-out を重ねない。
-- UI 変更は changed behavior と risk に応じて、affected route の browser smoke、responsive screenshot、route / auth / persistence の targeted E2E、release 時の full E2E を使い分ける。
-- UI 検証を実行した場合は、確認した route、viewport、browser/tool、state、未確認 state、残リスクと、価値がある場合だけ screenshot/trace path を報告する。
-- 完了時に `current.md` の handoff を必要に応じて更新する。
-- accepted slice 内では、局所的な stale plan 修正、実装、risk-based review、修正、再検証までやりきる。未解決 P0/P1 がなく、acceptance criteria の evidence が揃った時だけ完了する。
-- 完了時に `Next Action Contract` を出し、続けるなら次の最小 slice、止めるなら人間判断が必要な理由を示す。
-- 依頼した scope をそのまま実行する。勝手に狭めず、広げず、別作業に置き換えない。依頼が誤っていると判断した場合は 1 文で指摘した上で、依頼どおりの範囲をやりきる。
+- 依頼された scope をそのまま実行する。勝手に狭めず、広げず、別作業に置き換えない。
+- 依頼が誤っていると判断した時は 1 文で指摘し、依頼どおりの範囲をやりきる。
+- coding は main 1 体で実装・test・修正まで通す。
+- 工程（実装 / test / 確認）で agent を分けない。
+- 自分の作業の再確認を subagent に任せない。test や lint は main が実行する。
+- 委任は、広い探索、長い log / test 調査、独立 workstream、独立 review のように、別 context に隔離する価値が overhead を明確に上回る時だけ。判断の正本は `implementation-executor/references/review-and-parallelism.md`。
+- risk（low / medium / high）は委任の判断と分ける。risk は独立 review と verification の強さを決める。
+- 独立 review は実装者の会話を引き継がない fresh context で行い、fork は使わない。
+- 委任は flat な main → workers にする。並列化は独立 workstream がある時だけ。
+- Codex の `ultra`、Claude Code の `ultracode` / Workflow が orchestrate している workstream に manual fan-out を重ねない。
+- model / effort は `implementation-executor/references/model-routing.md` に従い、既存 main の設定を尊重する。根拠は `docs/model-routing-research.md`。
+- UI 変更の検証は、changed behavior と risk に応じて、affected route の browser smoke、responsive screenshot、route / auth / persistence の targeted E2E、release 時の full E2E を使い分ける。
+- UI 検証をした時は、確認した route、viewport、browser/tool、state、未確認の state、残リスクを報告する。screenshot / trace の path は価値がある時だけ添える。
+- accepted slice 内では、局所的な stale plan の修正、実装、risk-based review、修正、再検証までやりきる。
+- 完了するのは、未解決 P0/P1 がなく、acceptance criteria の evidence が揃った時だけ。
+- 完了時は必要に応じて `current.md` の handoff を更新する。
+- 最後の `Next Action Contract` で、続けるなら次の最小 slice を、止めるなら人間判断が要る理由を示す。
 
-共通の出口形式。正本の定義は plugin の `implementation-planner/references/output-contracts.md` にあり、以下は利用者が確認するための転記:
+共通の出口形式。正本は plugin の `implementation-planner/references/output-contracts.md` で、以下は利用者向けの転記:
 
 ```md
 ## Next Action Contract
@@ -247,7 +258,7 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 ここまでの作業を docs/implementation/current.md の Implementation Handoff に反映して。次のセッションが迷わず再開できるようにして。
 ```
 
-期待する内容:
+handoff に入る内容:
 
 - 完了したこと。
 - 未完了のこと。
@@ -285,8 +296,6 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 ```text
 この accepted slice を実装して。検証と handoff 更新までやりきって。
 ```
-
-良い例:
 
 ```text
 求人詳細画面の応募導線を改善したい。まず audit して、UX と過剰設計の問題を P0/P1/P2 で出して。実装はまだしない。
