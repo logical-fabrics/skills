@@ -12,4 +12,3 @@ Model:
 - 課題難易度に応じて Gemma 系列を優先候補にする。
 - thinking が有効になり得る model は latency を計測する。
 - 低難度タスクで thinking により主導線が遅くなる場合は、無効化または軽量 model を検討する。
-

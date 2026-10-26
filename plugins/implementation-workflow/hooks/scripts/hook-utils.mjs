@@ -1,5 +1,6 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 export const BIOME_EXTENSIONS = new Set([
@@ -32,26 +33,10 @@ export function readHookInput() {
 }
 
 export function findProjectRoot(input = {}) {
-  const toolInput = input.tool_input ?? {};
-  const candidates = [
-    input.cwd,
-    input.workdir,
-    toolInput.cwd,
-    toolInput.workdir,
-    process.env.CLAUDE_PROJECT_DIR,
-    process.env.CODEX_WORKSPACE_ROOT,
-    process.env.PWD,
-    process.cwd(),
-  ].filter(Boolean);
-
-  for (const candidate of candidates) {
-    const absolute = path.resolve(String(candidate));
-    const gitRoot = runGitRoot(absolute);
-    if (gitRoot) return gitRoot;
-    if (existsSync(path.join(absolute, "package.json"))) return absolute;
-  }
-
-  return process.cwd();
+  const cwd = path.resolve(
+    typeof input.cwd === "string" && input.cwd ? input.cwd : process.cwd(),
+  );
+  return runGitRoot(cwd) ?? cwd;
 }
 
 function runGitRoot(cwd) {
@@ -173,6 +158,81 @@ export function normalizeRelative(root, filePath) {
   return path.relative(root, absolute);
 }
 
+// Files whose change can alter what Knip reports: manifests, lockfiles, Knip and
+// tool configs, and entry-point index files.
+export function isDependencyGraphFile(file) {
+  const base = path.basename(file);
+  const normalized = file.replaceAll("\\", "/");
+
+  return (
+    DEPENDENCY_GRAPH_FILES.has(base) ||
+    /^(vite|next|nuxt|astro|svelte|webpack|rollup|tsup|vitest)\.config\./.test(
+      base,
+    ) ||
+    /^tsconfig\..+\.json$/.test(base) ||
+    normalized.includes("/index.") ||
+    normalized.startsWith("index.")
+  );
+}
+
+const DEPENDENCY_GRAPH_FILES = new Set([
+  "package.json",
+  "pnpm-lock.yaml",
+  "package-lock.json",
+  "npm-shrinkwrap.json",
+  "yarn.lock",
+  "bun.lock",
+  "bun.lockb",
+  "knip.json",
+  "knip.jsonc",
+  "knip.ts",
+  "knip.js",
+  "tsconfig.json",
+  "tsconfig.base.json",
+]);
+
+// Maps each dependency-graph file to a content hash. Comparing two snapshots
+// detects changes from any source (editor tools, package managers, shell
+// commands) and ignores files that were already dirty before the baseline.
+export function snapshotDependencyGraph(root) {
+  const snapshot = {};
+  for (const file of listCandidateFiles(root)) {
+    if (!isDependencyGraphFile(file)) continue;
+    if (file.split(/[\\/]/).includes("node_modules")) continue;
+    try {
+      snapshot[file] = createHash("sha256")
+        .update(readFileSync(path.join(root, file)))
+        .digest("hex");
+    } catch {
+      // Listed but unreadable (for example deleted since listing): absent.
+    }
+  }
+  return snapshot;
+}
+
+export function dependencyGraphChanged(before, after) {
+  const files = new Set([...Object.keys(before), ...Object.keys(after)]);
+  return [...files].some((file) => before[file] !== after[file]);
+}
+
+function listCandidateFiles(root) {
+  const result = spawnSync(
+    "git",
+    ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+    { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+  );
+  if (result.status === 0) return result.stdout.split("\0").filter(Boolean);
+
+  // Outside git, only root-level files are considered.
+  try {
+    return readdirSync(root, { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name);
+  } catch {
+    return [];
+  }
+}
+
 export function collectEditedFiles(hookInput) {
   const toolInput = hookInput.tool_input ?? {};
   const directPaths = collectDirectPaths(toolInput);
@@ -187,289 +247,6 @@ export function collectEditedFiles(hookInput) {
   return [
     ...new Set([...directPaths, ...extractPatchPaths(patchText)].map(String)),
   ];
-}
-
-export function collectDependencyGraphFiles(hookInput) {
-  if (hookInput.tool_name !== "Bash" || !wasSuccessfulBash(hookInput)) {
-    return [];
-  }
-
-  const command =
-    hookInput.tool_input?.command ?? hookInput.tool_input?.cmd ?? null;
-  if (typeof command !== "string" || !command.trim()) return [];
-  if (command.includes("<<")) return [];
-
-  const managers = new Set();
-  for (const segment of splitShellSegments(command)) {
-    const invocation = dependencyInvocation(segment);
-    if (invocation) managers.add(invocation);
-  }
-
-  const files = new Set();
-  for (const manager of managers) {
-    files.add("package.json");
-    for (const lockfile of DEPENDENCY_LOCKFILES[manager]) files.add(lockfile);
-  }
-  return [...files].sort();
-}
-
-const DEPENDENCY_ACTIONS = {
-  pnpm: new Set([
-    "add",
-    "dedupe",
-    "import",
-    "install",
-    "remove",
-    "rm",
-    "uninstall",
-    "up",
-    "update",
-    "upgrade",
-  ]),
-  npm: new Set([
-    "add",
-    "dedupe",
-    "dedup",
-    "i",
-    "install",
-    "remove",
-    "rm",
-    "un",
-    "uninstall",
-    "up",
-    "update",
-    "upgrade",
-  ]),
-  yarn: new Set([
-    "add",
-    "dedupe",
-    "import",
-    "install",
-    "remove",
-    "uninstall",
-    "up",
-    "update",
-    "upgrade",
-  ]),
-  bun: new Set([
-    "add",
-    "install",
-    "remove",
-    "rm",
-    "uninstall",
-    "up",
-    "update",
-    "upgrade",
-  ]),
-};
-
-const DEPENDENCY_LOCKFILES = {
-  pnpm: ["pnpm-lock.yaml"],
-  npm: ["package-lock.json", "npm-shrinkwrap.json"],
-  yarn: ["yarn.lock"],
-  bun: ["bun.lock", "bun.lockb"],
-};
-
-const OPTIONS_WITH_VALUE = new Set([
-  "--cache",
-  "--config",
-  "--cwd",
-  "--dir",
-  "--filter",
-  "--global-dir",
-  "--prefix",
-  "--registry",
-  "--use-yarnrc",
-  "--workspace",
-  "-C",
-  "-F",
-  "-w",
-]);
-
-function wasSuccessfulBash(input) {
-  const response = input.tool_response;
-  if (!response || typeof response !== "object") return true;
-  if (response.success === false || response.interrupted === true) return false;
-
-  for (const key of ["exit_code", "exitCode", "status_code", "statusCode"]) {
-    if (typeof response[key] === "number" && response[key] !== 0) return false;
-  }
-  if (
-    typeof response.status === "string" &&
-    ["error", "failed", "failure"].includes(response.status.toLowerCase())
-  ) {
-    return false;
-  }
-  return true;
-}
-
-function splitShellSegments(command) {
-  const segments = [];
-  let current = "";
-  let quote = null;
-  let escaped = false;
-  let comment = false;
-
-  const push = () => {
-    if (current.trim()) segments.push(current.trim());
-    current = "";
-  };
-
-  for (let index = 0; index < command.length; index += 1) {
-    const character = command[index];
-    if (comment) {
-      if (character === "\n") {
-        comment = false;
-        push();
-      }
-      continue;
-    }
-    if (escaped) {
-      current += character;
-      escaped = false;
-      continue;
-    }
-    if (character === "\\" && quote !== "'") {
-      current += character;
-      escaped = true;
-      continue;
-    }
-    if (quote) {
-      current += character;
-      if (character === quote) quote = null;
-      continue;
-    }
-    if (character === '"' || character === "'") {
-      quote = character;
-      current += character;
-      continue;
-    }
-    if (character === "#" && (!current || /\s$/.test(current))) {
-      comment = true;
-      continue;
-    }
-    if (
-      character === ";" ||
-      character === "\n" ||
-      ((character === "&" || character === "|") &&
-        command[index + 1] === character)
-    ) {
-      push();
-      if (command[index + 1] === character) index += 1;
-      continue;
-    }
-    current += character;
-  }
-  push();
-  return segments;
-}
-
-function dependencyInvocation(segment) {
-  const words = shellWords(segment);
-  if (words.length === 0) return null;
-
-  let index = unwrapCommandPrefix(words);
-  while (/^[A-Za-z_][A-Za-z0-9_]*=/.test(words[index] ?? "")) index += 1;
-
-  const executable = path.basename(words[index] ?? "");
-  if (!Object.hasOwn(DEPENDENCY_ACTIONS, executable)) return null;
-  index += 1;
-
-  while (index < words.length) {
-    const word = words[index];
-    if (word === "--") {
-      index += 1;
-      break;
-    }
-    if (!word.startsWith("-")) break;
-    const option = word.split("=", 1)[0];
-    index += OPTIONS_WITH_VALUE.has(option) && !word.includes("=") ? 2 : 1;
-  }
-
-  if (
-    executable === "yarn" &&
-    words[index] === "workspace" &&
-    words[index + 1]
-  ) {
-    index += 2;
-  }
-
-  return DEPENDENCY_ACTIONS[executable].has(words[index]) ? executable : null;
-}
-
-function unwrapCommandPrefix(words) {
-  let index = 0;
-
-  if (path.basename(words[index] ?? "") === "env") {
-    index += 1;
-    while (words[index]?.startsWith("-")) {
-      const option = words[index];
-      index += ["-u", "--unset"].includes(option) ? 2 : 1;
-    }
-  }
-  while (/^[A-Za-z_][A-Za-z0-9_]*=/.test(words[index] ?? "")) index += 1;
-
-  if (path.basename(words[index] ?? "") === "sudo") {
-    index += 1;
-    while (words[index]?.startsWith("-")) {
-      const option = words[index];
-      index += ["-C", "-D", "-g", "-h", "-p", "-R", "-T", "-u"].includes(option)
-        ? 2
-        : 1;
-    }
-  }
-
-  for (;;) {
-    const wrapper = path.basename(words[index] ?? "");
-    if (["command", "corepack"].includes(wrapper)) {
-      index += 1;
-      continue;
-    }
-    if (wrapper === "rtk") {
-      index += words[index + 1] === "proxy" ? 2 : 1;
-      continue;
-    }
-    return index;
-  }
-}
-
-function shellWords(segment) {
-  const words = [];
-  let current = "";
-  let quote = null;
-  let escaped = false;
-
-  for (const character of segment) {
-    if (escaped) {
-      current += character;
-      escaped = false;
-      continue;
-    }
-    if (character === "\\" && quote !== "'") {
-      escaped = true;
-      continue;
-    }
-    if (quote) {
-      if (character === quote) quote = null;
-      else current += character;
-      continue;
-    }
-    if (character === '"' || character === "'") {
-      quote = character;
-      continue;
-    }
-    if (/\s/.test(character)) {
-      if (current) {
-        words.push(current);
-        current = "";
-      }
-      continue;
-    }
-    current += character;
-  }
-  if (escaped) current += "\\";
-  if (current) words.push(current);
-  return words;
 }
 
 function collectDirectPaths(toolInput) {

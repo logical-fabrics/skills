@@ -31,8 +31,8 @@ const supportedAgentEfforts = new Set([
 ]);
 // Models that do not accept the effort parameter. Setting effort on these is a
 // silent no-op, so the routing intent has to be expressed by narrowing the task.
+// The `haiku` alias now resolves to Haiku 5.5, which accepts effort.
 const effortlessAgentModels = new Set([
-  "haiku",
   "claude-haiku-4-5",
   "claude-haiku-4-5-20251001",
 ]);
@@ -244,9 +244,11 @@ async function validateReferences(skillDir, skillText) {
 const executorDelegationContractPath =
   "skills/implementation-executor/references/review-and-parallelism.md";
 const executorDelegationContract = {
-  version: 3,
+  version: 4,
   primary_objective: "accepted-outcome-with-total-cost-awareness",
+  default_owner: "main-single-agent",
   delegate_when: "expected-context-savings-exceed-overhead",
+  self_check_delegation: "none",
   main_direct_when: "overhead-meets-or-exceeds-context-savings",
   risk_controls: "independent-review-and-verification",
   parallelize_when: "independent-workstreams",

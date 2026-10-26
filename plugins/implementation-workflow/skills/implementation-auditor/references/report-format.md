@@ -1,8 +1,6 @@
 # Report Format
 
-Audit report は簡潔にする。長い評論ではなく、次に何を直すかが分かる形にする。
-
-report の長さは findings の量に比例させる。埋め草の段落、重複した summary、boilerplate を足さない。該当がない section は、無理に埋めず 1 行で「該当なし」と書くか省く。
+Audit report は、次に何を直すかが分かる簡潔な形にする。長さは findings の量に比例させ、埋め草、重複した summary、boilerplate を足さない。該当がない section は「該当なし」の 1 行にするか省く。
 
 Recommended format:
 
@@ -52,10 +50,8 @@ Recommended format:
 - Open decisions:
 ```
 
-`Next Action Contract` の項目定義は `../../implementation-planner/references/output-contracts.md` が正本。上のブロックは Audit lane 向けの写しで、next lane から Audit を除いてある。項目を増やす場合は正本を先に変える。
+`Next Action Contract` の項目定義の正本は `../../implementation-planner/references/output-contracts.md`。上のブロックは Audit lane 向けの写しで、next lane から Audit を除いてある。項目を増やす場合は正本を先に変える。
 
-永続化する場合は、上記を `docs/implementation/current.md` の `Quality Review Findings` または `Improvement Backlog` に統合する。
-
-Audit は知るための lane なので、`Next Action Contract` は次に選ぶ入口を明確にするだけで、Plan / Execute へ自動遷移しない。
-
-Audit では通常 `Goal recommended: no`。長時間の Execute へ進む必要が明らかな場合だけ、次 lane の候補として `/goal` 用の短い draft を残す。
+- `Next Action Contract` は次の入口を示すだけで、Plan / Execute へ自動遷移しない。
+- 通常は `Goal recommended: no`。長時間の Execute が明らかに必要な場合だけ、次 lane 候補として `/goal` 用の短い draft を残す。
+- 永続化する場合は、上記を 該当作業の active plan の `Quality Review Findings` または `Improvement Backlog` に統合する。

@@ -4,20 +4,17 @@
 
 Executor-only でよい:
 
-- 文言修正。
-- 局所バグ。
-- 小さなリファクタ。
-- 既存 plan の明確な 1 slice。
+- 文言修正、局所バグ、小さなリファクタ、既存 plan の明確な 1 slice。
 - UI 判断、DB、認可、外部サービス、本番影響がない変更。
 
-Lightweight route でよい:
+Lightweight route でよい（すべて満たす時）:
 
 - 可逆で、影響範囲が 1-2 ファイル程度に閉じる。
 - product、UX、DB、認可、外部サービス、production rollout の判断が不要。
 - ユーザーが永続 plan を求めていない。
 - 次セッションへの引き継ぎが、チャット上の要約と検証結果で足りる。
 
-この場合、`docs/implementation/current.md` や `abstract-plan.html` を作らない。短い方針、変更対象、検証だけを示す。
+この route では plan file も `abstract-plan.html` も作らず、短い方針、変更対象、検証だけを示す。
 
 Planner が必要:
 
@@ -31,19 +28,19 @@ Research が先:
 
 - 公式 docs や現在の code で解消できる unknown が残る。
 
-repo、一次情報、実行確認で解ける unknown は聞かずに調査する。AskUser の要否は `ask-user.md` の 3 テストと checkpoint に従う。人間が所有する判断(product 方針、UX の方向性、コスト受容、リスク受容、rollout)は調査で代替せず、checkpoint でまとめて確認する。
+repo、一次情報、実行確認で解ける unknown は聞かずに調査する。人間が所有する判断（product 方針、UX の方向性、コスト受容、リスク受容、rollout）は調査で代替せず、`ask-user.md` の 3 テストと checkpoint に従ってまとめて確認する。
 
 ## Freshness
 
-既存 plan は以下を確認する:
+既存 plan で次を確認する:
 
 - 最新のユーザー依頼と矛盾していないか。
 - 現在の code、schema、routes、UI、tests と一致しているか。
 - 使用 library / cloud / API の仕様が古くないか。
-- plan 内の package / library / SDK / CLI version が latest 原則に沿っているか。既存 version より上げられる dependency がある場合、upgrade を実装 step と検証に含めているか。
-- plan 内の TODO / unknown / assumption が残っていないか。
-- 議論履歴、途中案、解消済み reviewer memo、古い差分説明が残り、実装者が現在の実行内容を読み取りにくくなっていないか。
-- 人間向け `abstract-plan.html` と実装向け `implementation-plan.md` が矛盾していないか。
-- 複数の active-looking plan が残っておらず、`docs/implementation/current.md` または repo 慣習上の active plan が明確か。
+- package / library / SDK / CLI version が latest 原則に沿っているか。上げられる dependency の upgrade が実装 step と検証に入っているか。
+- TODO / unknown / assumption が残っていないか。
+- 議論履歴、途中案、解消済み reviewer memo、古い差分説明が、現在の実行内容を読みにくくしていないか。
+- 人間向けの概要（`abstract-plan.html`）と plan 本体が矛盾していないか。
+- active-looking plan が複数残っておらず、この作業の active plan（`artifact-lifecycle.md` の Placement）が明確か。plan を repo に commit していないか。別の作業の plan を編集していないか。
 
-矛盾が P0/P1 なら、実装計画を更新してから handoff する。
+P0/P1 の矛盾があれば、実装計画を更新してから handoff する。

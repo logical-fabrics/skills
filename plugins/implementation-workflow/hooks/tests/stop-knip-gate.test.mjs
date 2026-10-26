@@ -18,15 +18,23 @@ const hooksRoot = path.resolve(
   "..",
 );
 const postEditScript = path.join(hooksRoot, "scripts", "post-edit-biome.mjs");
+const snapshotScript = path.join(
+  hooksRoot,
+  "scripts",
+  "snapshot-dependency-graph.mjs",
+);
 const stopScript = path.join(hooksRoot, "scripts", "stop-knip-gate.mjs");
+const hooksJson = path.join(hooksRoot, "hooks.json");
 
-test("unchanged and pre-existing dirty files do not trigger Knip", (t) => {
+test("pre-existing dirty files and unchanged dependency files do not trigger Knip", (t) => {
   const fixture = createFixture(t);
 
+  // Dirty before the baseline: not a change made during the turn.
   writeFileSync(
     path.join(fixture.root, "package.json"),
     `${JSON.stringify({ devDependencies: { knip: "1.0.0", extra: "1.0.0" } })}\n`,
   );
+  takeSnapshot(fixture, "claude-a");
   const result = runHook(
     fixture,
     stopScript,
@@ -37,19 +45,11 @@ test("unchanged and pre-existing dirty files do not trigger Knip", (t) => {
   assert.equal(readInvocations(fixture), "");
 });
 
-test("Claude PostToolUse records a dependency-graph edit for the matching Stop", (t) => {
+test("a dependency-graph edit after the baseline triggers Knip", (t) => {
   const fixture = createFixture(t);
 
-  assert.equal(
-    runHook(fixture, postEditScript, {
-      session_id: "claude-a",
-      cwd: fixture.root,
-      hook_event_name: "PostToolUse",
-      tool_name: "Edit",
-      tool_input: { file_path: path.join(fixture.root, "package.json") },
-    }).status,
-    0,
-  );
+  takeSnapshot(fixture, "claude-a");
+  addDependency(fixture, "zod");
   const result = runHook(
     fixture,
     stopScript,
@@ -60,54 +60,21 @@ test("Claude PostToolUse records a dependency-graph edit for the matching Stop",
   assert.match(readInvocations(fixture), /^exec knip$/m);
 });
 
-test("Codex-style thread and apply_patch input trigger Knip", (t) => {
+test("a change made by Bash (package manager or lockfile) triggers Knip without PostToolUse", (t) => {
   const fixture = createFixture(t);
-
-  assert.equal(
-    runHook(fixture, postEditScript, {
-      thread_id: "codex-a",
-      hook_event_name: "PostToolUse",
-      tool_name: "apply_patch",
-      tool_input: {
-        workdir: fixture.root,
-        patch: "*** Begin Patch\n*** Update File: package.json\n*** End Patch",
-      },
-    }).status,
-    0,
-  );
-  const result = runHook(fixture, stopScript, {
-    thread_id: "codex-a",
-    workdir: fixture.root,
-    hook_event_name: "Stop",
-    stop_hook_active: false,
-  });
-
-  assert.equal(result.status, 0);
-  assert.match(readInvocations(fixture), /^exec knip$/m);
-});
-
-test("successful dependency-manager Bash commands trigger Knip", (t) => {
-  const fixture = createFixture(t);
-  const commands = [
-    "rtk pnpm --filter app add zod",
-    "corepack npm --workspace app uninstall zod",
-    "yarn workspace web add zod",
-    "sudo -u developer bun --cwd app update",
+  const changes = [
+    () => writeFileSync(path.join(fixture.root, "pnpm-lock.yaml"), "changed\n"),
+    () => writeFileSync(path.join(fixture.root, "knip.json"), "{}\n"),
+    () => {
+      mkdirSync(path.join(fixture.root, "src"));
+      writeFileSync(path.join(fixture.root, "src", "index.ts"), "export {};\n");
+    },
   ];
 
-  for (const [index, command] of commands.entries()) {
+  for (const [index, change] of changes.entries()) {
     const sessionId = `bash-${index}`;
-    assert.equal(
-      runHook(fixture, postEditScript, {
-        session_id: sessionId,
-        cwd: fixture.root,
-        hook_event_name: "PostToolUse",
-        tool_name: "Bash",
-        tool_input: { command },
-        tool_response: { success: true },
-      }).status,
-      0,
-    );
+    takeSnapshot(fixture, sessionId);
+    change();
     assert.equal(
       runHook(fixture, stopScript, claudeStop(sessionId, fixture.root)).status,
       0,
@@ -116,50 +83,53 @@ test("successful dependency-manager Bash commands trigger Knip", (t) => {
 
   assert.equal(
     readInvocations(fixture).trim().split("\n").length,
-    commands.length,
+    changes.length,
   );
 });
 
-test("arbitrary or failed Bash does not track files or run Biome fallback", (t) => {
-  const fixture = createFixture(t, { includeBiome: true });
-  const inputs = [
-    {
-      session_id: "bash-arbitrary",
-      cwd: fixture.root,
-      hook_event_name: "PostToolUse",
-      tool_name: "Bash",
-      tool_input: { command: "echo 'noop; npm install'" },
-      tool_response: { success: true },
-    },
-    {
-      session_id: "bash-failed",
-      cwd: fixture.root,
-      hook_event_name: "PostToolUse",
-      tool_name: "Bash",
-      tool_input: { command: "rtk pnpm add zod" },
-      tool_response: { success: false, exit_code: 1 },
-    },
-  ];
+test("unrelated source changes do not trigger Knip", (t) => {
+  const fixture = createFixture(t);
 
-  for (const input of inputs) {
-    assert.equal(runHook(fixture, postEditScript, input).status, 0);
-    assert.equal(
-      runHook(fixture, stopScript, claudeStop(input.session_id, fixture.root))
-        .status,
-      0,
-    );
-  }
+  takeSnapshot(fixture, "claude-a");
+  writeFileSync(path.join(fixture.root, "util.ts"), "export const a = 1;\n");
+  assert.equal(
+    runHook(fixture, stopScript, claudeStop("claude-a", fixture.root)).status,
+    0,
+  );
   assert.equal(readInvocations(fixture), "");
+});
+
+test("Stop without a baseline fails open", (t) => {
+  const fixture = createFixture(t);
+
+  addDependency(fixture, "zod");
+  assert.equal(
+    runHook(fixture, stopScript, claudeStop("claude-a", fixture.root)).status,
+    0,
+  );
+  assert.equal(readInvocations(fixture), "");
+});
+
+test("the baseline is kept across prompts and consumed by Stop", (t) => {
+  const fixture = createFixture(t);
+
+  takeSnapshot(fixture, "claude-a");
+  addDependency(fixture, "zod");
+  takeSnapshot(fixture, "claude-a");
+  runHook(fixture, stopScript, claudeStop("claude-a", fixture.root));
+  assert.equal(readInvocations(fixture).trim().split("\n").length, 1);
+
+  // The next turn starts from the already-changed files.
+  takeSnapshot(fixture, "claude-a");
+  runHook(fixture, stopScript, claudeStop("claude-a", fixture.root));
+  assert.equal(readInvocations(fixture).trim().split("\n").length, 1);
 });
 
 test("session state is isolated by repository and session", (t) => {
   const fixture = createFixture(t);
 
-  runHook(fixture, postEditScript, {
-    session_id: "claude-a",
-    cwd: fixture.root,
-    tool_input: { file_path: "package.json" },
-  });
+  takeSnapshot(fixture, "claude-a");
+  addDependency(fixture, "zod");
 
   assert.equal(
     runHook(fixture, stopScript, claudeStop("claude-b", fixture.root)).status,
@@ -177,11 +147,8 @@ test("session state is isolated by repository and session", (t) => {
 test("stop_hook_active without a prior Knip block clears state without running", (t) => {
   const fixture = createFixture(t);
 
-  runHook(fixture, postEditScript, {
-    session_id: "claude-a",
-    cwd: fixture.root,
-    tool_input: { file_path: "package.json" },
-  });
+  takeSnapshot(fixture, "claude-a");
+  addDependency(fixture, "zod");
 
   assert.equal(
     runHook(fixture, stopScript, {
@@ -202,11 +169,8 @@ test("stop_hook_active without a prior Knip block clears state without running",
 test("Knip failure blocks once and reports output", (t) => {
   const fixture = createFixture(t, { knipExitCode: 1 });
 
-  runHook(fixture, postEditScript, {
-    session_id: "claude-a",
-    cwd: fixture.root,
-    tool_input: { file_path: "package.json" },
-  });
+  takeSnapshot(fixture, "claude-a");
+  addDependency(fixture, "zod");
   const failed = runHook(
     fixture,
     stopScript,
@@ -217,26 +181,20 @@ test("Knip failure blocks once and reports output", (t) => {
   assert.match(failed.stderr, /Knip hook found dependency/);
   assert.match(failed.stderr, /fixture knip failure/);
   assert.equal(readInvocations(fixture).trim().split("\n").length, 1);
-
-  const continuation = runHook(fixture, stopScript, {
-    ...claudeStop("claude-a", fixture.root),
-    stop_hook_active: true,
-  });
-  assert.equal(continuation.status, 0);
-  assert.equal(readInvocations(fixture).trim().split("\n").length, 1);
 });
 
-test("a dependency re-edit during continuation gets a non-blocking passing recheck", (t) => {
+test("the continuation after a block rechecks once, even for a source-only fix", (t) => {
   const fixture = createFixture(t, { knipExitCode: 1 });
 
-  recordPackageEdit(fixture, "claude-a");
+  takeSnapshot(fixture, "claude-a");
+  addDependency(fixture, "zod");
   assert.equal(
     runHook(fixture, stopScript, claudeStop("claude-a", fixture.root)).status,
     2,
   );
 
   fixture.knipExitCode = 0;
-  recordPackageEdit(fixture, "claude-a");
+  writeFileSync(path.join(fixture.root, "fixed.ts"), "export {};\n");
   const recheck = runHook(fixture, stopScript, {
     ...claudeStop("claude-a", fixture.root),
     stop_hook_active: true,
@@ -245,46 +203,26 @@ test("a dependency re-edit during continuation gets a non-blocking passing reche
   assert.equal(recheck.status, 0);
   assert.match(JSON.parse(recheck.stdout).systemMessage, /recheck passed/);
   assert.equal(readInvocations(fixture).trim().split("\n").length, 2);
-});
 
-test("a source edit during continuation also rechecks the prior Knip block", (t) => {
-  const fixture = createFixture(t, { knipExitCode: 1 });
-
-  recordPackageEdit(fixture, "claude-a");
-  assert.equal(
-    runHook(fixture, stopScript, claudeStop("claude-a", fixture.root)).status,
-    2,
-  );
-
-  fixture.knipExitCode = 0;
-  assert.equal(
-    runHook(fixture, postEditScript, {
-      session_id: "claude-a",
-      cwd: fixture.root,
-      tool_input: { file_path: "src/fixed-import.ts" },
-    }).status,
-    0,
-  );
-  const recheck = runHook(fixture, stopScript, {
+  const again = runHook(fixture, stopScript, {
     ...claudeStop("claude-a", fixture.root),
     stop_hook_active: true,
   });
-
-  assert.equal(recheck.status, 0);
-  assert.match(JSON.parse(recheck.stdout).systemMessage, /recheck passed/);
+  assert.equal(again.status, 0);
+  assert.equal(again.stdout, "");
   assert.equal(readInvocations(fixture).trim().split("\n").length, 2);
 });
 
 test("a failing continuation recheck reports JSON once without blocking again", (t) => {
   const fixture = createFixture(t, { knipExitCode: 1 });
 
-  recordPackageEdit(fixture, "claude-a");
+  takeSnapshot(fixture, "claude-a");
+  addDependency(fixture, "zod");
   assert.equal(
     runHook(fixture, stopScript, claudeStop("claude-a", fixture.root)).status,
     2,
   );
 
-  recordPackageEdit(fixture, "claude-a");
   const recheck = runHook(fixture, stopScript, {
     ...claudeStop("claude-a", fixture.root),
     stop_hook_active: true,
@@ -293,30 +231,53 @@ test("a failing continuation recheck reports JSON once without blocking again", 
   assert.match(JSON.parse(recheck.stdout).systemMessage, /still failed/);
   assert.equal(readInvocations(fixture).trim().split("\n").length, 2);
 
-  const noEdit = runHook(fixture, stopScript, {
+  const noBlock = runHook(fixture, stopScript, {
     ...claudeStop("claude-a", fixture.root),
     stop_hook_active: true,
   });
-  assert.equal(noEdit.status, 0);
-  assert.equal(noEdit.stdout, "");
+  assert.equal(noBlock.status, 0);
+  assert.equal(noBlock.stdout, "");
   assert.equal(readInvocations(fixture).trim().split("\n").length, 2);
 });
 
 test("missing session identity fails open instead of sharing state", (t) => {
   const fixture = createFixture(t);
 
-  const edited = runHook(fixture, postEditScript, {
-    cwd: fixture.root,
-    tool_input: { file_path: "package.json" },
-  });
+  const snapshotted = runHook(fixture, snapshotScript, { cwd: fixture.root });
+  addDependency(fixture, "zod");
   const stopped = runHook(fixture, stopScript, {
     cwd: fixture.root,
     stop_hook_active: false,
   });
 
-  assert.equal(edited.status, 0);
+  assert.equal(snapshotted.status, 0);
   assert.equal(stopped.status, 0);
   assert.equal(readInvocations(fixture), "");
+});
+
+test("PostToolUse runs Biome on edited files and no longer matches Bash", (t) => {
+  const fixture = createFixture(t, { includeBiome: true });
+  writeFileSync(path.join(fixture.root, "a.ts"), "export {};\n");
+
+  assert.equal(
+    runHook(fixture, postEditScript, {
+      session_id: "claude-a",
+      cwd: fixture.root,
+      tool_name: "Edit",
+      tool_input: { file_path: path.join(fixture.root, "a.ts") },
+    }).status,
+    0,
+  );
+  assert.match(
+    readInvocations(fixture),
+    /^exec biome check --write --no-errors-on-unmatched a\.ts$/m,
+  );
+
+  const hooks = JSON.parse(readFileSync(hooksJson, "utf8")).hooks;
+  assert.equal(
+    hooks.PostToolUse[0].matcher,
+    "Edit|MultiEdit|Write|apply_patch",
+  );
 });
 
 function claudeStop(sessionId, root) {
@@ -328,15 +289,22 @@ function claudeStop(sessionId, root) {
   };
 }
 
-function recordPackageEdit(fixture, sessionId) {
+function takeSnapshot(fixture, sessionId) {
   assert.equal(
-    runHook(fixture, postEditScript, {
+    runHook(fixture, snapshotScript, {
       session_id: sessionId,
       cwd: fixture.root,
-      tool_input: { file_path: "package.json" },
+      hook_event_name: "UserPromptSubmit",
     }).status,
     0,
   );
+}
+
+function addDependency(fixture, name) {
+  const file = path.join(fixture.root, "package.json");
+  const manifest = JSON.parse(readFileSync(file, "utf8"));
+  manifest.devDependencies[name] = "1.0.0";
+  writeFileSync(file, `${JSON.stringify(manifest)}\n`);
 }
 
 function createFixture(t, { includeBiome = false, knipExitCode = 0 } = {}) {
@@ -345,6 +313,7 @@ function createFixture(t, { includeBiome = false, knipExitCode = 0 } = {}) {
   const state = path.join(root, "hook-state");
   const invocationLog = path.join(root, "knip-invocations.log");
   mkdirSync(bin);
+  spawnSync("git", ["init", "-q"], { cwd: root });
   writeFileSync(
     path.join(root, "package.json"),
     `${JSON.stringify({
@@ -385,9 +354,6 @@ function runHook(fixture, script, input) {
       LF_IMPLEMENTATION_WORKFLOW_STATE_DIR: fixture.state,
       FAKE_KNIP_LOG: fixture.invocationLog,
       FAKE_KNIP_EXIT: String(fixture.knipExitCode),
-      CLAUDE_SESSION_ID: "",
-      CODEX_THREAD_ID: "",
-      CODEX_SESSION_ID: "",
     },
   });
 }

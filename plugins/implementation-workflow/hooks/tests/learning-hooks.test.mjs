@@ -96,7 +96,8 @@ test("explicit destinations and English persistence requests are recognized", (t
   const prompts = [
     "今の訂正、再発防止して。",
     "この訂正を AGENTS.md に追記して。",
-    "That's not what I asked. Remember this next time.",
+    "この訂正を CLAUDE.md に覚えておいて。",
+    "Add this to AGENTS.md next time.",
   ];
 
   for (const [index, prompt] of prompts.entries()) {
@@ -110,6 +111,39 @@ test("explicit destinations and English persistence requests are recognized", (t
       JSON.parse(result.stdout).hookSpecificOutput.additionalContext,
       /durable-learning intent/,
     );
+  }
+});
+
+test("a bare remember request is correction-level and left to host memory", (t) => {
+  const fixture = createFixture(t);
+  const prompts = [
+    "このことを覚えておいて。",
+    "私はタブ派だと覚えておいてください。",
+    "That's not what I asked. Remember this next time.",
+    "Please remember that I prefer tabs.",
+  ];
+
+  for (const [index, prompt] of prompts.entries()) {
+    const sessionId = `remember-${index}`;
+    const submitted = runHook(
+      fixture,
+      promptScript,
+      promptInput(sessionId, prompt),
+    );
+    assert.equal(submitted.status, 0);
+    const { additionalContext } = JSON.parse(
+      submitted.stdout,
+    ).hookSpecificOutput;
+    assert.doesNotMatch(additionalContext, /durable-learning intent/);
+    assert.match(additionalContext, /host's memory/);
+
+    const stopped = runHook(
+      fixture,
+      stopScript,
+      stopInput(sessionId, "修正しました。"),
+    );
+    assert.equal(stopped.status, 0);
+    assert.equal(stopped.stdout, "");
   }
 });
 
@@ -155,7 +189,7 @@ test("reported learning outcome satisfies explicit persistence gate", (t) => {
   const submitted = runHook(
     fixture,
     promptScript,
-    promptInput("explicit-b", "このことを覚えておいて。"),
+    promptInput("explicit-b", "このことを CLAUDE.md に記録して。"),
   );
   assert.equal(submitted.status, 0);
 
@@ -175,12 +209,10 @@ test("missing session identity fails open and stores no shared signal", (t) => {
   const fixture = createFixture(t);
   const submitted = runHook(fixture, promptScript, {
     cwd: fixture.root,
-    hook_event_name: "UserPromptSubmit",
     prompt: "次からは必ず確認して。",
   });
   const stopped = runHook(fixture, stopScript, {
     cwd: fixture.root,
-    hook_event_name: "Stop",
     stop_hook_active: false,
     last_assistant_message: "done",
   });
@@ -193,7 +225,7 @@ test("missing session identity fails open and stores no shared signal", (t) => {
 
 function promptInput(sessionId, prompt) {
   return {
-    thread_id: sessionId,
+    session_id: sessionId,
     cwd: undefined,
     hook_event_name: "UserPromptSubmit",
     prompt,
@@ -202,7 +234,7 @@ function promptInput(sessionId, prompt) {
 
 function stopInput(sessionId, lastMessage) {
   return {
-    thread_id: sessionId,
+    session_id: sessionId,
     hook_event_name: "Stop",
     stop_hook_active: false,
     last_assistant_message: lastMessage,
@@ -226,9 +258,6 @@ function runHook(fixture, script, input) {
     env: {
       ...process.env,
       LF_IMPLEMENTATION_WORKFLOW_STATE_DIR: fixture.state,
-      CLAUDE_SESSION_ID: "",
-      CODEX_THREAD_ID: "",
-      CODEX_SESSION_ID: "",
     },
   });
 }

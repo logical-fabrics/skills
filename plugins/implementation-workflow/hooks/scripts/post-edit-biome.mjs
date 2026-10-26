@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { recordEditedFiles } from "./edit-state.mjs";
 import {
   BIOME_EXTENSIONS,
-  collectDependencyGraphFiles,
   collectEditedFiles,
   fail,
   findProjectRoot,
@@ -20,24 +18,12 @@ const input = readHookInput();
 const root = findProjectRoot(input);
 const packageJson = loadPackageJson(root);
 const observedFiles = collectEditedFiles(input);
-const dependencyGraphFiles = collectDependencyGraphFiles(input);
-const trackedFiles = [...observedFiles, ...dependencyGraphFiles]
-  .map((file) => normalizeRelative(root, file))
-  .filter(Boolean)
-  .filter((file) => !file.split(path.sep).includes("node_modules"));
-
-recordEditedFiles(input, root, trackedFiles);
 
 if (!packageJson || !hasBiome(root, packageJson)) {
   process.exit(0);
 }
 
-const files =
-  observedFiles.length > 0
-    ? observedFiles
-    : input.tool_name === "Bash"
-      ? []
-      : gitChangedFiles(root);
+const files = observedFiles.length > 0 ? observedFiles : gitChangedFiles(root);
 const biomeFiles = files
   .map((file) => normalizeRelative(root, file))
   .filter(Boolean)
