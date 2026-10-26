@@ -16,9 +16,9 @@ UX:
 - ユーザーがページ、タブ、詳細画面、検索結果、管理対象、workflow step と認識する状態が URL に載っているか。local state だけで画面が切り替わり、戻る、リロード、直接アクセス、共有 URL が期待とずれる場合は P1 候補にする。
 - 認証、権限、onboarding、tenant selection などの gate で、開こうとした URL が保持されているか。権限不足や対象なしを無関係な default 画面への redirect で隠していないか。
 - planner `ui-ux.md` の canonical rubric に照らして、layout/action placement、result-centered copy、state/recovery、forms/accessibility が破綻していないか。
-- ユーザーの入力、本人素材、ライブ生成、AI 生成結果などの主成果物が、別素材、seed、sample、mock、demo asset で代替されて成功扱いされていないか。明示表示されていても、ユーザー期待と異なる成果物を preview / published / sent / success に進めるなら finding にする。
-- 特に、判断材料と CTA の距離、desktop の視線移動、導線ラベルの一貫性、操作後の結果説明、通知/共有/可逆性、不要な理由入力、操作後に仕事が進んだと分かるかを確認する。
-- ユーザー向け文言が行動を指示する言い方に寄っていないか、planner `ui-ux.md` の Result-Centered Copy に照らして確認する。判断材料を中立に示す表現へ直せる場合は finding にする。
+- ユーザー入力、本人素材、ライブ生成、AI 生成結果などの主成果物が、別素材、seed、sample、mock、demo asset で代替されて成功扱いされていないか。明示表示があっても、ユーザー期待と異なる成果物を preview / published / sent / success に進めるなら finding にする。
+- 判断材料と CTA の距離、desktop の視線移動、導線ラベルの一貫性、操作後の結果説明、通知/共有/可逆性、不要な理由入力、操作後に仕事が進んだと分かるかを確認する。
+- ユーザー向け文言が行動を指示する言い方に寄っていないか、planner `ui-ux.md` の Result-Centered Copy で確認する。判断材料を中立に示す表現へ直せるなら finding にする。
 - キュー型 UI では、操作後に対象がキューから外れるか、次の対象に進むか、完了状態や戻り先が分かるかを確認する。
 - 「保留」など、押しても業務上の扱いが変わらない操作が選択肢になっていないか確認する。
 
@@ -38,8 +38,8 @@ Verification:
 
 - 重要導線に test または実ブラウザ確認があるか。
 - mock-only 成功を real path 成功として扱っていないか。
-- 標準の `dev` command が production に近い runtime / binding contract を通っているか。frontend と backend/runtime の分離 proxy や local-only binding で、本来必要な接続失敗を隠していないか。
-- 外部 service / media / AI / storage など、機能成立に必要な binding が remote / live 接続なしでは動かない場合、その未確認を feature-ready として扱っていないか。
+- 標準の `dev` command が production に近い runtime / binding contract を通っているか。分離 proxy や local-only binding で、本来必要な接続失敗を隠していないか。
+- 外部 service / media / AI / storage など、remote / live 接続なしでは動かない、機能成立に必要な binding の未確認を feature-ready として扱っていないか。
 - regression を防ぐ最低限の coverage があるか。
 
 Data / Auth / Security:
@@ -59,4 +59,4 @@ AI:
 - AI が入力負荷、言語化負荷、認知負荷を下げているか。
 - AI output がテキストだけに閉じず、比較、選択、修正しやすい形か。
 - Gateway、latency、cost、failure、retry、不可逆操作の確認が設計されているか。
-- 失敗時に「別素材を出して成功に見せる」のではなく、失敗理由、再試行、入力変更、既存の本物候補選択、後で再開の導線になっているか。
+- 失敗時に別素材で成功に見せず、失敗理由、再試行、入力変更、既存の本物候補選択、後で再開の導線を出しているか。

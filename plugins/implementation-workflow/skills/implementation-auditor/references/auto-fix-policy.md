@@ -1,8 +1,8 @@
 # Auto-fix Policy
 
-Audit は原則として読み取り中心。`Auto-fix candidates` は候補提示であり、audit 依頼だけではファイル編集しない。
+Audit は読み取りが中心。`Auto-fix candidates` は候補提示で、audit 依頼だけではファイル編集しない。
 
-実編集できるのは、ユーザーが「修正して」と明示した狭い finding、または executor へ handoff された accepted slice の場合だけ。
+実編集は、ユーザーが「修正して」と明示した狭い finding か、executor へ handoff された accepted slice に限る。
 
 Safe auto-fix candidates:
 
@@ -34,4 +34,4 @@ Ask user first:
 - breaking change。
 - 長期保守方針。
 
-実編集する場合も、scope、files、verification、rollback を明示する。
+実編集する場合は、scope、files、verification、rollback を示す。

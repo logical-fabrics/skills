@@ -6,9 +6,8 @@
 
 - `SKILL.md` と `references/` を正本にする。
 - 日本語を既定にする。
-- host 固有の tool 名は、必要な場合だけ明記する。
-- 長時間・複数 slice・複数 review rounds を前提にする Plan lane では `/goal` を使ってよい。scope は計画完成と review closure に限定し、実装開始を含めない。
-- 長時間・複数 slice・検証ループを前提にする Execute handoff では `/goal` 用の短い draft を残す。
+- host 固有の tool 名は必要な場合だけ書く。
+- `/goal` の使い方（Plan lane は計画完成と review closure まで、Execute handoff は短い draft）は `output-contracts.md` の Goal に従う。
 
 ## Decision Interview (AskUser) の host 差分
 
@@ -21,10 +20,10 @@
 
 共通:
 
-- checkpoint 1 回は原則 1 回の質問バッチ(1 呼び出しまたは 1 メッセージ)に収める。
-- tool が使えない場合(mode 制約、subagent 実行、tool エラーを含む)は、同じ契約(推奨案を先頭に置く、各案の tradeoff、未回答時のデフォルト挙動)を番号付き選択肢のテキスト質問で再現し、回答を待ってから続行する。
-- planner 自身が subagent として動いている場合は、ユーザーへ直接質問できない。質問 block を最終出力として親エージェントへ返し、自分では待たない。
-- Codex では mode を自己判定しない。まず `request_user_input` を呼び、unavailable エラーが返ったらテキスト質問へフォールバックする。
+- checkpoint 1 回は原則 1 回の質問バッチ（1 呼び出しまたは 1 メッセージ）に収める。
+- tool が使えない場合（mode 制約、subagent 実行、tool エラーを含む）は、同じ契約（推奨案を先頭、各案の tradeoff、未回答時のデフォルト挙動）を番号付き選択肢のテキスト質問で再現し、回答を待ってから続行する。
+- planner が subagent として動いている場合はユーザーへ直接質問できない。質問 block を最終出力として親エージェントへ返し、自分では待たない。
+- Codex では mode を自己判定しない。まず `request_user_input` を呼び、unavailable エラーならテキスト質問へフォールバックする。
 
 ## abstract-plan.html の共有チャネル
 
@@ -41,13 +40,13 @@
 Codex:
 
 - `.codex-plugin/plugin.json` は Codex 配布用。
-- marketplace 提示用の `interface` ブロック（`displayName` / `shortDescription` / `defaultPrompt` / `brandColor` 等）は Codex 側のみに置く。Codex は `interface` を推奨フィールドとして扱う。
+- marketplace 提示用の `interface` ブロック（`displayName` / `shortDescription` / `defaultPrompt` / `brandColor` 等）は Codex 側だけに置く。Codex は `interface` を推奨フィールドとして扱う。
 - Codex 固有の用語、app browser、tool、MCP は Codex 専用として分けて書く。
 
 Claude Code:
 
 - `.claude-plugin/plugin.json` は Claude Code 配布用。
-- Claude Code に `interface` 概念はない。提示メタは top-level の `displayName` / `keywords` で表し、`interface` ブロックは入れない。Claude は未知 top-level フィールドを無視するが `claude plugin validate --strict`（release smoke で使用）が警告にするため。
+- Claude Code に `interface` 概念はない。提示メタは top-level の `displayName` / `keywords` で表し、`interface` ブロックは入れない。Claude は未知 top-level フィールドを無視するが、`claude plugin validate --strict`（release smoke で使用）が警告にするため。
 - 2 manifest の version は常に揃える。`interface`（Codex）と `displayName` + `keywords`（Claude）の差は、各 host のスキーマ差による意図的な host 固有差分。
-- thin slash command alias は配布しない。入口を増やすより、skill の自然文 trigger と description を整える。
+- thin slash command alias は配布しない。入口を増やさず、skill の自然文 trigger と description を整える。
 - Claude Code 固有の namespace は Claude 専用として分けて書く。

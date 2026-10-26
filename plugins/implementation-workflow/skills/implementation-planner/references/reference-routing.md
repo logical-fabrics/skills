@@ -1,6 +1,6 @@
 # Reference Routing
 
-すべての references を毎回読む必要はない。依頼内容に応じて読む。
+依頼内容に応じて必要な references だけを読む。
 
 Always:
 
@@ -18,16 +18,16 @@ UI / Web app:
 - `performance.md`
 - `simplicity.md`
 
-UI / Web app では `ui-ux.md` を canonical UI/UX rubric として扱う。executor / auditor 側の UI checklist は、この file の実装・監査向け要約であり、基準が衝突した場合は `ui-ux.md` を優先する。
+`ui-ux.md` を canonical UI/UX rubric とする。executor / auditor 側の UI checklist はその要約であり、基準が衝突したら `ui-ux.md` を優先する。
 
 Backend / API / CLI / batch / data pipeline / library (UI なし):
 
 - `simplicity.md`
 - `refactoring.md`
 - `observability.md`
-- `ci-security.md` when deploy、secret、CI が絡む場合。
-- Backend / API が greenfield かつ JS/TS で既存選定がない場合だけ、`default-stack.md` の API 既定（Hono typed RPC、Zod 等）を確認する。Frontend / mobile 候補は持ち込まない。
-- UI references（`ui-ux.md`、`accessibility.md`、`performance.md` の画面系）は読み込まない。`ui-ux.md` の「ユーザーの理解・判断・回復」原則は、CLI 出力・API レスポンス・エラーメッセージの分かりやすさとして読み替える。
+- `ci-security.md`（deploy、secret、CI が絡む場合）。
+- `default-stack.md` の API 既定（Hono typed RPC、Zod 等）は、Backend / API が greenfield かつ JS/TS で既存選定がない場合だけ確認する。Frontend / mobile 候補は持ち込まない。
+- UI references（`ui-ux.md`、`accessibility.md`、`performance.md` の画面系）は読まない。`ui-ux.md` の「ユーザーの理解・判断・回復」原則は、CLI 出力・API レスポンス・エラーメッセージの分かりやすさとして読み替える。
 
 非 JS / 非 Web / 非 API / 非 mobile の言語・領域 (Python / Go / Rust / Ruby / native module / 組み込み):
 
@@ -35,13 +35,13 @@ Backend / API / CLI / batch / data pipeline / library (UI なし):
 - `refactoring.md`
 - `observability.md`
 - `data-modeling.md`（DB がある場合の YAGNI / schema review の汎用部分のみ。Drizzle / Zod 等の JS 固有候補は適用しない）
-- `default-stack.md` は読まない。技術選定は repo 慣習と当該言語の標準に従う。`default-stack.md` は greenfield かつ TS/JS Web / API / mobile に限った LF ハウス既定であり、他言語・他領域には適用しない。
+- `default-stack.md` は読まない。技術選定は repo 慣習と当該言語の標準に従う。
 
 mobile / native UI:
 
-- `ui-ux.md` の原則（state machine、result-centered copy、操作後の進捗、回復）は platform UI に読み替えて適用する。
+- `ui-ux.md` の原則（state machine、result-centered copy、操作後の進捗、回復）を platform UI に読み替えて適用する。
 - `accessibility.md` は platform の a11y guideline（iOS / Android / 各 framework）へ読み替える。
-- 技術選定は repo 慣習と platform 標準を優先する。greenfield かつ JS/TS mobile app で既存選定がない場合だけ、`default-stack.md` の mobile 既定（Expo）を確認する。Web 候補（React/Vite/Tailwind 等）は根拠なく持ち込まない。
+- 技術選定は repo 慣習と platform 標準を優先する。`default-stack.md` の mobile 既定（Expo）は、greenfield かつ JS/TS mobile app で既存選定がない場合だけ確認する。Web 候補（React/Vite/Tailwind 等）は根拠なく持ち込まない。
 
 AI feature:
 
@@ -80,8 +80,6 @@ Codex / Claude Code behavior:
 
 ## Reference Index
 
-上の routing で選んだ file が何を持っているか:
-
 - `source-of-truth.md`: 判断の優先順位。
 - `planning-process.md`: 計画ループ、freshness、route selection。
 - `artifact-lifecycle.md`: 成果物の置き場所、active plan、archive、session handoff。
@@ -91,7 +89,7 @@ Codex / Claude Code behavior:
 - `ui-ux.md`: UI/UX canonical rubric、視覚検証、URL 状態、改行品質。
 - `ai-ux.md`: AI-first UX。
 - `ai-runtime.md`: Cloudflare AI Gateway、Workers AI、Gemma。
-- `default-stack.md`: greenfield または既存選定がない場合の Drizzle、Better Auth、Hono（typed RPC）、React、Vite、Vitest、Zod、Expo。
+- `default-stack.md`: greenfield かつ TS/JS Web / API / mobile で既存選定がない場合の LF ハウス既定（Drizzle、Better Auth、Hono（typed RPC）、React、Vite、Vitest、Zod、Expo）。
 - `data-modeling.md`: schema、Drizzle、raw SQL、YAGNI。
 - `delivery.md`: CI/CD、Cloudflare、staging、production、OGP。
 - `accessibility.md`: 実操作で確認する accessibility guardrails。

@@ -2,7 +2,7 @@
 
 ## Detection fixtures
 
-UserPromptSubmit hook には少なくとも以下を fixture 化する:
+UserPromptSubmit hook には少なくとも以下を fixture 化する。
 
 True positives:
 
@@ -24,23 +24,21 @@ False positives:
 - quotation / pasted prompt: `例: "Don't use rm -rf"`
 - comparison text: `A ではなく B という方式を解説して。`
 
-Regex detector が false positive を完全には除けないため、hook output は candidate context とし、curator の promotion gate を第二の防壁にする。explicit persistence だけは high-precision pattern で Stop outcome gate を有効にする。
+Regex detector は false positive を除ききれない。hook output は candidate context とし、curator の promotion gate を第二の防壁にする。Stop outcome gate を有効にするのは、explicit persistence の high-precision pattern だけ。
 
 ## Persistence fixtures
 
-最低限、以下を確認する:
-
-- session / repository identity がない場合は state を共有せず fail open。
-- state に prompt 本文、secret、transcript content が残らない。
+- session / repository identity がない場合は state を共有せず fail open する。
+- state に prompt 本文、secret、transcript content を残さない。
 - ordinary correction は Stop を block しない。
-- explicit persistence で `Learning outcome:` がない場合だけ一度 block する。
+- explicit persistence で `Learning outcome:` がない場合だけ、一度 block する。
 - `Learning outcome:` がある場合は block しない。
-- `stop_hook_active=true` の continuation は再 block せず state を消す。
-- Knip など別 Stop handler と並行しても互いの state を消さない。
+- `stop_hook_active=true` の continuation は再 block せず、state を消す。
+- Knip など別 Stop handler と並行しても、互いの state を消さない。
 
 ## Artifact checks
 
-Guidance delta では:
+Guidance delta で確認する:
 
 - canonical file / symlink target を一度だけ変更したか。
 - duplicate または contradictory rule を作っていないか。
@@ -53,10 +51,10 @@ Guidance delta では:
 
 Retrospective mode では追加で確認する:
 
-- 各候補が in-session の human correction、accepted feedback、deterministic failure のいずれかに紐づくか。agent の自己反省だけの候補が混ざっていないか。
+- 各候補が in-session の human correction、accepted feedback、deterministic failure のいずれかに紐づくか。agent の自己反省だけの候補がないか。
 - transcript file / session log を path から読んでいないか。
-- 候補提示 → user 選択 → 書き込み、の順序を守っているか。
-- 上限で切り捨てた候補の件数を報告しているか。
+- 候補提示 → user 選択 → 書き込み、の順序を守ったか。
+- 上限で切り捨てた候補の件数を報告したか。
 - 一度の sweep で deterministic guardrail を 2 件以上新設していないか。
 - context 圧縮で失われた範囲を、推測で候補化していないか。
 
@@ -64,14 +62,14 @@ Retrospective mode では追加で確認する:
 
 重要な learning は、可能なら二つの fixture で検証する:
 
-1. Recurrence fixture: 過去と同じ mistake class を誘発する新しい context を与え、rule / skill / hook が適用される。
-2. Counterexample fixture: 類似しているが正当な action を与え、過剰に block / route しない。
+1. Recurrence fixture: 過去と同じ mistake class を誘発する新しい context で、rule / skill / hook が適用される。
+2. Counterexample fixture: 類似しているが正当な action で、過剰に block / route しない。
 
-instruction-only learning は host behavior smoke で確認し、deterministic guardrail は unit / integration test で確認する。小標本で「永久に再発しない」と結論せず、観測した scope と未検証条件を報告する。
+instruction-only learning は host behavior smoke、deterministic guardrail は unit / integration test で確認する。小標本で「永久に再発しない」と結論せず、観測した scope と未検証条件を報告する。
 
 ## Closure evidence
 
-最終報告は以下を持つ:
+最終報告に含める:
 
 - signal source と promotion / NOOP 理由。
 - operation: ADD / REFINE / MERGE / NOOP。

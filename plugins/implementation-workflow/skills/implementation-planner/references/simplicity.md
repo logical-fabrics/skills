@@ -1,8 +1,6 @@
 # Simplicity / Overengineering
 
-UI/UX は最上位価値だが、短期的な体験改善のために長期保守性を壊してはならない。
-
-Simplicity reviewer は、価値に効く複雑さと、予測や不安から生まれた複雑さを分ける。
+UI/UX は最上位価値だが、短期的な体験改善のために長期保守性を壊さない。Simplicity reviewer は、価値に効く複雑さと、予測や不安から生まれた複雑さを分ける。
 
 - 現在のユーザー価値、既存仕様、直近で確定している要件を満たす最小構造を選ぶ。
 - 抽象化、汎用化、設定化、分散、キュー、イベント駆動、独自 framework、複雑な state machine、過剰な design token、過剰な CI matrix は、現在必要な理由がある場合だけ採用する。

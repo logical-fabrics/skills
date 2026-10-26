@@ -5,6 +5,7 @@
 - Made a single main agent the default for coding, following Anthropic's October 2026 guidance on folding subagents into the main loop. The executor no longer splits work by phase (implementation / tests / checking) and no longer delegates re-checks of its own work. Short checks run in the main agent. Independent review required by the risk table is unchanged. The delegation contract is now version 4.
 - Updated model routing for Claude Sonnet 5.5 and Haiku 5.5, and for GPT-6.1 Sol. GPT-6 Sol and GPT-5.6 are fallbacks. The bundled `implementation-worker` now runs at `medium` effort; long or hard diagnostics can raise it per invocation.
 - Corrected Claude Code host notes: non-fork subagents accept a per-invocation `effort`, subagents run in the background by default, fork mode is on by default, and no subagent can use AskUserQuestion.
+- Rewrote the agent-facing text of all four skills, their references, and the bundled agents as shorter, one-instruction-per-sentence rules. Duplicated rules across files now live in one canonical file with a one-line pointer elsewhere. No rule, condition, threshold, or literal that scripts, hooks, or evals match was changed. The planner's lightweight route now states that all its conditions must hold.
 - Migration: update to 0.12.0 and restart the host. Existing plans need no changes.
 
 ## 0.11.0
