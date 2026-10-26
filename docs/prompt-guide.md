@@ -214,9 +214,9 @@ docs/implementation/current.md の Implementation Handoff を読んで、次の�
 - 最初に plan freshness を確認する。
 - 古い plan をそのまま信じない。
 - 実装は最小 slice にする。
-- 小さく coherent で main に context が揃った作業は main が直接実装する。広い探索、長い log / test 調査、独立 workstream、独立 review のように、別 context に隔離する価値が overhead を明確に上回る作業だけ委任する。Claude Code（Opus 5.5 など）は指示がなくても subagent を起動しがちなので抑え、Codex は `ultra` 以外ではこの条件を満たした時だけ subagent を起動する。正本は `implementation-executor/references/review-and-parallelism.md`。
+- coding は main 1 体で実装・test・検証まで通すことを既定にする。小さく coherent で main に context が揃った作業は main が直接実装し、工程で agent を分けたり自分の作業を subagent に再確認させたりしない。広い探索、長い log / test 調査、独立 workstream、独立 review のように、別 context に隔離する価値が overhead を明確に上回る作業だけ委任する。Claude Code（Opus 5.5 など）は指示がなくても subagent を起動しがちなので抑え、Codex は `ultra` 以外ではこの条件を満たした時だけ subagent を起動する。正本は `implementation-executor/references/review-and-parallelism.md`。
 - low / medium / high risk は委任判断と分離する。risk は独立 review / verification の強さを決める。独立 review は実装者の会話を引き継がない fresh context で行い、fork は使わない。
-- model / effort は `implementation-executor/references/model-routing.md` に従う。既存 main の設定を尊重し、worker は scope・期待結果・確認方法に合う pair を選ぶ（例: Claude Code は Sonnet 5 worker / Opus 5.5 reviewer、Codex は Sol / Luna）。判断根拠は `docs/model-routing-research.md`。
+- model / effort は `implementation-executor/references/model-routing.md` に従う。既存 main の設定を尊重し、worker は scope・期待結果・確認方法に合う pair を選ぶ（例: Claude Code は Sonnet 5.5 worker / Opus 5.5 reviewer、Codex は GPT-6.1 Sol / Luna）。判断根拠は `docs/model-routing-research.md`。
 - 委任は flat な main → workers を既定にし、並列化は独立 workstream がある場合だけ行う。Codex `ultra`、Claude Code の `ultracode` / Workflow が orchestrate している workstream に manual fan-out を重ねない。
 - UI 変更は changed behavior と risk に応じて、affected route の browser smoke、responsive screenshot、route / auth / persistence の targeted E2E、release 時の full E2E を使い分ける。
 - UI 検証を実行した場合は、確認した route、viewport、browser/tool、state、未確認 state、残リスクと、価値がある場合だけ screenshot/trace path を報告する。

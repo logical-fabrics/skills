@@ -87,8 +87,8 @@ model routing の能力、価格、availability、retention、effort は vendor 
 - 独立 workstream がない fixture を agent 数のためだけに並列化しない。
 - audit / plan / execute は `Next Action Contract` で次 lane、人間判断の要否、`/goal` 推奨有無、推奨 prompt を返す。
 - 軽微な UI copy / style fixture では full E2E を要求せず、responsive fixture では mobile / desktop screenshot、route / auth / persistence fixture では targeted E2E、release fixture では full gate が plan に入る。
-- model routing 更新では、GPT-6 未提供時の旧世代 fallback、Claude alias の解決、各 model の既定 effort（Opus 5.5 は `medium`）、API-only parameter と host tool の分離、main / worker effort の整合を公式資料と diff で確認する。価格や model 品質の反復 benchmark は追加しない。
-- 委任の host 差分では、Claude Code で小さく coherent な fixture に subagent を起動しないこと、Codex で Delegation Value Test を通った作業（read-heavy な探索、独立 workstream）と risk 表が求める独立 review だけ subagent を起動すること、独立 review に fork を使わないことを確認する。
+- model routing 更新では、GPT-6 未提供時の旧世代 fallback、Claude alias の解決、各 model の既定 effort（Opus 5.5 / Haiku 5.5 は `medium`、Sonnet 5.5 / Fable 5.1 は `high`）、GPT-6.1 Sol 未提供時の GPT-6 Sol fallback、API-only parameter と host tool の分離、main / worker effort の整合を公式資料と diff で確認する。価格や model 品質の反復 benchmark は追加しない。
+- 委任の host 差分では、Claude Code で小さく coherent な fixture に subagent を起動しないこと、Codex で Delegation Value Test を通った作業（read-heavy な探索、独立 workstream）と risk 表が求める独立 review だけ subagent を起動すること、独立 review に fork を使わないこと、工程別の agent 分割や main 自身の作業の再確認に subagent を起動しないことを確認する。
 - Claude Code で `abstract-plan.html` を作る fixture では、非公開 artifact として publish され、URL が `Implementation Handoff` に残り、再更新で同じ URL が使われ、共有範囲は変わらないことを確認する。
 - task-based routing では、既存 main 設定の維持、明確な編集と複雑な review の effort の区別、適切な継承、override による要求値と実効値の差、必要な read-only reviewer が選択不能な場合を確認する。確認手段が docs / diff なら、モデルを実行した behavior smoke と区別して記録する。
 

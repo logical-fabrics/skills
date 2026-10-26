@@ -1,6 +1,6 @@
 ---
 name: verification-worker
-description: command と期待結果が決まっている lint、typecheck、test、build、log 確認を read-only で実行し、終了コードと出力の証跡を返す軽量 worker。失敗原因の調査や修正には使わない
+description: command と期待結果が決まっていて、出力が大きく main の context を埋める lint、typecheck、test、build、log 確認を read-only で実行し、終了コードと出力の証跡を返す軽量 worker。出力の短い check は main が直接実行する。失敗原因の調査や修正には使わない
 model: haiku
 maxTurns: 20
 tools:

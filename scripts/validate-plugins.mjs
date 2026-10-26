@@ -244,9 +244,11 @@ async function validateReferences(skillDir, skillText) {
 const executorDelegationContractPath =
   "skills/implementation-executor/references/review-and-parallelism.md";
 const executorDelegationContract = {
-  version: 3,
+  version: 4,
   primary_objective: "accepted-outcome-with-total-cost-awareness",
+  default_owner: "main-single-agent",
   delegate_when: "expected-context-savings-exceed-overhead",
+  self_check_delegation: "none",
   main_direct_when: "overhead-meets-or-exceeds-context-savings",
   risk_controls: "independent-review-and-verification",
   parallelize_when: "independent-workstreams",

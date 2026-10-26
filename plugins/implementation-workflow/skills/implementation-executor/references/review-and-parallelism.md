@@ -14,9 +14,11 @@ risk は implementation owner ではなく、独立 review / verification の強
 <!-- executor-delegation-contract:start -->
 ```json
 {
-  "version": 3,
+  "version": 4,
   "primary_objective": "accepted-outcome-with-total-cost-awareness",
+  "default_owner": "main-single-agent",
   "delegate_when": "expected-context-savings-exceed-overhead",
+  "self_check_delegation": "none",
   "main_direct_when": "overhead-meets-or-exceeds-context-savings",
   "risk_controls": "independent-review-and-verification",
   "parallelize_when": "independent-workstreams",
@@ -29,11 +31,14 @@ risk は implementation owner ではなく、独立 review / verification の強
 
 ### Delegation Value Test
 
-委任は、別 context に隔離できる作業量（広い repo 探索、大量 log / test output、長い debugging、独立 workstream）が、assignment の説明・context の複製・起動待ち・方向修正・統合・再検証の overhead を明確に上回る時に使う。拮抗するなら main が直接やる。
+既定は main 1 体で要件理解から実装・test・検証まで通すこと。coding は同じ context を共有する段階（調査、実装、test、修正）が連続するため、分割すると assignment の説明・context の複製・起動待ち・方向修正・統合・再検証の overhead が増え、multi-agent は同じ task で数倍の token を使う。委任は、別 context に隔離できる作業量がこの overhead を明確に上回る時だけにする。拮抗するなら main が直接やる。
 
-- main が直接やる: 小さく coherent な変更、順番に依存する作業、1 ファイル編集、main がすでに context を持っている作業、`rg` / 数ファイルの読み取りで済む調査。ファイル数や risk だけを委任理由にしない。
-- 委任が向く: read-heavy な探索・triage・要約、長い log / test loop、互いに state を共有しない独立 workstream、実装者と別 context で行う独立 review。
-- 委任した調査を main が並行して同じように繰り返さない。待つ間は依存しない別の作業を進める。
+- main が直接やる: 数回の tool call で終わる作業、小さく coherent な変更、順番に依存する作業、1 ファイル編集、main がすでに context を持っている作業、`rg` / 数ファイルの読み取りで済む調査。ファイル数や risk だけを委任理由にしない。
+- 委任が向く: main の context を埋める read-heavy な探索・triage・要約、大量の log / test output を伴う loop、互いに state を共有しない大きな独立 workstream、実装者と別 context で行う独立 review。
+- 分け方は問題の種類ではなく context で決める。feature を実装した者がその test も書く。「実装担当」「test 担当」「確認担当」のように工程で agent を分けない。
+- 自分の作業の検証や再確認のために subagent を起動しない。test や lint は main が実行する。例外は下の risk 表が求める独立 review と、出力が大きすぎて main の context を埋める verification だけ。
+- 1 体で足りるなら 1 体にし、同時数を増やさない。委任した調査を main が並行して同じように繰り返さない。待つ間は依存しない別の作業を進める。
+- worker が main の判断や context を何度も必要とするなら、委任の前提が崩れている。部分結果を受け取り、main で続ける。
 - worker が使えない場合は scope を再評価し、main で安全に扱えるなら続行する。判断品質、権限、scope を損なう場合だけ blocked / AskUser にする。
 
 host ごとの既定の違い:

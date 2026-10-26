@@ -77,3 +77,22 @@ Codex CLI `0.156.1` の bundled catalog では、`gpt-6-sol`（"Workhorse model 
 同時に、Claude Code では `abstract-plan.html` を非公開の artifact として publish することを既定にした。publish 直後は作成者しか見られず、共有範囲の拡大は明示指示がある時だけ行う。Codex の Sites は agent から起動できないため、提案にとどめる。
 
 検証は構造 validation、lint、hook test、Claude strict validation と inventory に限る。installed session での behavior smoke や model 間の費用比較は行っていない。
+
+## 0.12.0: coding の単一 agent 既定、Sonnet 5.5 / Haiku 5.5、GPT-6.1 Sol
+
+確認日: 2026-10-26。
+
+| 根拠 | 確認内容 | この repo の判断 |
+| --- | --- | --- |
+| [When to fold subagents into your main agent loop](https://claude.com/resources/articles/building-agents-when-to-fold-subagents-into-your-main-agent-loop)（2026-10-22） | skill と tool を持つ単一 agent は、多くの場合 subagent 構成と同等以上の品質を、より低い cost と latency で出す。subagent が残る条件は context 肥大による測定可能な劣化、fresh context での並列作業、tool 選択や指示の衝突。互いの出力に連鎖する、同じ data を触る、一緒に呼ばれる specialist は統合する | main 1 体を既定と明記し、委任は Delegation Value Test を通った時だけにする |
+| [Building multi-agent systems](https://claude.com/blog/building-multi-agent-systems-when-and-how-to-use-them) | multi-agent は同じ task で 3〜10 倍の token。問題の種類ではなく context で分ける。feature を扱う agent がその test も扱う。verification は context の受け渡しが少ないので分けやすい | 工程（実装 / test / 確認）での分割を禁止。独立 review は risk 表に残す |
+| [Prompting Claude Opus 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5) | 数回の tool call で終わる作業や、自分の作業の検証・再確認に subagent を使わない。1 体で足りるなら 1 体。明示的な検証指示は over-verification を招く | 自分の作業の再確認のための委任を禁止（contract の `self_check_delegation: none`）。短い check は main が実行する |
+| [Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) | 最新 model は指示なしで subagent を起動する。抑制 prompt 例は「単純な task、順番に依存する作業、1 ファイル編集、context を維持する作業は直接やる」 | 既存の「main が直接やる」条件を維持 |
+| [Claude Code subagents](https://code.claude.com/docs/en/sub-agents) | 計画・実装・test が context を共有する時、素早い局所変更、latency が重要な時は main で。subagent は既定で background、fork mode は既定で有効。AskUserQuestion はどの subagent も使えない。fork でない subagent は invocation で `effort` を指定でき、`CLAUDE_CODE_EFFORT_LEVEL` が優先する。深さ・同時数は環境変数で制限できる | host-adapters の effort 指定と AskUserQuestion の記述を修正。上限設定はユーザーに委ねる |
+| [Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview) / [Claude effort](https://platform.claude.com/docs/en/build-with-claude/effort) | Sonnet 5.5（既定 `high`、明確な agentic coding は `medium`、難しい・長い task は `high`）と Haiku 5.5（既定 `medium`、agentic coding も `medium`）が追加 | worker を Sonnet 5.5 `medium`、軽量 worker を Haiku 5.5 `medium` に更新。bundled `implementation-worker` の effort を `medium` に下げる |
+| [Codex models](https://learn.chatgpt.com/docs/models) / [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) | GPT-6.1 Sol（`gpt-6.1-sol`）は Astra に近い性能を低い cost で出す。GPT-6 Sol は前世代。Codex の既定 effort は client の既定から始める。API 既定は `medium` で `none` 非対応。Enterprise / Edu は admin が有効化するまで使えない | Codex の通常 worker と main を GPT-6.1 Sol に更新し、GPT-6 Sol → GPT-5.6 の順で fallback |
+| [Codex subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents) | read-heavy な並列を推奨、write-heavy な並列は衝突しやすい。`agents.enabled` は既定 true、同時数は `agents.max_concurrent_threads_per_session` | 既存方針を維持し、上限設定はユーザーに委ねる |
+
+「GPT-Sol 6.1」という名称は公式資料にない。公式名は GPT-6.1 Sol。OpenAI の資料に「coding は単一 agent を既定にする」と明言した箇所は見つからなかったが、write-heavy な並列への注意と「多くの task に Ultra は不要」は同じ方向を示す。
+
+検証は構造 validation、lint、hook test、Claude strict validation に限る。installed session での behavior smoke や model 間の費用比較は行っていない。

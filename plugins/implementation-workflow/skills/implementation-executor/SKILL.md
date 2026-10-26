@@ -12,7 +12,7 @@ description: Execute an existing Japanese implementation plan safely and increme
 main は要件理解から実装・統合まで担当し、受入品質を保って完了までの総時間・使用量・手直しを抑える。委任や model の軽量化は手段であり目的ではない。
 
 - plan、repo、docs、schema、routes、UI、tests、設定を読み、plan の古さと判断点を明示する。
-- 作業を main で直接やるか worker に渡すかを `references/review-and-parallelism.md` の Delegation Value Test で決める。小さく coherent で main に context が揃った作業は、複数ファイルでも main が直接実装する。
+- 既定は main 1 体で実装・test・検証まで通す。worker に渡すかは `references/review-and-parallelism.md` の Delegation Value Test で決める。小さく coherent で main に context が揃った作業は、複数ファイルでも main が直接実装する。
 - worker の diff、findings、verification evidence を読み、accept / reject / 差し戻しを判断する。
 - active plan と handoff の status、completed、next action、verification record を更新する。
 
@@ -70,7 +70,7 @@ Disallowed unless explicitly requested:
 - `references/artifact-lifecycle.md`: Execute lane での active plan 更新と handoff。置き場所と archive の正本は planner 側。
 - `references/execution-process.md`: 実装手順、dirty worktree、scope control。
 - `references/review-and-parallelism.md`: 並列化、review loop、reviewer roles。
-- `references/model-routing.md`: Opus 5.5 / Sonnet 5 / Fable 5.1 / Haiku 4.5 と GPT-6 Astra / Sol / Luna の役割分担、effort、escalation。
+- `references/model-routing.md`: Opus 5.5 / Sonnet 5.5 / Haiku 5.5 / Fable 5.1 と GPT-6 Astra / GPT-6.1 Sol / GPT-6 Luna の役割分担、effort、escalation。
 - `references/testing-verification.md`: local checks、UI verification、失敗時の扱い。
 - `references/safety-guardrails.md`: destructive operation、fallback、secret、production、git。
 - `references/ui-implementation.md`: UI 実装、responsive、screenshot、routing、改行。

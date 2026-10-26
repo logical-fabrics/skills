@@ -1,8 +1,8 @@
 ---
 name: implementation-worker
-description: scope・期待結果・確認方法が明確な作業を main から切り出す worker。広い repo 探索、長い log / test 調査、root-cause の再現（diagnostic mode, read-only）、または確定済み accepted slice の実装と局所テスト（implementation mode）に使う。main が context を持っている小さな変更には使わない
+description: scope・期待結果・確認方法が明確な作業を main から切り出す worker。広い repo 探索、長い log / test 調査、root-cause の再現（diagnostic mode, read-only）、または確定済み accepted slice の実装と局所テスト（implementation mode）に使う。main が context を持っている小さな変更、main 自身の作業の再確認には使わない
 model: sonnet
-effort: high
+effort: medium
 maxTurns: 30
 tools:
   - Read
