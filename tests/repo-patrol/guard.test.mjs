@@ -324,6 +324,7 @@ test("git allows only the patrol workflow", (t) => {
     "git fetch -q origin develop",
     "git remote set-head origin -a",
     "git rev-parse --abbrev-ref origin/HEAD",
+    "git rev-parse --verify -q origin/claude/patrol-deps",
     "git checkout -B claude/patrol-deps origin/develop",
     "git restore package.json pnpm-lock.yaml",
     "git restore --staged --worktree -- apps/web/package.json biome.json",
