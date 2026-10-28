@@ -8,3 +8,4 @@
 - Codex と Claude Code の挙動は、意図した host 固有差分を docs に明記する場合を除き揃える。
 - 長時間・複数 slice・検証ループを前提にする実行作業では、Codex / Claude Code の `/goal` を使う。Goal は短く、目的・成功条件・制約・検証条件に絞る。
 - 配布済み plugin の内容を変えたら plugin version を bump し、`docs/release-process.md` の release checks を実行する。
+- この repo は public。ファイルだけでなく、コミットメッセージ、PR・Issue の本文とコメントにも、非公開リポジトリの名前と PR 番号、取引先名、Slack の ID、他リポジトリの脆弱性の状況（パッケージの版・advisory ID）、ディレクトリ構成やリポジトリ設定を書かない。他リポジトリでの事例は「導入先 A」のように伏せ、版や ID は一般化して書く。
