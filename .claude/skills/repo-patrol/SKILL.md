@@ -158,7 +158,7 @@ npm 系以外の Dependabot の PR は取り込まず、`wait-checks.sh <REPO> <
 報告は事実だけを JSON で書き、`/tmp/repo-patrol/report.json` に Write ツールで置く。件数・見出し・@channel・投稿するかは `slack-post.sh` が決める。
 
 1. `.claude/skills/repo-patrol/scripts/slack-post.sh --check /tmp/repo-patrol/report.json` で形を確かめる（投稿しない。何度呼んでもよい）。exit 1 なら、出力の理由に沿って直す
-2. `.claude/skills/repo-patrol/scripts/slack-post.sh /tmp/repo-patrol/report.json` を 1 回だけ呼ぶ。報告することがない日は、スクリプトが投稿せずに「報告することがないので投稿しなかった」と出す。投稿に失敗したら、セッションの最後にそのことを書いて終える（ほかに知らせる手段はない）
+2. `.claude/skills/repo-patrol/scripts/slack-post.sh /tmp/repo-patrol/report.json` を 1 回だけ呼ぶ。報告することがない日は、スクリプトが投稿せずに「報告することがないので投稿しなかった」と出す（月曜だけは「異常なし」を投稿する）。投稿に失敗したら、セッションの最後にそのことを書いて終える（ほかに知らせる手段はない）
 
 ```json
 {

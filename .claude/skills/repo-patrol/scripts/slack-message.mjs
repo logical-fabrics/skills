@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // 巡回の報告（JSON）を検証し、chat.postMessage に送る JSON にする。slack-post.sh から呼ぶ。
 // usage: node slack-message.mjs <報告の JSON> <チャンネル> <owner/name>
-// 出力: {"rich": Block Kit の本文, "plain": 文字だけの本文}。投稿しない日は null
+// 出力: {"rich": Block Kit の本文, "plain": 文字だけの本文}。投稿しない日（items が空で月曜でない日）は null
 //   Block Kit が拒否されたら、slack-post.sh が plain で送り直す。ブロックが 50 を超えるときは rich も文字だけにする
 // 報告の形は SKILL.md の手順 7。巡回は事実だけを書き、件数・@channel・投稿するかはここで決める。
 // 形に合わなければ、理由を標準エラーに出して exit 1（巡回は直して呼び直す）
@@ -279,7 +279,8 @@ function render(report, channel, repo) {
   const mention = items.some((item) =>
     KINDS[item.kind].mentions.some((key) => item[key] === true),
   );
-  const title = `${repo.split("/")[1]} の巡回（${report.date}）: 要対応 ${items.length} 件`;
+  const status = items.length > 0 ? `要対応 ${items.length} 件` : "異常なし";
+  const title = `${repo.split("/")[1]} の巡回（${report.date}）: ${status}`;
 
   const blocks = [
     {
@@ -376,8 +377,10 @@ function main([file, channel, repo]) {
     );
     return 1;
   }
+  // 報告することがない日も月曜は投稿し、投稿が途絶えたら巡回が止まっていると分かるようにする
+  const monday = new Date(`${report.date}T00:00:00Z`).getUTCDay() === 1;
   const messages =
-    report.items.length > 0 ? render(report, channel, repo) : null;
+    report.items.length > 0 || monday ? render(report, channel, repo) : null;
   process.stdout.write(`${JSON.stringify(messages)}\n`);
   return 0;
 }
