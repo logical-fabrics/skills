@@ -1099,4 +1099,6 @@ test("wait-checks.sh reports no checks soon when no workflow is expected", (t) =
     waiting.stdout,
     /pending\ttesting\tワークフローが起動していない/,
   );
+  // 巡回は出力を読んで次の手を決めるので、時間切れでは呼び直させない
+  assert.match(waiting.stdout, /呼び直さない/);
 });
