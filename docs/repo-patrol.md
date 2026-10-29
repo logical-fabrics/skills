@@ -33,6 +33,7 @@ claude.ai の scheduled task（リポジトリごとに 1 つ・毎朝・リポ�
 - 実行できるのは、決まった形の git・`gh api`・pnpm・npm、読み取り系のコマンド、リポジトリにコミットされた `.claude/skills/*/scripts/` のスクリプトだけ。読めるのはリポジトリと `/tmp/repo-patrol/` の中だけ
 - GitHub の読み書きは設定のリポジトリだけ。書き込みは巡回 PR の作成と更新、Dependabot の PR へのコメントだけ（close とラベルは `stale.sh` の中）
 - ファイルの書き込みは `/tmp/repo-patrol/` と、追跡済みの依存ファイルだけ
+- 1 回の実行の書き込みは、巡回 PR 1 本・コメント 20 件・Slack 投稿 1 回・`stale.sh close` 1 回まで。hook の `session_id` ごとに `/tmp/repo-patrol-guard/` で数える
 - install・run の前と push の前に `check-diff.mjs` を通す（push のときは HEAD のコミットを見る）
 
 ただし guard は歯止めであって境界ではない。そこから起動されたプロセス（検証中に動く依存パッケージのコードなど）は止められない。
