@@ -193,6 +193,19 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
     - GitHub への書き込みが、Dependabot の PR へのコメントの範囲に収まっている
     - Actions の repo-patrol stale を `workflow_dispatch` で 1 回動かし、成功する（閉じる候補がなくても summary が出る）
 
+## Actions で動かす（scheduled task の代わり）
+
+`.github/workflows/repo-patrol.yml`（導入の 2 で写すもの）は、同じ巡回を GitHub Actions 上の Claude（`anthropics/claude-code-action`）で毎朝 09:07 に動かす。境界は workflow の `permissions` で、コードは書けず、PR へのコメントと読み取りだけができる。guard も `.claude/settings.json` の hook として同じく効く。人が次を置くまでは動かない。
+
+1. 持ち主が `claude setup-token` で OAuth トークンを作り、`CLAUDE_CODE_OAUTH_TOKEN` として Actions secrets に置く。組織の secrets にして、導入したリポジトリだけに見せる（`gh secret set CLAUDE_CODE_OAUTH_TOKEN --org <org> --visibility selected --repos <リポジトリ,…>`）。持ち主のサブスクの枠を使い、持ち主が退職・休止すると止まるのは scheduled task と同じ
+2. Slack のボットトークンを `SLACK_BOT_TOKEN` として同じように置く。投稿の step にだけ渡り、Claude と、Claude が起動したプロセスには見えない
+3. リポジトリ変数 `REPO_PATROL_MODE` を `observe` にする（`gh variable set REPO_PATROL_MODE --body observe -R <owner/repo>`）。観察モードは GitHub に書かず、Slack にも投稿しない。報告は実行の job summary に出る。scheduled task と並行して 1 週間、報告の中身を比べる
+4. 一致したら `REPO_PATROL_MODE` を `live` にし、scheduled task をオフにする。1 週間オフのまま問題がなければ、scheduled task と cloud environment を消す
+
+Claude に使わせるのは Bash・Write・Edit だけで、guard の hook を通らない読み取りのツール（Read・Glob・Grep）や Task・WebFetch は使わせない（`/proc` などからトークンを読めないように）。guard は、書き込む内容とコメントにトークンの値が入っていれば止める。失敗した日は、live なら失敗したことだけを Slack に知らせる。
+
+private リポジトリでは、実行時間が Actions の分を使う（CI を 9 分まで待つ）。まず 1 リポジトリの観察モードで実行時間を見てから広げる。止めるときは `gh variable delete REPO_PATROL_MODE -R <owner/repo>` か `gh workflow disable repo-patrol`。
+
 ## 設定ファイル（`.claude/repo-patrol.md`）
 
 散文で、次の見出しを書く。巡回はこの内容に従う。guard は「リポジトリ」（`gh api` で読み書きできるリポジトリ）を、dependency-check は「差分に含めてよい追加のパス」（`- \`パス\`` の形の行）をこのファイルから読む。

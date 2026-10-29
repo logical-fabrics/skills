@@ -128,6 +128,7 @@ while [ $# -gt 0 ]; do
   case $1 in
   -o) out=$2; shift ;;
   --data-binary) data=$2; shift ;;
+  -H) case $2 in Authorization:*) echo "$2" >>"$CURL_LOG.auth" ;; esac; shift ;;
   esac
   shift
 done
@@ -148,6 +149,8 @@ printf 200
       CURL_LOG: log,
       REJECT_BLOCKS: reject,
     }),
+    auth: () =>
+      existsSync(`${log}.auth`) ? readFileSync(`${log}.auth`, "utf8") : "",
     sent: () => {
       if (!existsSync(log)) return [];
       const lines = readFileSync(log, "utf8").trim().split("\n");
@@ -427,6 +430,33 @@ test("slack-post keeps the blocks within Slack's limits", (t) => {
   const many = repo.post(report(closing(600)));
   assert.equal(many.status, 0, many.stderr);
   assert.match(many.stdout, /（Block Kit:）\nnull\n$/);
+});
+
+test("on Actions the run URL is the log link and the Slack token is sent as a header", (t) => {
+  const url = runScript("session-url.sh", [], {
+    env: {
+      GITHUB_RUN_ID: "42",
+      GITHUB_REPOSITORY: "o/r",
+      GITHUB_SERVER_URL: "https://github.com",
+    },
+  });
+  assert.equal(url.status, 0, url.stderr);
+  assert.equal(url.stdout, "https://github.com/o/r/actions/runs/42\n");
+
+  const repo = slackRepo(t, SLACK_CONFIG);
+  const slack = fakeSlack(t);
+  const input = report([mergeItem()], { sessionUrl: url.stdout.trim() });
+  const posted = repo.post(input, {
+    ...slack.env(),
+    SLACK_BOT_TOKEN: "xoxb-test",
+  });
+  assert.equal(posted.status, 0, posted.stderr);
+  const [message] = slack.sent();
+  assert.match(
+    JSON.stringify(message.blocks),
+    /<https:\/\/github\.com\/o\/r\/actions\/runs\/42\|実行ログ>/,
+  );
+  assert.equal(slack.auth(), "Authorization: Bearer xoxb-test\n");
 });
 
 test("slack-post posts once, falls back to plain text and never posts with --check", (t) => {
@@ -976,6 +1006,11 @@ test("the workflows of this repository are the templates", () => {
     [
       "repo-patrol-dependency-check.yml",
       /node "\$RUNNER_TEMP\/base\/\.claude\/skills\/repo-patrol\/scripts\/dependency-check\.mjs" "\$BASE_SHA"/,
+    ],
+    // 人が secrets と vars.REPO_PATROL_MODE を置くまで動かず、Slack のトークンは投稿の step にだけ渡す
+    [
+      "repo-patrol.yml",
+      /if: vars\.REPO_PATROL_MODE == 'observe' \|\| vars\.REPO_PATROL_MODE == 'live'\n[\s\S]*uses: anthropics\/claude-code-action@v1[\s\S]*- name: Post the report to Slack\n {8}if: vars\.REPO_PATROL_MODE == 'live'\n {8}run: bash \.claude\/skills\/repo-patrol\/scripts\/slack-post\.sh \/tmp\/repo-patrol\/report\.json\n {8}env:\n {10}SLACK_BOT_TOKEN: \$\{\{ secrets\.SLACK_BOT_TOKEN \}\}/,
     ],
   ]) {
     const template = readFileSync(

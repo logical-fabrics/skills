@@ -144,8 +144,19 @@ export function evaluate(input, overrides = {}) {
       return checkCommand(toolInput.command, ctx);
     case "Edit":
     case "Write":
-    case "MultiEdit":
-      return checkWritePath(toolInput.file_path, ctx);
+    case "MultiEdit": {
+      const text = [
+        toolInput.content,
+        toolInput.new_string,
+        ...(Array.isArray(toolInput.edits)
+          ? toolInput.edits.map((edit) => edit?.new_string)
+          : []),
+      ].filter((value) => typeof value === "string");
+      return (
+        secretProblem(text.join("\n"), ctx) ??
+        checkWritePath(toolInput.file_path, ctx)
+      );
+    }
     case "NotebookEdit":
       return checkWritePath(toolInput.notebook_path, ctx);
     default:
@@ -169,11 +180,35 @@ function createContext(input, overrides) {
     root,
     repo: config?.repo ?? null,
     sessionId: input?.session_id,
+    // 観察モード（Actions の workflow を scheduled task と並行して動かす間）は GitHub に書かない
+    observe: overrides.observe ?? process.env.REPO_PATROL_OBSERVE === "1",
+    // Actions では Slack への投稿は workflow の別の step が行う（Claude には Slack のトークンを渡さない）
+    actions: overrides.actions ?? process.env.GITHUB_ACTIONS === "true",
     writeCountDir: overrides.writeCountDir ?? WRITE_COUNT_DIR,
     // このコマンドの中の数える書き込み（checkCommand が最後にまとめて数える）
     writes: [],
     fetchPull: overrides.fetchPull ?? ((endpoint) => fetchPull(endpoint, root)),
+    secrets: overrides.secrets ?? secretValues(process.env),
   };
+}
+
+// hook は巡回と同じ環境変数を受け継ぐ。トークンらしい値（名前に TOKEN・SECRET・KEY・PASSWORD を含み、20 文字以上）を集める
+function secretValues(env) {
+  return Object.entries(env)
+    .filter(
+      ([name, value]) =>
+        /TOKEN|SECRET|KEY|PASSWORD/i.test(name) &&
+        typeof value === "string" &&
+        value.length >= 20,
+    )
+    .map(([, value]) => value);
+}
+
+// 書き込む本文やコメントにトークンの値が入っていたら止める（読めてしまった値を外へ出さない）
+function secretProblem(text, ctx) {
+  return ctx.secrets.some((secret) => text.includes(secret))
+    ? block("書き込む内容に環境変数のトークンの値が入っている")
+    : null;
 }
 
 // .claude/repo-patrol.md の「リポジトリ」と「差分に含めてよい追加のパス」を読む。
@@ -538,6 +573,11 @@ function checkOwnScript(scriptPath, args, ctx) {
         `slack-post.sh に渡せるのは [--check] と ${PATROL_TMP}/ のファイルだけ`,
       );
     }
+    if (!check && ctx.actions) {
+      return block(
+        "Actions では slack-post.sh は --check だけ（投稿は workflow のあとの step が行う）",
+      );
+    }
     if (!check) ctx.writes.push("slack");
   }
   return checkReadPaths(args, ctx);
@@ -642,6 +682,11 @@ function checkGh(args, ctx) {
   if (!ctx.repo) {
     return block("設定（.claude/repo-patrol.md）のリポジトリを読めない");
   }
+  if (ctx.observe) {
+    return block(
+      "観察モードなので GitHub に書かない（書くはずだったものは、書いたものとして報告する）",
+    );
+  }
   const rule = API_WRITES.find(
     (candidate) =>
       candidate.method === method && candidate.path(ctx.repo).test(endpoint),
@@ -653,12 +698,16 @@ function checkGh(args, ctx) {
     return block(`書き込みの本文は ${PATROL_TMP}/ の JSON を --input で渡す`);
   }
 
+  let raw;
   let data;
   try {
-    data = JSON.parse(readFileSync(path.resolve(ctx.cwd, input), "utf8"));
+    raw = readFileSync(path.resolve(ctx.cwd, input), "utf8");
+    data = JSON.parse(raw);
   } catch {
     return block(`--input の ${input} を JSON として読めない`);
   }
+  const secret = secretProblem(raw, ctx);
+  if (secret) return secret;
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
     return block("--input の JSON はオブジェクトにする");
   }
