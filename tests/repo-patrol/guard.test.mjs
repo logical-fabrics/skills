@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import {
   mkdirSync,
   mkdtempSync,
@@ -86,10 +86,6 @@ function createFixture(t) {
     root,
     writeCountDir: path.join(root, "write-counts"),
     fetchPull: patrolPull,
-    checkDiff: () => null,
-    defaultBranch: () => "origin/develop",
-    isTracked: (relative) =>
-      !relative.startsWith("node_modules/") && relative !== "docs/package.json",
   };
   // 書き込みの件数は session_id ごとに数えるので、決めなければ呼び出しごとに別のセッションにする
   let calls = 0;
@@ -277,7 +273,7 @@ test("only committed skill scripts run, without interpreter options", (t) => {
   ]);
 });
 
-test("git allows only the patrol workflow", (t) => {
+test("git allows only fetching and reading", (t) => {
   const fixture = createFixture(t);
   fixture.assertBlocked([
     "git push origin HEAD:develop",
@@ -326,44 +322,26 @@ test("git allows only the patrol workflow", (t) => {
     "git commit -F /tmp/msg.txt",
     "git add .github/workflows/ci.yml",
     "git add --force x",
+    // 依存の更新は Dependabot が行うので、巡回はブランチもコミットも作らない
+    "git push origin HEAD:refs/heads/claude/patrol-deps",
+    "git push --force-with-lease origin HEAD:refs/heads/claude/patrol-deps",
+    "git checkout -B claude/patrol-deps origin/develop",
+    "git restore package.json pnpm-lock.yaml",
+    "git add -A",
+    "git commit -F /tmp/repo-patrol/commit.txt",
+    "git config user.email bot@example.com",
   ]);
   fixture.assertAllowed([
-    "git push origin HEAD:refs/heads/claude/patrol-deps",
-    "git push -u origin HEAD:refs/heads/claude/patrol-deps",
-    "git push --force-with-lease origin HEAD:refs/heads/claude/patrol-deps",
     "git fetch origin",
     "git fetch -q origin develop",
     "git remote set-head origin -a",
     "git rev-parse --abbrev-ref origin/HEAD",
-    "git rev-parse --verify -q origin/claude/patrol-deps",
-    "git checkout -B claude/patrol-deps origin/develop",
-    "git restore package.json pnpm-lock.yaml",
-    "git restore --staged --worktree -- apps/web/package.json biome.json",
-    "git add -A",
-    "git add package.json pnpm-lock.yaml",
-    "git commit -F /tmp/repo-patrol/commit.txt",
     "git status --porcelain",
     "git diff --name-only origin/develop -- .github/",
     "git log --oneline -5 | head -3",
     "git show origin/develop:package.json",
-    "git config user.email bot@example.com",
     "git config --get remote.origin.url",
   ]);
-  fixture.assertBlocked(["git checkout -B claude/patrol-deps origin/develop"], {
-    defaultBranch: () => null,
-  });
-  // push は HEAD を、install と run は作業ツリーを check-diff で確かめる
-  const headOnly = (mode) =>
-    mode === "head" ? "src/a.ts: 依存ファイルではない" : null;
-  fixture.assertBlocked(
-    ["git push origin HEAD:refs/heads/claude/patrol-deps"],
-    {
-      checkDiff: headOnly,
-    },
-  );
-  fixture.assertAllowed(["pnpm install --frozen-lockfile"], {
-    checkDiff: headOnly,
-  });
 });
 
 test("gh api allows reads of the configured repository and listed writes", (t) => {
@@ -402,9 +380,6 @@ test("gh api allows reads of the configured repository and listed writes", (t) =
     "gh api repos/o/r/pulls/1 -H 'Accept: application/vnd.github.diff'",
     "gh api -X GET repos/o/r/dependabot/alerts",
     "gh api repos/o/r/pulls 2>&1 | head -5",
-    `gh api -X POST repos/o/r/pulls --input ${prCreate}`,
-    `gh api -X POST repos/o/r/pulls --input ${prCreate} --jq .html_url`,
-    `gh api -X PATCH repos/o/r/pulls/12 --input ${prEdit}`,
   ]);
   fixture.assertBlocked([
     "gh api repos/other/repo/pulls",
@@ -428,7 +403,10 @@ test("gh api allows reads of the configured repository and listed writes", (t) =
     "gh workflow run deploy.yaml",
     "gh run rerun 123",
     "gh auth status",
+    // 巡回は PR を作らず、書き換えない（依存の更新は Dependabot の PR）
+    `gh api -X POST repos/o/r/pulls --input ${prCreate}`,
     `gh api -X POST repos/o/r/pulls --input ${prWrongHead}`,
+    `gh api -X PATCH repos/o/r/pulls/12 --input ${prEdit}`,
     `gh api -X PATCH repos/o/r/pulls/12 --input ${prClose}`,
     `gh api -X POST repos/o/r/issues/12/comments --input ${dependabot}`,
     `gh api -X POST repos/o/r/issues/12/comments --input ${dependabotInCode}`,
@@ -448,10 +426,6 @@ test("gh api allows reads of the configured repository and listed writes", (t) =
     headRepo: "someone/r",
     baseRepo: "o/r",
   });
-  const edit = `gh api -X PATCH repos/o/r/pulls/12 --input ${prEdit}`;
-  fixture.assertBlocked([edit], { fetchPull: humanPull });
-  fixture.assertBlocked([edit], { fetchPull: forkPull });
-  fixture.assertBlocked([edit], { fetchPull: () => null });
 
   // コメントは Dependabot の PR だけ。番号の PR を読んで作成者を確かめる
   const dependabotPull = (endpoint) =>
@@ -486,11 +460,6 @@ test("gh api allows reads of the configured repository and listed writes", (t) =
 
 test("writes are capped per session and run one at a time", (t) => {
   const fixture = createFixture(t);
-  const pr = fixture.writeJson("pr.json", {
-    title: "x",
-    head: "claude/patrol-deps",
-    base: "develop",
-  });
   const comment = fixture.writeJson("comment.json", { body: "見送ります" });
   const dependabotPull = () => ({
     headRef: "dependabot/npm_and_yarn/a-1.2.4",
@@ -500,7 +469,6 @@ test("writes are capped per session and run one at a time", (t) => {
   });
   const post = "/tmp/repo-patrol/report.json";
   const writes = [
-    [`gh api -X POST repos/o/r/pulls --input ${pr}`, 1],
     [`gh api -X POST repos/o/r/issues/12/comments --input ${comment}`, 20],
     [`.claude/skills/repo-patrol/scripts/slack-post.sh ${post}`, 1],
   ];
@@ -526,13 +494,16 @@ test("writes are capped per session and run one at a time", (t) => {
   // 止めたコマンドは数えない。数える書き込みを 2 つつないだら止める
   assert.equal(
     allowed(
-      `gh api -X POST repos/o/r/pulls --input ${pr} && cat /etc/passwd`,
+      `gh api -X POST repos/o/r/issues/12/comments --input ${comment} && cat /etc/passwd`,
       "s3",
     ),
     false,
   );
   assert.equal(
-    allowed(`gh api -X POST repos/o/r/pulls --input ${pr}`, "s3"),
+    allowed(
+      `gh api -X POST repos/o/r/issues/12/comments --input ${comment}`,
+      "s3",
+    ),
     true,
   );
   assert.equal(
@@ -553,6 +524,7 @@ test("writes are capped per session and run one at a time", (t) => {
       {
         root: fixture.root,
         cwd: fixture.root,
+        fetchPull: dependabotPull,
         writeCountDir: path.join(fixture.root, "write-counts"),
       },
     );
@@ -561,56 +533,37 @@ test("writes are capped per session and run one at a time", (t) => {
   }
 });
 
-test("package managers allow only the patrol forms", (t) => {
+test("package managers allow only reading", (t) => {
   const fixture = createFixture(t);
-  const gated = [
-    "pnpm install --lockfile-only --ignore-scripts",
-    "pnpm install --frozen-lockfile",
-    "pnpm install --frozen-lockfile --ignore-scripts",
-    "pnpm run check",
-    "pnpm --filter mobile run typecheck",
-    "pnpm update undici --no-save --lockfile-only --ignore-scripts",
-    "pnpm --dir app update @scope/pkg brace-expansion --no-save --lockfile-only --ignore-scripts",
-    "npm --prefix functions install --package-lock-only --ignore-scripts",
-    "npm ci",
-  ];
   fixture.assertAllowed([
-    ...gated,
     "pnpm audit --json",
+    "pnpm --dir functions audit --json",
     "pnpm why react",
     "pnpm -v",
     "npm view react time --json",
     "npm audit --json",
-    "corepack enable",
-    "cd functions && pnpm install --frozen-lockfile",
+    "npm --prefix functions audit --json --package-lock-only",
   ]);
-  fixture.assertBlocked(gated, {
-    checkDiff: () => "package.json: scripts が変わっている",
-  });
+  // install・update・run は依存のコードを動かしうる。依存の更新は Dependabot が行う
   fixture.assertBlocked([
-    "pnpm run --dir /tmp/repo-patrol x",
-    "pnpm run check --config=/tmp/repo-patrol/x.js",
-    "pnpm run check -- --watch",
+    "pnpm install --lockfile-only --ignore-scripts",
+    "pnpm install --frozen-lockfile",
+    "pnpm run check",
+    "pnpm --filter mobile run typecheck",
+    "pnpm update undici --no-save --lockfile-only --ignore-scripts",
+    "npm --prefix functions install --package-lock-only --ignore-scripts",
+    "npm ci",
+    "corepack enable",
     "pnpm --dir . exec id",
     "pnpm -C . dlx evil",
-    "pnpm --filter web exec id",
     "npm --prefix . exec id",
-    "corepack pnpm exec id",
     "pnpm add evil@1.0.0",
     "npm install evil",
     "pnpm config set script-shell /tmp/x",
     "npm explore x -- id",
-    "pnpm install",
-    "pnpm update",
-    "pnpm update --no-save --lockfile-only --ignore-scripts",
-    "pnpm update undici --lockfile-only --ignore-scripts",
-    "pnpm update undici@7.30.1 --no-save --lockfile-only --ignore-scripts",
-    "pnpm update undici --latest --no-save --lockfile-only --ignore-scripts",
-    "pnpm update undici --no-save --lockfile-only --ignore-scripts --depth 0",
     "pnpm dlx some-package",
     "npx some-package",
-    "pnpm lint",
-    "pnpm --dir /tmp install --frozen-lockfile",
+    "pnpm --dir /tmp audit",
   ]);
 });
 
@@ -637,20 +590,17 @@ test("redirects and utilities stay inside the work directory", (t) => {
   ]);
 });
 
-test("file tools write only to the work directory and tracked dependency files", (t) => {
+test("file tools write only to the work directory", (t) => {
   const fixture = createFixture(t);
   const cases = [
-    ["Write", { file_path: "/tmp/repo-patrol/pr.json" }, true],
-    ["Edit", { file_path: "package.json" }, true],
-    ["Edit", { file_path: "apps/web/package.json" }, true],
-    ["Edit", { file_path: "pnpm-lock.yaml" }, true],
-    ["Edit", { file_path: "biome.json" }, true],
-    ["Write", { file_path: "docs/package.json" }, false],
-    ["Edit", { file_path: "node_modules/x/package.json" }, false],
-    ["Write", { file_path: "link/package.json" }, false],
+    ["Write", { file_path: "/tmp/repo-patrol/report.json" }, true],
+    ["Edit", { file_path: "/tmp/repo-patrol/comment.json" }, true],
+    ["Edit", { file_path: "package.json" }, false],
+    ["Edit", { file_path: "pnpm-lock.yaml" }, false],
+    ["Edit", { file_path: "biome.json" }, false],
+    ["Write", { file_path: "/tmp/repo-patrol/../x.sh" }, false],
     ["Write", { file_path: ".claude/settings.json" }, false],
     ["Edit", { file_path: ".github/workflows/ci.yml" }, false],
-    ["Edit", { file_path: ".github/package.json" }, false],
     ["Write", { file_path: "src/index.ts" }, false],
     ["Write", { file_path: "/tmp/x.sh" }, false],
     ["MultiEdit", { file_path: "/home/user/.claude/settings.json" }, false],
@@ -683,65 +633,6 @@ test("hasMention ignores code, comments, versions and email addresses", () => {
   assert.equal(hasMention("`@Dependabot rebase`"), true);
   assert.equal(hasMention("確認: @someone"), true);
   assert.equal(hasMention("@org/team"), true);
-});
-
-test("install, run and push go through check-diff in a real repository", (t) => {
-  const dir = mkdtempSync(path.join(os.tmpdir(), "repo-patrol-gate-"));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  const run = (cwd, ...args) =>
-    execFileSync("git", args, { cwd, encoding: "utf8", stdio: "pipe" });
-  const origin = path.join(dir, "origin.git");
-  const seed = path.join(dir, "seed");
-  const clone = path.join(dir, "clone");
-  run(dir, "init", "-q", "--bare", "-b", "main", origin);
-  run(dir, "init", "-q", "-b", "main", seed);
-  run(seed, "config", "user.email", "test@example.com");
-  run(seed, "config", "user.name", "test");
-  const basePackage = {
-    scripts: { check: "biome check" },
-    dependencies: { a: "^1.0.0" },
-  };
-  writeFileSync(path.join(seed, "package.json"), JSON.stringify(basePackage));
-  run(seed, "add", "-A");
-  run(seed, "commit", "-q", "-m", "base");
-  run(seed, "push", "-q", origin, "main");
-  run(dir, "clone", "-q", origin, clone);
-  run(clone, "config", "user.email", "test@example.com");
-  run(clone, "config", "user.name", "test");
-
-  const write = (data) =>
-    writeFileSync(path.join(clone, "package.json"), JSON.stringify(data));
-  const check = (command) =>
-    evaluate(
-      { tool_name: "Bash", tool_input: { command } },
-      { cwd: clone, root: clone, config: { repo: "o/r", extras: [] } },
-    ).allow;
-
-  write({ ...basePackage, dependencies: { a: "^1.1.0" } });
-  assert.equal(check("pnpm install --frozen-lockfile"), true);
-
-  write({
-    ...basePackage,
-    scripts: { check: "biome check", postinstall: "node x" },
-  });
-  assert.equal(check("pnpm install --frozen-lockfile"), false);
-  assert.equal(check("pnpm run check"), false);
-
-  // scripts を足したコミットを作り、作業ツリーでだけ戻しても push は止まる
-  run(clone, "checkout", "-q", "-b", "claude/patrol-deps");
-  run(clone, "commit", "-q", "-am", "scripts");
-  write({ ...basePackage, dependencies: { a: "^1.1.0" } });
-  assert.equal(check("pnpm install --frozen-lockfile"), true);
-  assert.equal(
-    check("git push origin HEAD:refs/heads/claude/patrol-deps"),
-    false,
-  );
-
-  run(clone, "commit", "-q", "-am", "only the bump");
-  assert.equal(
-    check("git push origin HEAD:refs/heads/claude/patrol-deps"),
-    true,
-  );
 });
 
 function runGuard(input, env) {
