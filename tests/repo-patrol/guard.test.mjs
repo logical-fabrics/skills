@@ -84,15 +84,18 @@ function createFixture(t) {
   const base = {
     cwd: root,
     root,
+    writeCountDir: path.join(root, "write-counts"),
     fetchPull: patrolPull,
     checkDiff: () => null,
     defaultBranch: () => "origin/develop",
     isTracked: (relative) =>
       !relative.startsWith("node_modules/") && relative !== "docs/package.json",
   };
-  const run = (command, overrides = {}) =>
+  // 書き込みの件数は session_id ごとに数えるので、決めなければ呼び出しごとに別のセッションにする
+  let calls = 0;
+  const run = (command, overrides = {}, sessionId = `session-${++calls}`) =>
     evaluate(
-      { tool_name: "Bash", tool_input: { command } },
+      { tool_name: "Bash", tool_input: { command }, session_id: sessionId },
       { ...base, ...overrides },
     );
   return {
@@ -471,6 +474,83 @@ test("gh api allows reads of the configured repository and listed writes", (t) =
     () => null,
   ]) {
     fixture.assertBlocked([commentOn(12)], { fetchPull });
+  }
+});
+
+test("writes are capped per session and run one at a time", (t) => {
+  const fixture = createFixture(t);
+  const pr = fixture.writeJson("pr.json", {
+    title: "x",
+    head: "claude/patrol-deps",
+    base: "develop",
+  });
+  const comment = fixture.writeJson("comment.json", { body: "見送ります" });
+  const dependabotPull = () => ({
+    headRef: "dependabot/npm_and_yarn/a-1.2.4",
+    headRepo: "o/r",
+    baseRepo: "o/r",
+    author: "dependabot[bot]",
+  });
+  const post = "/tmp/repo-patrol/slack.txt";
+  const writes = [
+    [`gh api -X POST repos/o/r/pulls --input ${pr}`, 1],
+    [`gh api -X POST repos/o/r/issues/12/comments --input ${comment}`, 20],
+    [`.claude/skills/repo-patrol/scripts/slack-post.sh ${post}`, 1],
+    [`bash .claude/skills/repo-patrol/scripts/stale.sh o/r close`, 1],
+  ];
+  const allowed = (command, sessionId) =>
+    fixture.run(command, { fetchPull: dependabotPull }, sessionId).allow;
+  for (const [command, limit] of writes) {
+    for (let n = 1; n <= limit; n++) {
+      assert.equal(allowed(command, "s1"), true, `${command} #${n}`);
+    }
+    assert.equal(allowed(command, "s1"), false, `${command} #${limit + 1}`);
+    assert.equal(allowed(command, "s2"), true, `${command} in another session`);
+  }
+
+  // 読み取りと数えない操作は上限に関係しない
+  for (const command of [
+    "bash .claude/skills/repo-patrol/scripts/stale.sh o/r list",
+    "gh api repos/o/r/pulls",
+  ]) {
+    assert.equal(allowed(command, "s1"), true, command);
+  }
+
+  // 止めたコマンドは数えない。数える書き込みを 2 つつないだら止める
+  assert.equal(
+    allowed(
+      `gh api -X POST repos/o/r/pulls --input ${pr} && cat /etc/passwd`,
+      "s3",
+    ),
+    false,
+  );
+  assert.equal(
+    allowed(`gh api -X POST repos/o/r/pulls --input ${pr}`, "s3"),
+    true,
+  );
+  assert.equal(
+    allowed(
+      `gh api -X POST repos/o/r/issues/12/comments --input ${comment}; gh api -X POST repos/o/r/issues/12/comments --input ${comment}`,
+      "s4",
+    ),
+    false,
+  );
+
+  for (const sessionId of [undefined, "", "../x"]) {
+    const result = evaluate(
+      {
+        tool_name: "Bash",
+        tool_input: { command: writes[0][0] },
+        session_id: sessionId,
+      },
+      {
+        root: fixture.root,
+        cwd: fixture.root,
+        writeCountDir: path.join(fixture.root, "write-counts"),
+      },
+    );
+    assert.equal(result.allow, false, String(sessionId));
+    assert.match(result.reason, /session_id/);
   }
 });
 
