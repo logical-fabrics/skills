@@ -101,7 +101,7 @@ while :; do
   esac
 
   if [ "$(date +%s)" -ge "$deadline" ]; then
-    echo "まだ実行中。もう一度呼ぶ"
+    echo "まだ実行中。呼び直さない（翌日の巡回でまた見る）"
     exit 3
   fi
   sleep 30
