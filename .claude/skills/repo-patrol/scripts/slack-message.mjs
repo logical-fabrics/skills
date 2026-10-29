@@ -10,6 +10,7 @@
 //   - & < > はすべてエスケープする（<!channel> やリンク記法を無効にする）
 //   - リンクにするのは、#番号（設定のリポジトリの Issue / PR）、そのリポジトリの Actions の実行 URL、実行ログの URL だけ
 //   - メンションは、ここが付ける @channel だけ
+//   - mrkdwn は verbatim にする（Slack が素の URL・チャンネル名・メンションを自動で解釈しないように）
 
 import { readFileSync } from "node:fs";
 
@@ -290,7 +291,7 @@ function render(report, channel, repo) {
   if (mention) {
     blocks.push({
       type: "section",
-      text: { type: "mrkdwn", text: "<!channel>" },
+      text: { type: "mrkdwn", text: "<!channel>", verbatim: true },
     });
   }
   const fallback = [`${mention ? "<!channel> " : ""}${escapeMarkup(title)}`];
@@ -303,7 +304,10 @@ function render(report, channel, repo) {
       ...matching.map((item) => `• ${lines[kind](item)}`),
     ];
     for (const text of chunk(texts)) {
-      blocks.push({ type: "section", text: { type: "mrkdwn", text } });
+      blocks.push({
+        type: "section",
+        text: { type: "mrkdwn", text, verbatim: true },
+      });
     }
     fallback.push("", ...texts);
   }
@@ -336,7 +340,10 @@ function render(report, channel, repo) {
   if (context.length > 0) {
     blocks.push({ type: "divider" });
     for (const text of chunk(context)) {
-      blocks.push({ type: "context", elements: [{ type: "mrkdwn", text }] });
+      blocks.push({
+        type: "context",
+        elements: [{ type: "mrkdwn", text, verbatim: true }],
+      });
     }
     fallback.push("", ...context);
   }
