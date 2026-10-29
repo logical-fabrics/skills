@@ -85,6 +85,9 @@ function createFixture(t) {
     cwd: root,
     root,
     writeCountDir: path.join(root, "write-counts"),
+    // 環境変数（REPO_PATROL_OBSERVE・GITHUB_ACTIONS）に左右されないように、既定を決める
+    observe: false,
+    actions: false,
     fetchPull: patrolPull,
   };
   // 書き込みの件数は session_id ごとに数えるので、決めなければ呼び出しごとに別のセッションにする
@@ -525,12 +528,35 @@ test("writes are capped per session and run one at a time", (t) => {
         root: fixture.root,
         cwd: fixture.root,
         fetchPull: dependabotPull,
+        observe: false,
+        actions: false,
         writeCountDir: path.join(fixture.root, "write-counts"),
       },
     );
     assert.equal(result.allow, false, String(sessionId));
     assert.match(result.reason, /session_id/);
   }
+});
+
+test("observe mode writes nothing and Actions posts only through the workflow", (t) => {
+  const fixture = createFixture(t);
+  const comment = fixture.writeJson("comment.json", { body: "見送ります" });
+  const dependabotPull = () => ({
+    headRef: "dependabot/npm_and_yarn/a-1.2.4",
+    headRepo: "o/r",
+    baseRepo: "o/r",
+    author: "dependabot[bot]",
+  });
+  const write = `gh api -X POST repos/o/r/issues/12/comments --input ${comment}`;
+  const post =
+    ".claude/skills/repo-patrol/scripts/slack-post.sh /tmp/repo-patrol/report.json";
+  const check =
+    ".claude/skills/repo-patrol/scripts/slack-post.sh --check /tmp/repo-patrol/report.json";
+  fixture.assertAllowed([write], { fetchPull: dependabotPull });
+  fixture.assertBlocked([write], { fetchPull: dependabotPull, observe: true });
+  fixture.assertAllowed(["gh api repos/o/r/pulls", check], { observe: true });
+  fixture.assertBlocked([post], { actions: true });
+  fixture.assertAllowed([check], { actions: true });
 });
 
 test("package managers allow only reading", (t) => {

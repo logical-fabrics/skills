@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # リポジトリの巡回
 
-scheduled task（旧 routines）から毎日 1 回実行する。マージは人がする。巡回が受け持つのは、Dependabot の PR の見立てと見送り理由のコメント、CI の確認、閉じる予定の Issue / PR の予告、Slack への報告まで。ほかは GitHub 側が行う。
+scheduled task（旧 routines）か、Actions の workflow（`workflows/repo-patrol.yml`）から毎日 1 回実行する。マージは人がする。巡回が受け持つのは、Dependabot の PR の見立てと見送り理由のコメント、CI の確認、閉じる予定の Issue / PR の予告、Slack への報告まで。ほかは GitHub 側が行う。
 
 - 依存の更新: Dependabot（npm の minor・patch は groups で 1 本の PR にまとまる。公開から 4 日は cooldown で待つ）
 - 依存の PR の検査: Actions の `repo-patrol dependency check`（`workflows/repo-patrol-dependency-check.yml`）
@@ -29,6 +29,7 @@ scheduled task（旧 routines）から毎日 1 回実行する。マージは人
 - 環境変数 `TZ=Asia/Tokyo`
 - `.claude/repo-patrol.md`（このリポジトリの設定。投稿先の「Slack チャンネル」もここに書く）。なければ、何もせずに「設定ファイルがない」と返して終える
 - `.claude/settings.json` に guard（`.claude/skills/repo-patrol/guard.mjs`）が登録されている。手順 1 で効いているかを確かめる
+- Actions の workflow から動いているときは、Slack への投稿は workflow のあとの step が行う（手順 6 は `--check` まで。guard も投稿を止める）。観察モードでは guard が GitHub への書き込みを止めるので、コメントするはずだったものはコメントしたものとして報告する
 
 シェルの変数はコマンドをまたいで残らない。作業ファイルは `/tmp/repo-patrol/` に置き、スクリプトは `.claude/skills/repo-patrol/scripts/` から呼ぶ。長い出力はファイルに書き、必要な部分だけ読む。以下では次の書き方を使う。
 

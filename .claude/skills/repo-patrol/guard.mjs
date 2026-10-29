@@ -169,6 +169,10 @@ function createContext(input, overrides) {
     root,
     repo: config?.repo ?? null,
     sessionId: input?.session_id,
+    // 観察モード（Actions の workflow を scheduled task と並行して動かす間）は GitHub に書かない
+    observe: overrides.observe ?? process.env.REPO_PATROL_OBSERVE === "1",
+    // Actions では Slack への投稿は workflow の別の step が行う（Claude には Slack のトークンを渡さない）
+    actions: overrides.actions ?? process.env.GITHUB_ACTIONS === "true",
     writeCountDir: overrides.writeCountDir ?? WRITE_COUNT_DIR,
     // このコマンドの中の数える書き込み（checkCommand が最後にまとめて数える）
     writes: [],
@@ -533,6 +537,11 @@ function checkOwnScript(scriptPath, args, ctx) {
         `slack-post.sh に渡せるのは [--check] と ${PATROL_TMP}/ のファイルだけ`,
       );
     }
+    if (!check && ctx.actions) {
+      return block(
+        "Actions では slack-post.sh は --check だけ（投稿は workflow のあとの step が行う）",
+      );
+    }
     if (!check) ctx.writes.push("slack");
   }
   return checkReadPaths(args, ctx);
@@ -642,6 +651,11 @@ function checkGh(args, ctx) {
 
   if (!ctx.repo) {
     return block("設定（.claude/repo-patrol.md）のリポジトリを読めない");
+  }
+  if (ctx.observe) {
+    return block(
+      "観察モードなので GitHub に書かない（書くはずだったものは、書いたものとして報告する）",
+    );
   }
   const rule = API_WRITES.find(
     (candidate) =>
