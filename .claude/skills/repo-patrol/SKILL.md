@@ -59,7 +59,7 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
   - 環境変数の値は表示しない（`REPO_PATROL` などは hook が効いていることで分かる）
 - 引用符: クエリ文字列を含むエンドポイントや jq の式は引用符で囲む。ダブルクォートの中に `$`・`` ` ``・`\` は書けないので、jq の式は単一引用符で囲む
 - 使えるコマンド:
-  - git: `fetch origin`、`remote set-head origin -a`、読み取り（status・diff・log・show・rev-parse・merge-base・ls-files）、`config` の読み取り
+  - git: `fetch origin`、`remote set-head origin -a`、読み取り（status・diff・log・show・rev-parse・merge-base・ls-files）。`.git` の中のファイルは読めない
   - `gh api`（下の「GitHub の操作」の形。読めるのは `repos/<REPO>/...` と `user` だけ）
   - pnpm: `audit`、`why`。npm: `view`、`audit`（install・update・run は使えない）
   - `.claude/skills/<skill>/scripts/` のスクリプト（直接か、オプションなしの `bash` / `node` で）。`slack-post.sh` に渡せるのは `--check` と `/tmp/repo-patrol/` のファイルだけ
@@ -98,10 +98,9 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 ### 1. 準備
 
 1. `.claude/repo-patrol.md` を読む
-2. guard を確かめる。`git push --dry-run origin HEAD:refs/heads/develop` を実行し、guard に止められることを確かめる。止められなかったら GitHub には何も書かず、要判断 1 件（`label` は「guard」、`reason` は「効いていない」、`commentedNow: false`、`security: true`）だけの報告を手順 6 のとおり投稿して終える
-3. `git fetch origin` と `git remote set-head origin -a` を実行し、`git rev-parse --abbrev-ref origin/HEAD` で `<BASE>` を確かめる
-4. `gh api user --jq .login` で自分のログイン名を控える（自分のコメントを見分けるため）
-5. `mkdir -p /tmp/repo-patrol`
+2. guard を確かめる。`ls /` を実行し、出力に `repo-patrol guard:` が出て止められることを確かめる（guard がなければ成功するコマンドなので、ほかの理由の失敗と取り違えない）。止められなかったら GitHub には何も書かず、要判断 1 件（`label` は「guard」、`reason` は「効いていない」、`commentedNow: false`、`security: true`）だけの報告を手順 6 のとおり投稿して終える
+3. `gh api repos/<REPO> --jq .default_branch` で `<BASE>` を確かめる
+4. `mkdir -p /tmp/repo-patrol`
 
 ### 2. 棚卸し
 
@@ -113,8 +112,8 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 
 基準は設定の「判断基準」が指す文書。なければ `references/dependency-triage.md`。PR ごとに、作成からの日数（作成日時から数えた日数。作成の日は 0）を出す。
 
-1. マージ待ちにしないもの（メジャー更新、設定の見送り表にあるもの）は、まだ自分の repo-patrol コメントがなければ、理由と見直す条件を 1 回だけコメントする。PR は作成から 30 日で自動で閉じる（次の版が出れば Dependabot が出し直す）ことも書き、「open のまま残す」とは書かない。どちらも `notes.deferred` に並べる（今回コメントしたものは、`commentedNow: true` の要判断にもする）
-2. それ以外の npm 系の PR（minor・patch のグループや、1 つずつの PR）は、`.claude/skills/repo-patrol/scripts/wait-checks.sh <REPO> <番号> <設定の CI のワークフロー>,repo-patrol dependency check` を 1 回だけ呼ぶ（既定の 9 分）。終了コードは 0 成功・1 失敗・3 時間切れ・4 コンフリクト・5 チェックがない・6 GitHub API の失敗
+1. マージ待ちにしないもの（メジャー更新、設定の見送り表にあるもの）は、まだ巡回のコメント（本文に `<!-- repo-patrol -->` か `— repo-patrol` を含むもの。書いた人の名前では見分けない）がなければ、理由と見直す条件を 1 回だけコメントする。本文の先頭に `<!-- repo-patrol -->` を付ける。PR は作成から 30 日で自動で閉じる（次の版が出れば Dependabot が出し直す）ことも書き、「open のまま残す」とは書かない。どちらも `notes.deferred` に並べる（今回コメントしたものは、`commentedNow: true` の要判断にもする）
+2. それ以外の npm 系の PR（minor・patch のグループや、1 つずつの PR）は、`.claude/skills/repo-patrol/scripts/wait-checks.sh <REPO> <番号> '<設定の CI のワークフロー>,repo-patrol dependency check'` を 1 回だけ呼ぶ（既定の 9 分。ワークフロー名は空白を含むので単一引用符で囲む）。終了コードは 0 成功・1 失敗・3 時間切れ・4 コンフリクト・5 チェックがない・6 GitHub API の失敗・64 引数の誤り（直して呼び直す）
    - 0・3 なら `merge` 項目にする（`ci` は `success` か `pending`）。3 は呼び直さない（翌日の巡回でまた見る）
    - 1 なら、落ちたのが dependency-check か CI かを失敗したジョブで確かめる。dependency-check なら、check の出力（annotations かジョブのログ）にある理由を添えて要判断にする（公開から 4 日未満だけが理由なら見送り中にし、4 日たったら人が re-run すると書く）。CI なら `ci: "failure"` の `merge` 項目にし、失敗したジョブのステップ名を `label` に短く添える
    - 4 なら `merge` 項目の `label` に「コンフリクト」と書き、`ci: "unknown"` にする（Dependabot が rebase する）。5・6 は `ci: "unknown"`

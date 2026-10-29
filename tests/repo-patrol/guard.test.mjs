@@ -209,7 +209,13 @@ test("shell features and unlisted commands are blocked", (t) => {
 
 test("reads stay inside the repository and the work directory", (t) => {
   const fixture = createFixture(t);
+  mkdirSync(path.join(fixture.root, ".git"));
+  writeFileSync(path.join(fixture.root, ".git", "config"), "[http]\n");
   fixture.assertBlocked([
+    // SKILL.md の手順 1 の guard の確認（guard がなければ成功する）
+    "ls /",
+    "cat .git/config",
+    "grep -r token .git",
     "cat /etc/hosts",
     "jq . /etc/hosts",
     "grep -r token /",
@@ -340,7 +346,13 @@ test("git allows only fetching and reading", (t) => {
     "git diff --name-only origin/develop -- .github/",
     "git log --oneline -5 | head -3",
     "git show origin/develop:package.json",
+  ]);
+  // Actions では .git/config に認証情報が入ることがあるので、git の設定も .git の中も読まない
+  fixture.assertBlocked([
     "git config --get remote.origin.url",
+    "git config --list",
+    "git remote get-url origin",
+    "git remote -v",
   ]);
 });
 

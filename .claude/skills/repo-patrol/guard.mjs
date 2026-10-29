@@ -479,10 +479,15 @@ function checkReadPaths(args, ctx) {
     } catch {
       return block(`${arg} を確かめられない`);
     }
-    if (relativeInside(realRoot, real) === null) {
+    const relative = relativeInside(realRoot, real);
+    if (relative === null) {
       return block(
         `${arg} は読まない（読めるのはリポジトリと ${PATROL_TMP}/ の中だけ）`,
       );
+    }
+    // .git/config などには、Actions で git の認証情報が入ることがある
+    if (relative.split(path.sep).includes(".git")) {
+      return block(`${arg} は読まない（.git の中は読まない）`);
     }
   }
   return null;
@@ -565,15 +570,9 @@ function checkGit(args, ctx) {
         : block("git fetch は origin から、決まったオプションだけ");
     }
     case "remote":
-      return /^(?:set-head origin (?:-a|--auto)|-v|get-url origin)$/.test(
-        joined,
-      )
+      return /^set-head origin (?:-a|--auto)$/.test(joined)
         ? null
-        : block("git remote は set-head origin -a と読み取りだけ");
-    case "config":
-      return /^(?:--get(?:-all)? \S+|--list|-l)$/.test(joined)
-        ? null
-        : block("git config は読み取りだけ");
+        : block("git remote は set-head origin -a だけ");
     default:
       // 依存の更新は Dependabot が行うので、巡回はブランチやコミットを作らず push もしない
       return block(`git ${subcommand} は使わない`);
