@@ -188,7 +188,7 @@ test("slack-post renders the report as Block Kit in order of severity", (t) => {
     `<https://github.com/o/r/issues/${number}|#${number}>`;
   const section = (...lines) => ({
     type: "section",
-    text: { type: "mrkdwn", text: lines.join("\n") },
+    text: { type: "mrkdwn", text: lines.join("\n"), verbatim: true },
   });
   assert.deepEqual(blocks, [
     {
@@ -229,6 +229,7 @@ test("slack-post renders the report as Block Kit in order of severity", (t) => {
             ":white_check_mark: main の CI: 成功",
             "<https://claude.ai/code/session_abc123|実行ログ>",
           ].join("\n"),
+          verbatim: true,
         },
       ],
     },

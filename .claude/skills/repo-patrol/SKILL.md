@@ -146,7 +146,7 @@ npm 系以外の Dependabot の PR は取り込まず、`wait-checks.sh <REPO> <
 ### 5. 30 日を過ぎたものを閉じる
 
 1. `.claude/skills/repo-patrol/scripts/stale.sh <REPO> list` で候補を出す
-2. `.claude/skills/repo-patrol/scripts/stale.sh <REPO> close` で閉じる（1 日 10 件まで。残りは翌日に回る）。終了コードが 1 なら取得か close に失敗しているので、要判断として報告する。2 は閉じたがラベルかコメントに失敗したもので、出力の `closed-partial` の番号を報告する
+2. `.claude/skills/repo-patrol/scripts/stale.sh <REPO> close` で閉じる（1 日 10 件まで。残りは翌日に回る）。終了コードが 1 なら取得か close に失敗しているので、要判断として報告する。2 は閉じたがラベルかコメントに失敗したもので、出力の `closed-partial` の番号を挙げて要判断にする（人が見ないと、理由のない close が残る）
 3. 閉じた件数、hold（セキュリティ更新のため閉じないもの）と残りの件数、`closed-partial` の番号は `notes.closed` に入れる。7 日以内に閉じる予定のもの（notice と notice-first）は `closing_soon` 項目にする
 
 ### 6. 既定ブランチの CI
