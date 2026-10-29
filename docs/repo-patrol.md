@@ -173,7 +173,7 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
    - Dependabot アラートの API（`gh api repos/<owner>/<repo>/dependabot/alerts`）が使えるか
    - ジョブのログ（`gh api repos/<owner>/<repo>/actions/jobs/<id>/logs`）が取れるか
    - Claude Code の版（hook の `onFailure` は v2.1.295 以降）と、Bash 以外に GitHub に書き込めるツールがあるか
-   - 終わったら Environment variables に `REPO_PATROL=1` を足し、新しいセッションで `git push --dry-run origin HEAD:refs/heads/develop` が guard に止められることを確かめる（値がちょうど `1` でないと guard は動かない）
+   - 終わったら Environment variables に `REPO_PATROL=1` を足し、新しいセッションで `ls /` が `repo-patrol guard:` の理由で止められることを確かめる（値がちょうど `1` でないと guard は動かない）
 11. scheduled task を作る（https://claude.ai/code/routines）
     - project からは作らない（project のスレッドはリポジトリの hooks を読まない）
     - リポジトリはこの 1 つだけ。環境は手順 9 で作ったもの。コネクタはすべて外す
@@ -188,7 +188,7 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
     - 作ったら、CLI の `/schedule update` で、このタスクの使えるツールから WebFetch と WebSearch を外す（既定で入っていることがある。guard の対象外で、巡回では使わない）
 
 12. Run now で実行し、トランスクリプトで次を確かめる
-    - SKILL.md の手順 1 の guard の確認で、push が guard に止められている
+    - SKILL.md の手順 1 の guard の確認（`ls /`）が guard に止められている
     - 報告することがあれば、プロジェクトのチャンネルにボット名義で 1 回投稿される（新しい要対応があれば @channel が付く）。なければ、実行ログの最後に投稿しなかったことが書かれている（月曜なら「異常なし」が投稿される）
     - GitHub への書き込みが、Dependabot の PR へのコメントの範囲に収まっている
     - Actions の repo-patrol stale を `workflow_dispatch` で 1 回動かし、成功する（閉じる候補がなくても summary が出る）

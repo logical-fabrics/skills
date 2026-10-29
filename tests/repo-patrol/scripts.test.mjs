@@ -1487,6 +1487,14 @@ test("wait-checks.sh reports no checks soon when no workflow is expected", (t) =
   const none = runScript("wait-checks.sh", ["o/r", "1", "-", "0"], { env });
   assert.equal(none.status, 5, none.stdout + none.stderr);
 
+  // ワークフロー名を引用符で囲み忘れると、名前の続きが分に入る。CI の失敗とは別の終了コードにする
+  const unquoted = runScript(
+    "wait-checks.sh",
+    ["o/r", "1", "CI,repo-patrol", "dependency", "check"],
+    { env },
+  );
+  assert.equal(unquoted.status, 64, unquoted.stdout + unquoted.stderr);
+
   // 待つワークフローがあるときは、10 分たつまで起動を待つ
   const waiting = runScript("wait-checks.sh", ["o/r", "1", "testing", "0"], {
     env,
