@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   chmodSync,
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -966,22 +967,240 @@ test("stale.sh close closes first, caps at 10 a day and keeps the order", (t) =>
   );
 });
 
-test("the stale workflow of this repository is the template", () => {
-  const template = path.join(
-    scriptsDir,
-    "..",
-    "workflows",
-    "repo-patrol-stale.yml",
+test("the workflows of this repository are the templates", () => {
+  for (const [name, command] of [
+    [
+      "repo-patrol-stale.yml",
+      /bash \.claude\/skills\/repo-patrol\/scripts\/stale\.sh "\$GITHUB_REPOSITORY" close/,
+    ],
+    [
+      "repo-patrol-dependency-check.yml",
+      /node "\$RUNNER_TEMP\/base\/\.claude\/skills\/repo-patrol\/scripts\/dependency-check\.mjs" "\$BASE_SHA"/,
+    ],
+  ]) {
+    const template = readFileSync(
+      path.join(scriptsDir, "..", "workflows", name),
+      "utf8",
+    );
+    const own = readFileSync(
+      path.resolve(scriptsDir, "../../../../.github/workflows", name),
+      "utf8",
+    );
+    assert.equal(own, template, name);
+    assert.match(template, command, name);
+  }
+});
+
+// npm view の代わり。「名前@版 → 項目」の表から、頼まれた項目だけを返す。表にない版は E404
+function fakeNpm(t, versions) {
+  const dir = tempDir(t);
+  const file = path.join(dir, "versions.json");
+  writeFileSync(file, JSON.stringify(versions));
+  writeFileSync(
+    path.join(dir, "npm"),
+    `#!/usr/bin/env node
+const versions = JSON.parse(require("node:fs").readFileSync(${JSON.stringify(file)}, "utf8"));
+const [command, spec, ...rest] = process.argv.slice(2);
+if (command !== "view" || !(spec in versions)) {
+  console.error("E404");
+  process.exit(1);
+}
+const out = {};
+for (const field of rest.filter((arg) => arg !== "--json")) {
+  if (versions[spec][field] !== undefined) out[field] = versions[spec][field];
+}
+process.stdout.write(JSON.stringify(out));
+`,
   );
-  const own = path.resolve(
-    scriptsDir,
-    "../../../../.github/workflows/repo-patrol-stale.yml",
+  chmodSync(path.join(dir, "npm"), 0o755);
+  return { PATH: `${dir}:${process.env.PATH}` };
+}
+
+const daysAgo = (days) =>
+  new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+const npmPerson = (name) => `${name} <${name}@example.com>`;
+const TRUSTED = "GitHub Actions <npm-oidc-no-reply@github.com>";
+const PROVENANCE = {
+  url: "https://registry.npmjs.org/-/npm/v1/attestations/x",
+};
+const release = (version, extra = {}) => ({
+  _npmUser: npmPerson("alice"),
+  maintainers: [npmPerson("alice")],
+  time: { [version]: daysAgo(10) },
+  ...extra,
+});
+// BASE_LOCK → BUMPED_LOCK で新しく入る版（a・realc は前の版あり、@scope/url は新しい名前）と、その前の版
+const releases = () => ({
+  "a@1.2.0": release("1.2.0"),
+  "a@1.3.0": release("1.3.0"),
+  "realc@1.0.0": release("1.0.0"),
+  "realc@1.1.0": release("1.1.0"),
+  "@scope/url@0.11.4": release("0.11.4"),
+});
+
+function bumpedRepo(t) {
+  const repo = createRepo(t);
+  repo.writeLock(BUMPED_LOCK);
+  execFileSync("git", ["commit", "-q", "-am", "bump"], { cwd: repo.dir });
+  return repo;
+}
+
+test("publisher-check fails on new install scripts, publisher changes and young versions", (t) => {
+  const repo = bumpedRepo(t);
+  const cases = [
+    ["既存の版の更新", () => {}, 0, /新しく入る版: 3 件/],
+    [
+      "install script が増えた",
+      (v) => {
+        v["a@1.3.0"].scripts = { postinstall: "node x.js" };
+      },
+      1,
+      /a@1\.3\.0: postinstall が前の版（1\.2\.0）から増えた・変わった/,
+    ],
+    [
+      "前の版と同じ install script",
+      (v) => {
+        v["a@1.2.0"].scripts = { postinstall: "node x.js" };
+        v["a@1.3.0"].scripts = { postinstall: "node x.js" };
+      },
+      0,
+      /問題はない/,
+    ],
+    [
+      "新しい名前の install script",
+      (v) => {
+        v["@scope/url@0.11.4"].scripts = { install: "node-gyp rebuild" };
+      },
+      1,
+      /@scope\/url@0\.11\.4: install がある/,
+    ],
+    [
+      "maintainers にいない公開者",
+      (v) => {
+        v["a@1.3.0"]._npmUser = npmPerson("mallory");
+      },
+      1,
+      /公開者 mallory が前の版（1\.2\.0）の maintainers にいない/,
+    ],
+    [
+      "provenance がなくなった",
+      (v) => {
+        v["a@1.2.0"]["dist.attestations"] = PROVENANCE;
+      },
+      1,
+      /a@1\.3\.0: 前の版にあった provenance がない/,
+    ],
+    [
+      "trusted publishing から人の公開へ",
+      (v) => {
+        v["a@1.2.0"]._npmUser = TRUSTED;
+        v["a@1.2.0"]["dist.attestations"] = PROVENANCE;
+      },
+      1,
+      /trusted publishing だったのに、alice が公開している/,
+    ],
+    [
+      "人から trusted publishing へ",
+      (v) => {
+        v["a@1.3.0"]._npmUser = TRUSTED;
+        v["a@1.3.0"]["dist.attestations"] = PROVENANCE;
+      },
+      0,
+      /問題はない/,
+    ],
+    [
+      "trusted publishing どうし",
+      (v) => {
+        for (const spec of ["a@1.2.0", "a@1.3.0"]) {
+          v[spec]._npmUser = TRUSTED;
+          v[spec]["dist.attestations"] = PROVENANCE;
+        }
+      },
+      0,
+      /問題はない/,
+    ],
+    [
+      "公開から 4 日未満",
+      (v) => {
+        v["realc@1.1.0"].time = { "1.1.0": daysAgo(1) };
+      },
+      1,
+      /realc@1\.1\.0: 公開から 4 日たっていない/,
+    ],
+    [
+      "npm に問い合わせられない",
+      (v) => {
+        delete v["@scope/url@0.11.4"];
+      },
+      2,
+      /npm に問い合わせられなかった/,
+    ],
+  ];
+  for (const [label, change, status, output] of cases) {
+    const versions = releases();
+    change(versions);
+    const result = spawnSync(
+      process.execPath,
+      [path.join(scriptsDir, "publisher-check.mjs"), "main"],
+      { cwd: repo.dir, encoding: "utf8", env: fakeNpm(t, versions) },
+    );
+    assert.equal(
+      result.status,
+      status,
+      `${label}: ${result.stdout}${result.stderr}`,
+    );
+    assert.match(result.stdout + result.stderr, output, label);
+  }
+});
+
+test("dependency-check uses the checker and the extra paths of the base copy", (t) => {
+  const config = (extras) =>
+    `# repo-patrol の設定\n\n## リポジトリ\n\no/r\n\n## 差分に含めてよい追加のパス\n\n${extras.map((extra) => `- \`${extra}\``).join("\n")}\n`;
+  // workflow が base のコミットから取り出すもの（スキルと設定）
+  const baseCopy = (extras) => {
+    const dir = tempDir(t);
+    cpSync(
+      path.dirname(scriptsDir),
+      path.join(dir, ".claude", "skills", "repo-patrol"),
+      {
+        recursive: true,
+      },
+    );
+    writeFileSync(path.join(dir, ".claude", "repo-patrol.md"), config(extras));
+    return dir;
+  };
+  // PR のチェックアウト。自分の設定では biome.json を許しているが、検査はこれを使わない
+  const repo = createRepo(t);
+  mkdirSync(path.join(repo.dir, ".claude"));
+  writeFileSync(
+    path.join(repo.dir, ".claude", "repo-patrol.md"),
+    config(["biome.json"]),
   );
-  assert.equal(readFileSync(own, "utf8"), readFileSync(template, "utf8"));
-  assert.match(
-    readFileSync(template, "utf8"),
-    /bash \.claude\/skills\/repo-patrol\/scripts\/stale\.sh "\$GITHUB_REPOSITORY" close/,
-  );
+  execFileSync("git", ["add", "-A"], { cwd: repo.dir });
+  execFileSync("git", ["commit", "-q", "-m", "config"], { cwd: repo.dir });
+  execFileSync("git", ["branch", "-f", "main", "HEAD"], { cwd: repo.dir });
+  repo.writeLock(BUMPED_LOCK);
+  writeFileSync(path.join(repo.dir, "biome.json"), "{}\n");
+  execFileSync("git", ["add", "-A"], { cwd: repo.dir });
+  execFileSync("git", ["commit", "-q", "-m", "bump"], { cwd: repo.dir });
+
+  const check = (copy) =>
+    spawnSync(
+      process.execPath,
+      [
+        path.join(
+          copy,
+          ".claude/skills/repo-patrol/scripts/dependency-check.mjs",
+        ),
+        "main",
+      ],
+      { cwd: repo.dir, encoding: "utf8", env: fakeNpm(t, releases()) },
+    );
+  const allowed = check(baseCopy(["biome.json"]));
+  assert.equal(allowed.status, 0, allowed.stdout + allowed.stderr);
+  const denied = check(baseCopy([]));
+  assert.equal(denied.status, 1, denied.stdout + denied.stderr);
+  assert.match(denied.stdout, /biome\.json: 依存ファイルではない/);
 });
 
 function auditSummary(t, report) {

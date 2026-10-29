@@ -18,8 +18,9 @@ logical-fabrics/skills（正本）── コピー ──> 各リポジトリの
 claude.ai の scheduled task（リポジトリごとに 1 つ・毎朝・リポジトリごとの cloud environment）── clone ──> 各リポジトリ
    ├─ GitHub（Claude GitHub App 経由・REST だけ）: 巡回 PR、コメント
    └─ Slack（Slack アプリのボット名義・プロジェクトのチャンネル）: 報告がある日と月曜に 1 投稿、新しい要対応のときだけ @channel
-GitHub Actions の repo-patrol stale（各リポジトリの .github/workflows/・毎朝 08:17 JST・workflow のトークン）
-   └─ 30 日を過ぎた Issue / PR の close・ラベル・理由のコメント
+GitHub Actions（各リポジトリの .github/workflows/・workflow のトークン）
+   ├─ repo-patrol stale（毎朝 08:17 JST）: 30 日を過ぎた Issue / PR の close・ラベル・理由のコメント
+   └─ repo-patrol dependency check（Dependabot の npm 系の PR と巡回 PR）: check-diff と、新しい版の公開者・install script・公開日の検査
 ```
 
 - scheduled task はリポジトリごとに 1 つ作る。複数のリポジトリを付けたセッションでは `.claude/settings.json` の hooks が読まれず、guard が効かないため
@@ -37,6 +38,7 @@ GitHub Actions の repo-patrol stale（各リポジトリの .github/workflows/�
 - ファイルの書き込みは `/tmp/repo-patrol/` と、追跡済みの依存ファイルだけ
 - 1 回の実行の書き込みは、巡回 PR 1 本・コメント 20 件・Slack 投稿 1 回まで。hook の `session_id` ごとに `/tmp/repo-patrol-guard/` で数える
 - install・run の前と push の前に `check-diff.mjs` を通す（push のときは HEAD のコミットを見る）
+- Dependabot の npm 系の PR と巡回 PR には、Actions の `dependency-check` が同じ check-diff と、新しい版の公開者・install script・公開日の検査（`publisher-check.mjs`）をかける。検査のスクリプトと設定は base のコミットから取り出すので、PR が検査を書き換えられない
 
 ただし guard は歯止めであって境界ではない。そこから起動されたプロセス（検証中に動く依存パッケージのコードなど）は止められない。
 
@@ -74,7 +76,7 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
    rsync -a --delete "$LF/.claude/skills/repo-patrol/" .claude/skills/repo-patrol/
    git -C "$LF" rev-parse HEAD > .claude/skills/repo-patrol/SOURCE
    mkdir -p .github/workflows
-   cp .claude/skills/repo-patrol/workflows/repo-patrol-stale.yml .github/workflows/
+   cp .claude/skills/repo-patrol/workflows/*.yml .github/workflows/
    ```
 
    リポジトリの lint（Biome・ESLint・knip など）が `.claude/` を対象にしていれば、`.claude/skills/repo-patrol/` を対象外にする。
@@ -107,7 +109,7 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
 4. `.claude/repo-patrol.md` を書く（下の「設定ファイル」）。Slack アプリをそのプロジェクトのチャンネルに招待する（`/invite @アプリ名`）
 5. ラベル `keep` と `patrol-closed` を作る（`gh label create keep`、`gh label create patrol-closed`）
 6. `.claude/skills/repo-patrol/scripts/stale.sh <owner/repo> list` で閉じる候補を出し、残したいものに `keep` を付ける。初回にまとめて閉じるものを人が確かめるため
-7. PR を作り、CI が通ってからマージする
+7. PR を作り、CI が通ってからマージする。マージ後、Dependabot の npm 系の PR に `dependency-check` が付くことを確かめる。2 週間ほど誤検知がなければ、ruleset の required status checks に `dependency-check` を足す（人の PR では skip され、skip は required check を満たす）
 8. https://claude.ai/code で、このリポジトリ用の cloud environment（例: `repo-patrol-<リポジトリ名>`）を作る。Personal のまま共有せず、巡回のほかには使わない
    - Network access: Trusted のまま（network secret のホストは許可リストなしで届く）。npm のレジストリ以外から取る依存（`package.json` に tarball の URL を書いたものなど）があれば、Custom にして「Also include default list of common package managers」にチェックを入れ、そのホストだけを Allowed domains に足す。ジョブのログの転送先（`*.blob.core.windows.net`）のような広いワイルドカードは足さない（誰でも作れる保存先へ書き出せる通り道になる）
    - Network secret: host `slack.com`、値は Slack のボットトークン。環境ごとに入れるので、トークンを替えたら全部の環境を直す
@@ -242,13 +244,13 @@ Slack の宛先は「Slack チャンネル」に書いたものだけで、`slac
 3. Org Owner が、Claude GitHub App のインストール対象からリポジトリを外す
 4. Slack アプリのトークンを revoke する
 5. https://claude.ai/code/routines でタスクをオフにする（実行中のセッションは止まらない）
-6. close を止めるときは、Actions の repo-patrol stale を無効にする（`gh workflow disable "repo-patrol stale"`）
+6. close や依存の検査を止めるときは、Actions の workflow を無効にする（`gh workflow disable "repo-patrol stale"`、`gh workflow disable "repo-patrol dependency check"`。required check に足していれば、先に ruleset から外す）
 
 戻す:
 
 - 閉じたものは `is:closed label:patrol-closed` で探して reopen する
 - 巡回 PR のブランチ `claude/patrol-deps` は人が消す（巡回はブランチを消せない）
-- 巡回をやめるときは、`.claude/skills/repo-patrol/`・`.claude/repo-patrol.md`・`settings.json` の guard・`.github/workflows/repo-patrol-stale.yml` を消す PR を出す
+- 巡回をやめるときは、`.claude/skills/repo-patrol/`・`.claude/repo-patrol.md`・`settings.json` の guard・`.github/workflows/repo-patrol-*.yml` を消す PR を出す
 
 ## 制約
 
@@ -257,3 +259,5 @@ Slack の宛先は「Slack チャンネル」に書いたものだけで、`slac
 - scheduled tasks は research preview で、挙動が変わることがある。毎回の guard の確認と GitHub 側の設定で、変わっても安全側に倒れるようにしている
 - Claude GitHub App には Dependabot アラートの権限がないので、アラートの API は 403 になる。巡回はアラートが読めるときも audit を取り、`audit-summary.mjs` で版ごとに直接依存か推移依存かを見る
 - Actions のジョブログはクラウドから取れないことがある。その場合は失敗したステップ名とリンクを報告する
+- Dependabot のセキュリティ更新は cooldown を待たずに来るので、公開から 4 日未満なら `dependency-check` が落ちる。4 日たってから人が re-run する（巡回は workflow を再実行しない）
+- `dependency-check` は前の版と同じ install script を通す（毎回止めないため）。巡回は `references/dependency-triage.md` のとおり、install script のある版を要判断にする
