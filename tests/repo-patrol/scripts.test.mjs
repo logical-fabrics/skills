@@ -177,7 +177,6 @@ test("slack-post renders the report as Block Kit in order of severity", (t) => {
           sessionUrl: "https://claude.ai/code/session_abc123",
           notes: {
             deferred: [{ number: 3, label: "`c` 2.0.0", reason: "メジャー" }],
-            closed: { issues: 2, prs: 1, hold: 0, remaining: 0, partial: [5] },
             baseCi: "success",
           },
         },
@@ -225,7 +224,6 @@ test("slack-post renders the report as Block Kit in order of severity", (t) => {
           type: "mrkdwn",
           text: [
             `:zzz: 見送り中: ${link(3)} \`c\` 2.0.0（メジャー）`,
-            `:wastebasket: 閉じた: Issue 2 件・PR 1 件（hold 0 件・残り 0 件）。ラベルかコメントに失敗: ${link(5)}`,
             ":white_check_mark: main の CI: 成功",
             "<https://claude.ai/code/session_abc123|実行ログ>",
           ].join("\n"),
@@ -331,8 +329,8 @@ test("slack-post rejects a report that does not match the format", (t) => {
       /notes\.baseCi の形が違う（success か unknown/,
     ],
     [
-      report([], { notes: { closed: { issues: 1, prs: 0, remaining: 0 } } }),
-      /notes\.closed\.hold がない/,
+      report([], { notes: { closed: { issues: 1 } } }),
+      /notes\.closed は使わないキー/,
     ],
     [
       report([], { notes: { deferred: [{ label: "a" }] } }),
@@ -886,12 +884,16 @@ test("check-diff accepts extra paths only when configured", (t) => {
 function fakeGh(t, { issues, failIssues = false }) {
   const dir = tempDir(t);
   const log = path.join(dir, "calls.log");
+  const bodies = path.join(dir, "bodies.log");
   const issuesFile = path.join(dir, "issues.json");
   writeFileSync(issuesFile, JSON.stringify(issues));
   writeFileSync(
     path.join(dir, "gh"),
     `#!/usr/bin/env bash
 echo "$*" >> "${log}"
+for arg in "$@"; do
+  case $arg in body=@*) cat "\${arg#body=@}" >> "${bodies}" ;; esac
+done
 case "$*" in
   *"issues?state=open"*)
     ${failIssues ? 'echo "HTTP 502" >&2; exit 1' : `cat "${issuesFile}"`} ;;
@@ -909,6 +911,7 @@ esac
         .trim()
         .split("\n")
         .filter((line) => line.startsWith("api -X")),
+    bodies: () => readFileSync(bodies, "utf8"),
   };
 }
 
@@ -935,7 +938,11 @@ test("stale.sh close closes first, caps at 10 a day and keeps the order", (t) =>
   issues.push({ ...oldIssue(99), labels: [{ name: "keep" }] });
   const gh = fakeGh(t, { issues });
   const result = runScript("stale.sh", ["o/r", "close", "--max", "20"], {
-    env: gh.env,
+    env: {
+      ...gh.env,
+      GITHUB_RUN_ID: "42",
+      GITHUB_SERVER_URL: "https://github.com",
+    },
   });
   assert.equal(result.status, 0, result.stderr);
   assert.match(
@@ -952,6 +959,29 @@ test("stale.sh close closes first, caps at 10 a day and keeps the order", (t) =>
   );
   assert.match(calls[1], /^api -X POST repos\/o\/r\/issues\/1\/labels/);
   assert.match(calls[2], /^api -X POST repos\/o\/r\/issues\/1\/comments/);
+  // close は Actions の workflow が行うので、コメントの実行ログはその実行
+  assert.match(
+    gh.bodies(),
+    /— repo-patrol ・ 実行ログ: https:\/\/github\.com\/o\/r\/actions\/runs\/42\n/,
+  );
+});
+
+test("the stale workflow of this repository is the template", () => {
+  const template = path.join(
+    scriptsDir,
+    "..",
+    "workflows",
+    "repo-patrol-stale.yml",
+  );
+  const own = path.resolve(
+    scriptsDir,
+    "../../../../.github/workflows/repo-patrol-stale.yml",
+  );
+  assert.equal(readFileSync(own, "utf8"), readFileSync(template, "utf8"));
+  assert.match(
+    readFileSync(template, "utf8"),
+    /bash \.claude\/skills\/repo-patrol\/scripts\/stale\.sh "\$GITHUB_REPOSITORY" close/,
+  );
 });
 
 function auditSummary(t, report) {

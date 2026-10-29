@@ -26,7 +26,6 @@ const WRITE_LIMITS = {
   pull: { limit: 1, label: "巡回 PR の作成" },
   comment: { limit: 20, label: "コメント" },
   slack: { limit: 1, label: "Slack への投稿" },
-  close: { limit: 1, label: "stale.sh の close" },
 };
 const CHECK_DIFF = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -446,7 +445,7 @@ function checkCommand(command, ctx) {
   }
   if (ctx.writes.length > 1) {
     return block(
-      "PR の作成・コメント・Slack への投稿・close は、1 つずつ単独で実行する",
+      "PR の作成・コメント・Slack への投稿は、1 つずつ単独で実行する",
     );
   }
   if (ctx.writes.length === 1) return countWrite(ctx.writes[0], ctx) ?? ALLOW;
@@ -599,8 +598,11 @@ function checkOwnScript(scriptPath, args, ctx) {
     if (!ctx.repo || args[0]?.toLowerCase() !== ctx.repo.toLowerCase()) {
       return block(`${parts[4]} には設定のリポジトリ（${ctx.repo}）を渡す`);
     }
-    if (parts[4] === "stale.sh" && args[1] === "close") {
-      ctx.writes.push("close");
+    // close は Actions の workflow（workflows/repo-patrol-stale.yml）が行う
+    if (parts[4] === "stale.sh" && (args.length !== 2 || args[1] !== "list")) {
+      return block(
+        "stale.sh は list だけ（close は Actions の workflow が行う）",
+      );
     }
   }
   if (parts[2] === "repo-patrol" && parts[4] === "slack-post.sh") {

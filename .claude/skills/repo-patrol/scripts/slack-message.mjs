@@ -48,12 +48,6 @@ const TYPES = {
     test: (value) => Number.isInteger(value) && value >= 0,
     expected: "0 以上の整数",
   },
-  numbers: {
-    test: (value) =>
-      Array.isArray(value) &&
-      value.every((number) => Number.isInteger(number) && number > 0),
-    expected: "正の整数の配列",
-  },
   boolean: {
     test: (value) => typeof value === "boolean",
     expected: "true か false",
@@ -133,17 +127,9 @@ const KINDS = {
 
 const NOTES_FIELDS = {
   deferred: "list?",
-  closed: "object?",
   baseCi: "baseCi?",
 };
 const DEFERRED_FIELDS = { number: "number?", label: "text", reason: "text" };
-const CLOSED_FIELDS = {
-  issues: "count",
-  prs: "count",
-  hold: "count",
-  remaining: "count",
-  partial: "numbers?",
-};
 
 function checkFields(value, fields, where, errors) {
   if (!TYPES.object.test(value)) {
@@ -193,9 +179,6 @@ function validate(report) {
       notes.deferred.forEach((entry, index) => {
         checkFields(entry, DEFERRED_FIELDS, `notes.deferred[${index}]`, errors);
       });
-    }
-    if (TYPES.object.test(notes.closed)) {
-      checkFields(notes.closed, CLOSED_FIELDS, "notes.closed", errors);
     }
   }
   return errors;
@@ -318,18 +301,6 @@ function render(report, channel, repo) {
       (entry) => `${ref(entry.number)}${entry.label}（${entry.reason}）`,
     );
     context.push(mrkdwn(`:zzz: 見送り中: ${entries.join("・")}`));
-  }
-  if (notes.closed) {
-    const { issues, prs, hold, remaining, partial = [] } = notes.closed;
-    const failed =
-      partial.length > 0
-        ? `。ラベルかコメントに失敗: ${partial.map((number) => `#${number}`).join("・")}`
-        : "";
-    context.push(
-      mrkdwn(
-        `:wastebasket: 閉じた: Issue ${issues} 件・PR ${prs} 件（hold ${hold} 件・残り ${remaining} 件）${failed}`,
-      ),
-    );
   }
   if (notes.baseCi === "success") {
     context.push(mrkdwn(`:white_check_mark: ${base} の CI: 成功`));
