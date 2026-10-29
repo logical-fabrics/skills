@@ -1,6 +1,6 @@
 ---
 name: repo-patrol
-description: リポジトリを無人で巡回する。Dependabot の更新をまとめた PR を作って CI を見届け、30 日を過ぎた Issue と PR を閉じ、報告することがあれば Slack に 1 回投稿する。Claude Code の scheduled task から、REPO_PATROL=1 の cloud environment で実行する。
+description: リポジトリを無人で巡回する。Dependabot の更新をまとめた PR を作って CI を確かめ、30 日を過ぎた Issue と PR を閉じ、報告することがあれば Slack に 1 回投稿する。Claude Code の scheduled task から、REPO_PATROL=1 の cloud environment で実行する。
 disable-model-invocation: true
 ---
 
@@ -13,7 +13,7 @@ scheduled task（旧 routines）から毎日 1 回実行する。マージは人
 ## 完了条件
 
 - 手順 7 の報告を `slack-post.sh` に 1 回渡している（投稿するか、件数、@channel はスクリプトが決める）
-- 巡回 PR を作った・作り直した場合は、その CI の結果（成功・失敗・時間切れ）が報告に入っている
+- 巡回 PR を作った・作り直した場合は、その CI の状態（成功・失敗・実行中）が報告に入っている
 - 30 日を過ぎた Issue / PR は、閉じたか、閉じなかった理由（hold・1 日の上限）が報告に入っている
 - GitHub への書き込みが、すべて「GitHub の操作」の形に沿っている
 
@@ -116,7 +116,7 @@ push の前に `git rev-parse --verify -q origin/claude/patrol-deps` で、リ�
 
 巡回 PR がなければ手順 4 へ。あれば、新しい依存は足さない（レビュー中の差分を動かさない）。
 
-1. `.claude/skills/repo-patrol/scripts/wait-checks.sh <REPO> <番号> <設定の CI のワークフロー>` で状態を見る。終了コードは 0 成功・1 失敗・3 時間切れ・4 コンフリクト・5 チェックがない・6 GitHub API の失敗。3 なら合計 45 分まで呼び直す。6 は CI の結果が分からないので `ci: "unknown"` にする
+1. `.claude/skills/repo-patrol/scripts/wait-checks.sh <REPO> <番号> <設定の CI のワークフロー>` で状態を見る。終了コードは 0 成功・1 失敗・3 時間切れ・4 コンフリクト・5 チェックがない・6 GitHub API の失敗。呼ぶのは 1 回だけ（既定の 9 分）。3 なら呼び直さずに `ci: "pending"` にする（翌日の巡回でまた見る）。5 と 6 は CI の結果が分からないので `ci: "unknown"` にする
 2. exit 4（コンフリクト）なら作り直す。PR 本文の機械可読ブロックにある依存のうち、`<BASE>` の版がすでに目標以上のものは外し、残りで手順 4 の 4〜11 をやり直して push する。何も残らなければ作り直さず、「巡回 PR は不要になった。閉じてください」と要判断で報告する
 3. それ以外は、`merge` 項目に CI の結果（`ci`）と作成からの日数（`ageDays`）を入れる。作成から 7 日ごと（7・14・21 日目…）は `nudge: true` にする（催促のメンションが付く）
 
@@ -137,7 +137,7 @@ push の前に `git rev-parse --verify -q origin/claude/patrol-deps` で、リ�
     - 版を変えたものとその理由（4 日ルールなど）
     - 検証の結果
     - 末尾に機械可読ブロック `<!-- repo-patrol: {"deps": ["<name>@<version>", ...]} -->` とフッター `— repo-patrol ・ 実行ログ: <SESSION_URL>`
-12. `wait-checks.sh` で CI を最後まで待つ。落ちたら、失敗したジョブのステップ名と annotations をまとめて要判断にする（直さない）
+12. `wait-checks.sh` を手順 3 の 1 と同じく 1 回だけ呼ぶ。終わっていなくても、作った巡回 PR は `isNew: true` の `merge` 項目にする。落ちたら、失敗したジョブのステップ名と annotations をまとめて要判断にする（直さない）
 
 Dependabot の PR は、巡回 PR のマージ後に Dependabot が自分で閉じる。巡回からは閉じない。
 
