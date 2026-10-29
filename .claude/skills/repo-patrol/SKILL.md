@@ -74,7 +74,7 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 |---|---|---|
 | 巡回 PR を作る | `gh api -X POST repos/<REPO>/pulls --input /tmp/repo-patrol/pr.json` | title, body, head（`claude/patrol-deps`）, base, draft |
 | 巡回 PR の題名・本文を直す | `gh api -X PATCH repos/<REPO>/pulls/<番号> --input /tmp/repo-patrol/pr.json` | title, body |
-| コメントする | `gh api -X POST repos/<REPO>/issues/<番号>/comments --input /tmp/repo-patrol/comment.json` | body |
+| Dependabot の PR にコメントする | `gh api -X POST repos/<REPO>/issues/<番号>/comments --input /tmp/repo-patrol/comment.json` | body |
 | push する（リモートに `claude/patrol-deps` がない） | `git push origin HEAD:refs/heads/claude/patrol-deps` | |
 | push する（リモートに `claude/patrol-deps` がある） | `git push --force-with-lease origin HEAD:refs/heads/claude/patrol-deps` | |
 | 閉じる・ラベルを付ける | `.claude/skills/repo-patrol/scripts/stale.sh <REPO> close` | |

@@ -52,6 +52,7 @@ const patrolPull = () => ({
   headRef: "claude/patrol-deps",
   headRepo: "o/r",
   baseRepo: "o/r",
+  author: "patrol-owner",
 });
 
 // 一時ディレクトリにリポジトリの形（スキルのスクリプト・設定・依存ファイル）を作る。
@@ -394,7 +395,6 @@ test("gh api allows reads of the configured repository and listed writes", (t) =
     `gh api -X POST repos/o/r/pulls --input ${prCreate}`,
     `gh api -X POST repos/o/r/pulls --input ${prCreate} --jq .html_url`,
     `gh api -X PATCH repos/o/r/pulls/12 --input ${prEdit}`,
-    `gh api -X POST repos/o/r/issues/12/comments --input ${comment}`,
   ]);
   fixture.assertBlocked([
     "gh api repos/other/repo/pulls",
@@ -442,6 +442,36 @@ test("gh api allows reads of the configured repository and listed writes", (t) =
   fixture.assertBlocked([edit], { fetchPull: humanPull });
   fixture.assertBlocked([edit], { fetchPull: forkPull });
   fixture.assertBlocked([edit], { fetchPull: () => null });
+
+  // コメントは Dependabot の PR だけ。番号の PR を読んで作成者を確かめる
+  const dependabotPull = (endpoint) =>
+    endpoint.toLowerCase() === "repos/o/r/pulls/12"
+      ? {
+          headRef: "dependabot/npm_and_yarn/a-1.2.4",
+          headRepo: "o/r",
+          baseRepo: "o/r",
+          author: "dependabot[bot]",
+        }
+      : null;
+  const commentOn = (number) =>
+    `gh api -X POST repos/o/r/issues/${number}/comments --input ${comment}`;
+  fixture.assertAllowed(
+    [
+      commentOn(12),
+      `gh api -X POST repos/O/R/issues/12/comments --input ${comment}`,
+    ],
+    { fetchPull: dependabotPull },
+  );
+  // 13 は Issue（pulls が読めない）
+  fixture.assertBlocked([commentOn(13)], { fetchPull: dependabotPull });
+  for (const fetchPull of [
+    patrolPull,
+    humanPull,
+    () => ({ ...forkPull(), author: "dependabot[bot]" }),
+    () => null,
+  ]) {
+    fixture.assertBlocked([commentOn(12)], { fetchPull });
+  }
 });
 
 test("package managers allow only the patrol forms", (t) => {
