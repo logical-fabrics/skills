@@ -599,15 +599,21 @@ function checkOwnScript(scriptPath, args, ctx) {
     if (!ctx.repo || args[0]?.toLowerCase() !== ctx.repo.toLowerCase()) {
       return block(`${parts[4]} には設定のリポジトリ（${ctx.repo}）を渡す`);
     }
-    if (parts[4] === "stale.sh" && args[1] === "close")
+    if (parts[4] === "stale.sh" && args[1] === "close") {
       ctx.writes.push("close");
+    }
   }
   if (parts[2] === "repo-patrol" && parts[4] === "slack-post.sh") {
-    const target = path.resolve(ctx.cwd, args[0] ?? "");
-    if (args.length !== 1 || !isUnder(target, PATROL_TMP)) {
-      return block(`slack-post.sh に渡せるのは ${PATROL_TMP}/ のファイルだけ`);
+    // --check は投稿せずに検証するだけなので数えない
+    const check = args[0] === "--check";
+    const files = check ? args.slice(1) : args;
+    const target = path.resolve(ctx.cwd, files[0] ?? "");
+    if (files.length !== 1 || !isUnder(target, PATROL_TMP)) {
+      return block(
+        `slack-post.sh に渡せるのは [--check] と ${PATROL_TMP}/ のファイルだけ`,
+      );
     }
-    ctx.writes.push("slack");
+    if (!check) ctx.writes.push("slack");
   }
   return checkReadPaths(args, ctx);
 }

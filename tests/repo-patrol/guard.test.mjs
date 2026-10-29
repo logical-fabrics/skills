@@ -221,6 +221,9 @@ test("reads stay inside the repository and the work directory", (t) => {
     "cat /tmp/repo-patrol/../../etc/hosts",
     "bash .claude/skills/repo-patrol/scripts/slack-post.sh /etc/hosts",
     "bash .claude/skills/repo-patrol/scripts/slack-post.sh .claude/repo-patrol.md",
+    "bash .claude/skills/repo-patrol/scripts/slack-post.sh --check /etc/hosts",
+    "bash .claude/skills/repo-patrol/scripts/slack-post.sh --dry-run /tmp/repo-patrol/report.json",
+    "bash .claude/skills/repo-patrol/scripts/slack-post.sh /tmp/repo-patrol/report.json --check",
     "jq -n env",
     "jq -n '$ENV'",
     "git diff --no-index /etc/hosts /dev/null",
@@ -235,7 +238,8 @@ test("reads stay inside the repository and the work directory", (t) => {
     "cat .claude/repo-patrol.md",
     "jq . /tmp/repo-patrol/x.json",
     "grep -r react package.json",
-    "bash .claude/skills/repo-patrol/scripts/slack-post.sh /tmp/repo-patrol/slack.txt",
+    "bash .claude/skills/repo-patrol/scripts/slack-post.sh /tmp/repo-patrol/report.json",
+    "bash .claude/skills/repo-patrol/scripts/slack-post.sh --check /tmp/repo-patrol/report.json",
   ]);
 });
 
@@ -491,7 +495,7 @@ test("writes are capped per session and run one at a time", (t) => {
     baseRepo: "o/r",
     author: "dependabot[bot]",
   });
-  const post = "/tmp/repo-patrol/slack.txt";
+  const post = "/tmp/repo-patrol/report.json";
   const writes = [
     [`gh api -X POST repos/o/r/pulls --input ${pr}`, 1],
     [`gh api -X POST repos/o/r/issues/12/comments --input ${comment}`, 20],
@@ -511,6 +515,7 @@ test("writes are capped per session and run one at a time", (t) => {
   // 読み取りと数えない操作は上限に関係しない
   for (const command of [
     "bash .claude/skills/repo-patrol/scripts/stale.sh o/r list",
+    `.claude/skills/repo-patrol/scripts/slack-post.sh --check ${post}`,
     "gh api repos/o/r/pulls",
   ]) {
     assert.equal(allowed(command, "s1"), true, command);
