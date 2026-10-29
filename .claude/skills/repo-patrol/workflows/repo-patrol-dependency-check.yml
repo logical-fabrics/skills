@@ -3,8 +3,10 @@
 # ruleset の required check に足すのは、誤検知がないことを運用で確かめてから人が行う（check の名前は dependency-check）
 name: repo-patrol dependency check
 
+# pull_request_target なので、この workflow の定義は PR ではなく base のものが動く（PR が check を外したり書き換えたりできない）。
+# そのかわり、PR のコードは決して実行しない。PR のチェックアウトは git で読むだけにし、install・run・PR のスクリプトを足さない
 on:
-  pull_request:
+  pull_request_target:
 
 permissions:
   contents: read
@@ -16,9 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
+      - name: Checkout the pull request as data
         uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
 

@@ -988,10 +988,14 @@ test("the workflows of this repository are the templates", () => {
     );
     assert.equal(own, template, name);
     assert.match(template, command, name);
+    // 依存の検査は base の定義で動かす（PR が check を外せないように）
+    if (name === "repo-patrol-dependency-check.yml") {
+      assert.match(template, /^on:\n {2}pull_request_target:\n/m);
+    }
   }
 });
 
-// npm view の代わり。「名前@版 → 項目」の表から、頼まれた項目だけを返す。表にない版は E404
+// npm view の代わり。「名前@版 → その版のメタデータ」の表を引く。表にない版と、レジストリを決めていない呼び出しは失敗
 function fakeNpm(t, versions) {
   const dir = tempDir(t);
   const file = path.join(dir, "versions.json");
@@ -1001,15 +1005,11 @@ function fakeNpm(t, versions) {
     `#!/usr/bin/env node
 const versions = JSON.parse(require("node:fs").readFileSync(${JSON.stringify(file)}, "utf8"));
 const [command, spec, ...rest] = process.argv.slice(2);
-if (command !== "view" || !(spec in versions)) {
-  console.error("E404");
+if (command !== "view" || !rest.includes("--registry=https://registry.npmjs.org/") || !(spec in versions)) {
+  console.error("E404 " + process.argv.slice(2).join(" "));
   process.exit(1);
 }
-const out = {};
-for (const field of rest.filter((arg) => arg !== "--json")) {
-  if (versions[spec][field] !== undefined) out[field] = versions[spec][field];
-}
-process.stdout.write(JSON.stringify(out));
+process.stdout.write(JSON.stringify(versions[spec]));
 `,
   );
   chmodSync(path.join(dir, "npm"), 0o755);
@@ -1085,7 +1085,7 @@ test("publisher-check fails on new install scripts, publisher changes and young 
     [
       "provenance がなくなった",
       (v) => {
-        v["a@1.2.0"]["dist.attestations"] = PROVENANCE;
+        v["a@1.2.0"].dist = { attestations: PROVENANCE };
       },
       1,
       /a@1\.3\.0: 前の版にあった provenance がない/,
@@ -1094,7 +1094,7 @@ test("publisher-check fails on new install scripts, publisher changes and young 
       "trusted publishing から人の公開へ",
       (v) => {
         v["a@1.2.0"]._npmUser = TRUSTED;
-        v["a@1.2.0"]["dist.attestations"] = PROVENANCE;
+        v["a@1.2.0"].dist = { attestations: PROVENANCE };
       },
       1,
       /trusted publishing だったのに、alice が公開している/,
@@ -1103,7 +1103,7 @@ test("publisher-check fails on new install scripts, publisher changes and young 
       "人から trusted publishing へ",
       (v) => {
         v["a@1.3.0"]._npmUser = TRUSTED;
-        v["a@1.3.0"]["dist.attestations"] = PROVENANCE;
+        v["a@1.3.0"].dist = { attestations: PROVENANCE };
       },
       0,
       /問題はない/,
@@ -1113,7 +1113,7 @@ test("publisher-check fails on new install scripts, publisher changes and young 
       (v) => {
         for (const spec of ["a@1.2.0", "a@1.3.0"]) {
           v[spec]._npmUser = TRUSTED;
-          v[spec]["dist.attestations"] = PROVENANCE;
+          v[spec].dist = { attestations: PROVENANCE };
         }
       },
       0,
@@ -1151,6 +1151,119 @@ test("publisher-check fails on new install scripts, publisher changes and young 
     );
     assert.match(result.stdout + result.stderr, output, label);
   }
+});
+
+// lockfile を base と HEAD の 2 つのコミットにした git リポジトリ
+function lockRepo(t, file, baseText, headText) {
+  const dir = tempDir(t);
+  const git = (...args) => execFileSync("git", args, { cwd: dir });
+  git("init", "-q", "-b", "main");
+  git("config", "user.email", "test@example.com");
+  git("config", "user.name", "test");
+  writeFileSync(path.join(dir, file), baseText);
+  git("add", "-A");
+  git("commit", "-q", "-m", "base");
+  git("checkout", "-q", "-b", "dependabot/npm_and_yarn/x");
+  writeFileSync(path.join(dir, file), headText);
+  git("commit", "-q", "-am", "bump");
+  return dir;
+}
+
+test("publisher-check reads the installed package behind aliases and peer suffixes", (t) => {
+  const tarball = (name, version) =>
+    `https://registry.npmjs.org/${name}/-/${name.split("/").at(-1)}-${version}.tgz`;
+  const npmLock = (packages) =>
+    JSON.stringify({
+      lockfileVersion: 3,
+      packages: { "": { name: "app" }, ...packages },
+    });
+  const entry = (name, version, extra = {}) => ({
+    version,
+    resolved: tarball(name, version),
+    integrity: "sha512-x",
+    ...extra,
+  });
+  const run = (dir, versions) =>
+    spawnSync(
+      process.execPath,
+      [path.join(scriptsDir, "publisher-check.mjs"), "main"],
+      {
+        cwd: dir,
+        encoding: "utf8",
+        env: fakeNpm(t, versions),
+      },
+    );
+
+  // npm の別名: node_modules/lodash の中身は evil。evil を確かめる（lodash@1.0.0 を見て通さない）
+  const alias = lockRepo(
+    t,
+    "package-lock.json",
+    npmLock({ "node_modules/@s/b": entry("@s/b", "1.0.0") }),
+    npmLock({
+      "node_modules/@s/b": entry("@s/b", "1.0.1"),
+      "node_modules/lodash": entry("evil", "1.0.0", { name: "evil" }),
+    }),
+  );
+  const result = run(alias, {
+    "@s/b@1.0.0": release("1.0.0"),
+    "@s/b@1.0.1": release("1.0.1"),
+    "lodash@1.0.0": release("1.0.0"),
+    "evil@1.0.0": release("1.0.0", {
+      scripts: { postinstall: "node steal.js" },
+    }),
+  });
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /evil@1\.0\.0: postinstall がある/);
+  assert.doesNotMatch(result.stdout, /lodash/);
+
+  // resolved が版と食い違う解決は、レジストリから取るものとして扱わない（check-diff が止める）
+  const mismatched = lockRepo(
+    t,
+    "package-lock.json",
+    npmLock({ "node_modules/a": entry("a", "1.0.0") }),
+    npmLock({
+      "node_modules/a": entry("a", "1.0.1", {
+        resolved: tarball("a", "1.0.0"),
+      }),
+    }),
+  );
+  const diff = spawnSync(
+    process.execPath,
+    [path.join(scriptsDir, "check-diff.mjs"), "main", "--head"],
+    {
+      cwd: mismatched,
+      encoding: "utf8",
+    },
+  );
+  assert.equal(diff.status, 1, diff.stdout);
+  assert.match(
+    diff.stdout,
+    /node_modules\/a@1\.0\.1 がレジストリ以外から解決される/,
+  );
+
+  // pnpm lockfile v6 の peer 付きの鍵は、括弧を除いた名前と版で確かめる
+  const pnpmLock = (key) =>
+    [
+      "lockfileVersion: '6.0'",
+      "",
+      "packages:",
+      "",
+      `  ${key}:`,
+      "    resolution: {integrity: sha512-q}",
+      "",
+    ].join("\n");
+  const peers = lockRepo(
+    t,
+    "pnpm-lock.yaml",
+    pnpmLock("/@tanstack/q@5.0.0(react@18.2.0)"),
+    pnpmLock("/@tanstack/q@5.1.0(react@18.2.0)"),
+  );
+  const peerResult = run(peers, {
+    "@tanstack/q@5.0.0": release("5.0.0"),
+    "@tanstack/q@5.1.0": release("5.1.0"),
+  });
+  assert.equal(peerResult.status, 0, peerResult.stdout + peerResult.stderr);
+  assert.match(peerResult.stdout, /新しく入る版: 1 件/);
 });
 
 test("dependency-check uses the checker and the extra paths of the base copy", (t) => {

@@ -38,7 +38,7 @@ GitHub Actions（各リポジトリの .github/workflows/・workflow のトー�
 - ファイルの書き込みは `/tmp/repo-patrol/` と、追跡済みの依存ファイルだけ
 - 1 回の実行の書き込みは、巡回 PR 1 本・コメント 20 件・Slack 投稿 1 回まで。hook の `session_id` ごとに `/tmp/repo-patrol-guard/` で数える
 - install・run の前と push の前に `check-diff.mjs` を通す（push のときは HEAD のコミットを見る）
-- Dependabot の npm 系の PR と巡回 PR には、Actions の `dependency-check` が同じ check-diff と、新しい版の公開者・install script・公開日の検査（`publisher-check.mjs`）をかける。検査のスクリプトと設定は base のコミットから取り出すので、PR が検査を書き換えられない
+- Dependabot の npm 系の PR と巡回 PR には、Actions の `dependency-check` が同じ check-diff と、新しい版の公開者・install script・公開日の検査（`publisher-check.mjs`）をかける。workflow は `pull_request_target` で base の定義が動き、検査のスクリプトと設定も base のコミットから取り出すので、PR が検査を書き換えたり外したりできない。PR のコードは実行しない（git で読み、`npm view` はチェックアウトの外で npm のレジストリに問い合わせるだけ）
 
 ただし guard は歯止めであって境界ではない。そこから起動されたプロセス（検証中に動く依存パッケージのコードなど）は止められない。
 

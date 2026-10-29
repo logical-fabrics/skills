@@ -12,6 +12,7 @@
 //   - 公開から 4 日未満
 
 import { execFileSync } from "node:child_process";
+import os from "node:os";
 import path from "node:path";
 import { npmResolutions, pnpmResolutions } from "./lockfile.mjs";
 
@@ -24,6 +25,7 @@ const LOCKFILES = new Set([
   "npm-shrinkwrap.json",
 ]);
 const TRUSTED_PUBLISHER = "GitHub Actions";
+const REGISTRY = "https://registry.npmjs.org/";
 
 const [base] = process.argv.slice(2);
 if (!base) {
@@ -43,40 +45,28 @@ const lockfiles = git("diff", "--name-only", mergeBase, "HEAD")
   .split("\n")
   .filter((file) => LOCKFILES.has(path.basename(file)));
 
-// 鍵は pnpm なら「名前@版」（古い形式は先頭に /）、npm なら「node_modules/…/名前@版」
-function parseKey(key, isPnpm) {
-  let id = key.replace(/^\//, "");
-  if (!isPnpm) {
-    const marker = id.lastIndexOf("node_modules/");
-    if (marker === -1) return null;
-    id = id.slice(marker + "node_modules/".length);
-  }
-  const at = id.lastIndexOf("@");
-  if (at <= 0) return null;
-  const version = id.slice(at + 1);
-  return /^\d+\.\d+\.\d+/.test(version)
-    ? { name: id.slice(0, at), version }
-    : null;
-}
-
-// 名前 → レジストリから解決する版の集合。レジストリ以外の解決は check-diff が止める
+// 名前 → レジストリから解決する版の集合と、名前と版を読めない鍵。レジストリ以外の解決は check-diff が止める
 function versionsAt(ref, file) {
   let text;
   try {
     text = git("show", `${ref}:${file}`);
   } catch {
-    return new Map();
+    return { byName: new Map(), unreadable: new Set() };
   }
   const isPnpm = path.basename(file) === "pnpm-lock.yaml";
   const resolutions = isPnpm ? pnpmResolutions(text) : npmResolutions(text);
   const byName = new Map();
-  for (const [key, { registry }] of resolutions ?? []) {
-    const parsed = registry ? parseKey(key, isPnpm) : null;
-    if (!parsed) continue;
-    if (!byName.has(parsed.name)) byName.set(parsed.name, new Set());
-    byName.get(parsed.name).add(parsed.version);
+  const unreadable = new Set();
+  for (const [key, { registry, name, version }] of resolutions ?? []) {
+    if (!registry) continue;
+    if (!name || !/^\d+\.\d+\.\d+/.test(version ?? "")) {
+      unreadable.add(key);
+      continue;
+    }
+    if (!byName.has(name)) byName.set(name, new Set());
+    byName.get(name).add(version);
   }
-  return byName;
+  return { byName, unreadable };
 }
 
 function compareVersions(a, b) {
@@ -94,22 +84,34 @@ const personName = (person) =>
     .replace(/\s*<[^>]*>\s*$/, "")
     .trim();
 
-// 2 つ以上の項目を頼むと、npm view は項目名を鍵にしたオブジェクトを返す
-function view(spec, fields) {
-  const out = execFileSync("npm", ["view", spec, ...fields, "--json"], {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  }).trim();
-  return out === "" ? {} : JSON.parse(out);
+// 項目を指定せずに 1 つの版を頼むと、npm view はその版のメタデータを 1 つのオブジェクトで返す。
+// PR のチェックアウトの .npmrc を読まないよう、チェックアウトの外で、レジストリを決めて呼ぶ
+function view(spec) {
+  const out = execFileSync(
+    "npm",
+    ["view", spec, "--json", `--registry=${REGISTRY}`],
+    { cwd: os.tmpdir(), encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+  ).trim();
+  const data = out === "" ? null : JSON.parse(out);
+  if (data === null || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error(`${spec} のメタデータが 1 つの版の形ではない`);
+  }
+  return data;
 }
 
 const added = new Map();
+// 読めない鍵を黙って通さない（base から読めなかったものは、この PR の問題ではないので除く）
+const unreadable = [];
 for (const file of lockfiles) {
   const before = versionsAt(mergeBase, file);
-  for (const [name, versions] of versionsAt("HEAD", file)) {
+  const after = versionsAt("HEAD", file);
+  for (const key of after.unreadable) {
+    if (!before.unreadable.has(key)) unreadable.push(`${file}: ${key}`);
+  }
+  for (const [name, versions] of after.byName) {
     for (const version of versions) {
-      if (before.get(name)?.has(version)) continue;
-      const previous = [...(before.get(name) ?? [])]
+      if (before.byName.get(name)?.has(version)) continue;
+      const previous = [...(before.byName.get(name) ?? [])]
         .sort(compareVersions)
         .at(-1);
       added.set(`${name}@${version}`, { name, version, previous });
@@ -120,20 +122,8 @@ for (const file of lockfiles) {
 const problems = [];
 try {
   for (const [spec, { name, version, previous }] of added) {
-    const next = view(spec, [
-      "scripts",
-      "_npmUser",
-      "dist.attestations",
-      "time",
-    ]);
-    const prev = previous
-      ? view(`${name}@${previous}`, [
-          "scripts",
-          "_npmUser",
-          "maintainers",
-          "dist.attestations",
-        ])
-      : null;
+    const next = view(spec);
+    const prev = previous ? view(`${name}@${previous}`) : null;
 
     for (const hook of INSTALL_SCRIPTS) {
       const command = next.scripts?.[hook];
@@ -157,8 +147,8 @@ try {
       const user = personName(next._npmUser);
       const trusted = user === TRUSTED_PUBLISHER;
       const prevTrusted = personName(prev._npmUser) === TRUSTED_PUBLISHER;
-      const provenance = Boolean(next["dist.attestations"]);
-      const prevProvenance = Boolean(prev["dist.attestations"]);
+      const provenance = Boolean(next.dist?.attestations);
+      const prevProvenance = Boolean(prev.dist?.attestations);
       if (!(trusted && provenance)) {
         if (prevTrusted && !trusted) {
           problems.push(
@@ -183,6 +173,9 @@ try {
   process.exit(2);
 }
 
+for (const key of unreadable) {
+  problems.push(`${key}: lockfile の鍵から名前と版を読めない`);
+}
 console.log(`新しく入る版: ${added.size} 件`);
 if (problems.length > 0) {
   console.log("確かめが要る版がある:");
