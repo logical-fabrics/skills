@@ -18,6 +18,7 @@ permissions:
   pull-requests: write
   actions: read
   checks: read
+  statuses: read
 
 concurrency:
   group: repo-patrol
@@ -26,7 +27,7 @@ jobs:
   patrol:
     if: vars.REPO_PATROL_MODE == 'observe' || vars.REPO_PATROL_MODE == 'live'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       REPO_PATROL: "1"
       TZ: Asia/Tokyo
@@ -55,12 +56,13 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # Claude GitHub App のトークンではなく、この workflow の permissions に絞ったトークンを使う
           github_token: ${{ github.token }}
-          claude_args: --allowedTools "Bash,Read,Write,Edit,Glob,Grep"
+          # guard の hook を通らない読み取りのツール（Read・Glob・Grep）は使わせない。/proc などからトークンを読めないように、読むのは guard が見る Bash だけにする
+          claude_args: --allowedTools "Bash,Write,Edit" --disallowedTools "Read,Glob,Grep,NotebookEdit,Task,WebFetch,WebSearch"
           prompt: |
-            .claude/skills/repo-patrol/SKILL.md を読んで、そのとおりに巡回する。設定は .claude/repo-patrol.md。
+            .claude/skills/repo-patrol/SKILL.md を読んで、そのとおりに巡回する。設定は .claude/repo-patrol.md。ファイルは cat などのシェルのコマンドで読む（Read ツールは使えない）。
             これは GitHub Actions 上の無人の定期実行。マージ、本番昇格、リポジトリ設定の変更はしない。
             Slack への投稿はこのあとの step が行うので、手順 6 は `slack-post.sh --check` で確かめるところまでにする。
-            ${{ vars.REPO_PATROL_MODE == 'live' && '' || '観察モード: GitHub には書かない。コメントするはずだった Dependabot の PR は、コメントしたものとして報告する。' }}
+            ${{ vars.REPO_PATROL_MODE != 'live' && '観察モード: GitHub には書かない。コメントするはずだった Dependabot の PR は、コメントしたものとして報告する。' || '' }}
 
       # Slack のトークンは、ここにだけ渡す（Claude と、Claude が起動したプロセスには見せない）
       - name: Post the report to Slack
@@ -81,3 +83,15 @@ jobs:
             REPO_PATROL=0 bash .claude/skills/repo-patrol/scripts/slack-post.sh --check /tmp/repo-patrol/report.json
             echo '```'
           } >>"$GITHUB_STEP_SUMMARY"
+
+      # 失敗した日は報告が届かないので、失敗したことだけを知らせる
+      - name: Tell Slack that the patrol failed
+        if: failure() && vars.REPO_PATROL_MODE == 'live'
+        run: |
+          mkdir -p /tmp/repo-patrol
+          jq -n --arg date "$(date +%F)" --arg url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            '{date: $date, sessionUrl: $url, items: [{kind: "decision", label: "巡回", reason: "Actions の実行が失敗した（実行ログを見る）", commentedNow: false, security: true}]}' \
+            >/tmp/repo-patrol/failed.json
+          bash .claude/skills/repo-patrol/scripts/slack-post.sh /tmp/repo-patrol/failed.json
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

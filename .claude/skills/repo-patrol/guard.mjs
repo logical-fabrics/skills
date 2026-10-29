@@ -144,8 +144,19 @@ export function evaluate(input, overrides = {}) {
       return checkCommand(toolInput.command, ctx);
     case "Edit":
     case "Write":
-    case "MultiEdit":
-      return checkWritePath(toolInput.file_path, ctx);
+    case "MultiEdit": {
+      const text = [
+        toolInput.content,
+        toolInput.new_string,
+        ...(Array.isArray(toolInput.edits)
+          ? toolInput.edits.map((edit) => edit?.new_string)
+          : []),
+      ].filter((value) => typeof value === "string");
+      return (
+        secretProblem(text.join("\n"), ctx) ??
+        checkWritePath(toolInput.file_path, ctx)
+      );
+    }
     case "NotebookEdit":
       return checkWritePath(toolInput.notebook_path, ctx);
     default:
@@ -177,7 +188,27 @@ function createContext(input, overrides) {
     // このコマンドの中の数える書き込み（checkCommand が最後にまとめて数える）
     writes: [],
     fetchPull: overrides.fetchPull ?? ((endpoint) => fetchPull(endpoint, root)),
+    secrets: overrides.secrets ?? secretValues(process.env),
   };
+}
+
+// hook は巡回と同じ環境変数を受け継ぐ。トークンらしい値（名前に TOKEN・SECRET・KEY・PASSWORD を含み、20 文字以上）を集める
+function secretValues(env) {
+  return Object.entries(env)
+    .filter(
+      ([name, value]) =>
+        /TOKEN|SECRET|KEY|PASSWORD/i.test(name) &&
+        typeof value === "string" &&
+        value.length >= 20,
+    )
+    .map(([, value]) => value);
+}
+
+// 書き込む本文やコメントにトークンの値が入っていたら止める（読めてしまった値を外へ出さない）
+function secretProblem(text, ctx) {
+  return ctx.secrets.some((secret) => text.includes(secret))
+    ? block("書き込む内容に環境変数のトークンの値が入っている")
+    : null;
 }
 
 // .claude/repo-patrol.md の「リポジトリ」と「差分に含めてよい追加のパス」を読む。
@@ -667,12 +698,16 @@ function checkGh(args, ctx) {
     return block(`書き込みの本文は ${PATROL_TMP}/ の JSON を --input で渡す`);
   }
 
+  let raw;
   let data;
   try {
-    data = JSON.parse(readFileSync(path.resolve(ctx.cwd, input), "utf8"));
+    raw = readFileSync(path.resolve(ctx.cwd, input), "utf8");
+    data = JSON.parse(raw);
   } catch {
     return block(`--input の ${input} を JSON として読めない`);
   }
+  const secret = secretProblem(raw, ctx);
+  if (secret) return secret;
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
     return block("--input の JSON はオブジェクトにする");
   }
