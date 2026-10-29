@@ -350,16 +350,33 @@ test("slack-post rejects a report that does not match the format", (t) => {
   assert.match(result.stderr, /リポジトリ/);
 });
 
-test("slack-post does not post when there is nothing to report", (t) => {
+test("slack-post posts an empty report only on Mondays", (t) => {
   const repo = slackRepo(t, SLACK_CONFIG);
   const slack = fakeSlack(t);
-  const result = repo.post(
-    report([], { notes: { baseCi: "success" } }),
-    slack.env(),
-  );
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /報告することがないので投稿しなかった/);
+  const empty = (date) =>
+    report([], {
+      date,
+      sessionUrl: "https://claude.ai/code/session_abc123",
+      notes: { baseCi: "success" },
+    });
+
+  const tuesday = repo.post(empty("2026-10-27"), slack.env());
+  assert.equal(tuesday.status, 0, tuesday.stderr);
+  assert.match(tuesday.stdout, /報告することがないので投稿しなかった/);
   assert.deepEqual(slack.sent(), []);
+
+  const monday = repo.post(empty("2026-10-26"), slack.env());
+  assert.equal(monday.status, 0, monday.stderr);
+  const [sent] = slack.sent();
+  assert.equal(sent.text, "r の巡回（2026-10-26）: 異常なし");
+  assert.deepEqual(
+    sent.blocks.map((block) => block.type),
+    ["header", "divider", "context"],
+  );
+  assert.equal(
+    sent.blocks[2].elements[0].text,
+    ":white_check_mark: main の CI: 成功\n<https://claude.ai/code/session_abc123|実行ログ>",
+  );
 });
 
 test("slack-post accepts a channel name as the destination", (t) => {
