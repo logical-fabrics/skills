@@ -258,6 +258,9 @@ test("only committed skill scripts run, without interpreter options", (t) => {
     "bash .claude/skills/../scripts/z.sh",
     "./x.sh",
     "bash .claude/skills/repo-patrol/scripts/stale.sh other/repo list",
+    "bash .claude/skills/repo-patrol/scripts/stale.sh o/r close",
+    "bash .claude/skills/repo-patrol/scripts/stale.sh O/R close --max 1",
+    "bash .claude/skills/repo-patrol/scripts/stale.sh o/r list close",
     ".claude/skills/repo-patrol/scripts/wait-checks.sh other/repo 1 -",
     "node .claude/skills/repo-patrol/scripts/audit-summary.mjs /etc/passwd",
   ]);
@@ -265,7 +268,7 @@ test("only committed skill scripts run, without interpreter options", (t) => {
   fixture.assertAllowed([
     `node .claude/skills/repo-patrol/scripts/audit-summary.mjs ${audit}`,
     "bash .claude/skills/repo-patrol/scripts/stale.sh o/r list",
-    "bash .claude/skills/repo-patrol/scripts/stale.sh O/R close",
+    "bash .claude/skills/repo-patrol/scripts/stale.sh O/R list",
     ".claude/skills/repo-patrol/scripts/wait-checks.sh o/r 12 testing",
     "node .claude/skills/repo-patrol/scripts/check-diff.mjs origin/develop biome.json",
     "node .claude/skills/dependabot-weekly/scripts/pkgdiff.mjs origin/develop:pnpm-lock.yaml pnpm-lock.yaml",
@@ -500,7 +503,6 @@ test("writes are capped per session and run one at a time", (t) => {
     [`gh api -X POST repos/o/r/pulls --input ${pr}`, 1],
     [`gh api -X POST repos/o/r/issues/12/comments --input ${comment}`, 20],
     [`.claude/skills/repo-patrol/scripts/slack-post.sh ${post}`, 1],
-    [`bash .claude/skills/repo-patrol/scripts/stale.sh o/r close`, 1],
   ];
   const allowed = (command, sessionId) =>
     fixture.run(command, { fetchPull: dependabotPull }, sessionId).allow;

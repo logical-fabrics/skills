@@ -5,7 +5,7 @@ Claude Code の scheduled tasks（旧 routines）で、リポジトリを毎日 
 ## 何をするか
 
 - Dependabot の npm 系の更新を 1 本の PR（巡回 PR、ブランチ `claude/patrol-deps`）にまとめ、CI を確かめる（9 分で終わらなければ、翌日の巡回でまた見る）
-- 30 日を過ぎた Issue と PR を、理由のコメントと `patrol-closed` ラベルを付けて閉じる（1 日 10 件まで。7 日前に予告する）
+- 30 日を過ぎた Issue と PR を、理由のコメントと `patrol-closed` ラベルを付けて閉じる（1 日 10 件まで。7 日前に予告する）。閉じるのは Actions の定期 workflow で、巡回は予告と workflow の失敗を報告する
 - 既定ブランチの CI の状態を見る
 - 人が見るべきもの（マージ待ち・要判断・CI の失敗・閉じる予定）がある日に、リポジトリの設定に書いた Slack チャンネルに 1 投稿する。新しく対応が要るときは @channel を付ける。何もない日は投稿しないが、月曜だけは「異常なし」を投稿する（月曜に投稿がなければ、巡回が止まっている）
 
@@ -16,8 +16,10 @@ Claude Code の scheduled tasks（旧 routines）で、リポジトリを毎日 
 ```text
 logical-fabrics/skills（正本）── コピー ──> 各リポジトリの .claude/skills/repo-patrol/ と .claude/repo-patrol.md
 claude.ai の scheduled task（リポジトリごとに 1 つ・毎朝・リポジトリごとの cloud environment）── clone ──> 各リポジトリ
-   ├─ GitHub（Claude GitHub App 経由・REST だけ）: 巡回 PR、コメント、close
+   ├─ GitHub（Claude GitHub App 経由・REST だけ）: 巡回 PR、コメント
    └─ Slack（Slack アプリのボット名義・プロジェクトのチャンネル）: 報告がある日と月曜に 1 投稿、新しい要対応のときだけ @channel
+GitHub Actions の repo-patrol stale（各リポジトリの .github/workflows/・毎朝 08:17 JST・workflow のトークン）
+   └─ 30 日を過ぎた Issue / PR の close・ラベル・理由のコメント
 ```
 
 - scheduled task はリポジトリごとに 1 つ作る。複数のリポジトリを付けたセッションでは `.claude/settings.json` の hooks が読まれず、guard が効かないため
@@ -31,9 +33,9 @@ claude.ai の scheduled task（リポジトリごとに 1 つ・毎朝・リポ�
 
 - シェルの変数展開・グロブ・サブシェルなどは使わせない
 - 実行できるのは、決まった形の git・`gh api`・pnpm・npm、読み取り系のコマンド、リポジトリにコミットされた `.claude/skills/*/scripts/` のスクリプトだけ。読めるのはリポジトリと `/tmp/repo-patrol/` の中だけ
-- GitHub の読み書きは設定のリポジトリだけ。書き込みは巡回 PR の作成と更新、Dependabot の PR へのコメントだけ（close とラベルは `stale.sh` の中）
+- GitHub の読み書きは設定のリポジトリだけ。書き込みは巡回 PR の作成と更新、Dependabot の PR へのコメントだけ（close とラベルは Actions の workflow が行う）
 - ファイルの書き込みは `/tmp/repo-patrol/` と、追跡済みの依存ファイルだけ
-- 1 回の実行の書き込みは、巡回 PR 1 本・コメント 20 件・Slack 投稿 1 回・`stale.sh close` 1 回まで。hook の `session_id` ごとに `/tmp/repo-patrol-guard/` で数える
+- 1 回の実行の書き込みは、巡回 PR 1 本・コメント 20 件・Slack 投稿 1 回まで。hook の `session_id` ごとに `/tmp/repo-patrol-guard/` で数える
 - install・run の前と push の前に `check-diff.mjs` を通す（push のときは HEAD のコミットを見る）
 
 ただし guard は歯止めであって境界ではない。そこから起動されたプロセス（検証中に動く依存パッケージのコードなど）は止められない。
@@ -44,7 +46,7 @@ guard が効かなかったとき（hook が読まれない、仕様が変わる
 |---|---|
 | 既定ブランチ・本番ブランチへの直接の書き込み | ruleset: Require a pull request・Block force pushes・Restrict deletions。bypass list は空（github-actions も入れない） |
 | 巡回が ruleset を外せないこと | GitHub との接続を Claude GitHub App 方式にする（`/web-setup` で手元のトークンを渡さない）。App はリポジトリ設定の権限を read しか持たない |
-| Actions のトークン | Actions の既定のトークンを read にし、「Allow GitHub Actions to create and approve pull requests」を切る |
+| Actions のトークン | Actions の既定のトークンを read にし、「Allow GitHub Actions to create and approve pull requests」を切る。close の workflow は、自分の `permissions` で Issue と PR の書き込みだけを得る |
 
 ruleset が使えないプラン（Free の private リポジトリなど）では、巡回を入れない。
 
@@ -71,6 +73,8 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
    git -C "$LF" diff --quiet HEAD -- .claude/skills/repo-patrol || echo "lf-skills に未コミットの変更がある"
    rsync -a --delete "$LF/.claude/skills/repo-patrol/" .claude/skills/repo-patrol/
    git -C "$LF" rev-parse HEAD > .claude/skills/repo-patrol/SOURCE
+   mkdir -p .github/workflows
+   cp .claude/skills/repo-patrol/workflows/repo-patrol-stale.yml .github/workflows/
    ```
 
    リポジトリの lint（Biome・ESLint・knip など）が `.claude/` を対象にしていれば、`.claude/skills/repo-patrol/` を対象外にする。
@@ -169,7 +173,8 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
 11. Run now で実行し、トランスクリプトで次を確かめる
     - SKILL.md の手順 1 の guard の確認で、push が guard に止められている
     - 報告することがあれば、プロジェクトのチャンネルにボット名義で 1 回投稿される（新しい要対応があれば @channel が付く）。なければ、実行ログの最後に投稿しなかったことが書かれている（月曜なら「異常なし」が投稿される）
-    - GitHub への書き込みが、巡回 PR・コメント・close の範囲に収まっている
+    - GitHub への書き込みが、巡回 PR・コメントの範囲に収まっている
+    - Actions の repo-patrol stale を `workflow_dispatch` で 1 回動かし、成功する（閉じる候補がなくても summary が出る）
 
 ## 設定ファイル（`.claude/repo-patrol.md`）
 
@@ -219,14 +224,14 @@ CI では見ないもの、すぐ落ちるものだけ。ビルドやテスト�
 
 ## 巡回で許す操作
 
-AGENTS.md などにある「既存コードの変更は指示がある場合のみ」は、巡回では次の操作について満たされたものとして扱う: 依存の版の更新、`claude/patrol-deps` への push、巡回 PR の作成と更新、Dependabot の PR への見送り理由のコメント、30 日を過ぎた Issue / PR の close。
+AGENTS.md などにある「既存コードの変更は指示がある場合のみ」は、巡回では次の操作について満たされたものとして扱う: 依存の版の更新、`claude/patrol-deps` への push、巡回 PR の作成と更新、Dependabot の PR への見送り理由のコメント。
 ```
 
 Slack の宛先は「Slack チャンネル」に書いたものだけで、`slack-post.sh` がこのファイルから読む（巡回は `.claude` を書き換えられないので、宛先を変えられない）。チャンネル名はチャンネルの名前を変えると投稿が失敗するので、ID のほうが確実。ID も名前も秘密情報ではないが、public リポジトリでは公開されることに注意する。
 
 ## コピーの更新
 
-正本を変えたら、`pnpm test:hooks` を通してから main に入れ、導入済みのリポジトリで「リポジトリへの導入」の 2 をやり直して PR を出す。`SOURCE` を見ると、どのリポジトリが古いかが分かる。
+正本を変えたら、`pnpm test:hooks` を通してから main に入れ、導入済みのリポジトリで「リポジトリへの導入」の 2（スキルと workflow のコピー）をやり直して PR を出す。`SOURCE` を見ると、どのリポジトリが古いかが分かる。
 
 ## 止める・戻す
 
@@ -237,12 +242,13 @@ Slack の宛先は「Slack チャンネル」に書いたものだけで、`slac
 3. Org Owner が、Claude GitHub App のインストール対象からリポジトリを外す
 4. Slack アプリのトークンを revoke する
 5. https://claude.ai/code/routines でタスクをオフにする（実行中のセッションは止まらない）
+6. close を止めるときは、Actions の repo-patrol stale を無効にする（`gh workflow disable "repo-patrol stale"`）
 
 戻す:
 
 - 閉じたものは `is:closed label:patrol-closed` で探して reopen する
 - 巡回 PR のブランチ `claude/patrol-deps` は人が消す（巡回はブランチを消せない）
-- 巡回をやめるときは、`.claude/skills/repo-patrol/`・`.claude/repo-patrol.md`・`settings.json` の guard を消す PR を出す
+- 巡回をやめるときは、`.claude/skills/repo-patrol/`・`.claude/repo-patrol.md`・`settings.json` の guard・`.github/workflows/repo-patrol-stale.yml` を消す PR を出す
 
 ## 制約
 
