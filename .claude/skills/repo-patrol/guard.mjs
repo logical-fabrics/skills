@@ -11,6 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const PATROL_BRANCH = "claude/patrol-deps";
+const DEPENDABOT = "dependabot[bot]";
 const PATROL_TMP = "/tmp/repo-patrol";
 const CHECK_DIFF = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -111,6 +112,15 @@ const API_WRITES = [
     path: (repo) =>
       new RegExp(`^repos/${escapeRegExp(repo)}/issues/\\d+/comments$`, "i"),
     keys: ["body"],
+    // 巡回がコメントするのは、取り込まない Dependabot の PR への見送り理由だけ
+    check: (_data, endpoint, ctx) => {
+      const pull = ctx.fetchPull(
+        endpoint.replace(/\/issues\/(\d+)\/comments$/i, "/pulls/$1"),
+      );
+      return pull?.author === DEPENDABOT && pull.headRepo === pull.baseRepo
+        ? null
+        : "コメントできるのは Dependabot の PR だけ";
+    },
   },
 ];
 
@@ -958,12 +968,12 @@ function fetchPull(endpoint, cwd) {
         "api",
         endpoint,
         "--jq",
-        '[.head.ref, (.head.repo.full_name // ""), .base.repo.full_name] | @tsv',
+        '[.head.ref, (.head.repo.full_name // ""), .base.repo.full_name, .user.login] | @tsv',
       ],
       { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
     ).trim();
-    const [headRef, headRepo, baseRepo] = out.split("\t");
-    return { headRef, headRepo, baseRepo };
+    const [headRef, headRepo, baseRepo, author] = out.split("\t");
+    return { headRef, headRepo, baseRepo, author };
   } catch {
     return null;
   }

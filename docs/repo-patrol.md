@@ -31,7 +31,7 @@ claude.ai の scheduled task（リポジトリごとに 1 つ・毎朝・リポ�
 
 - シェルの変数展開・グロブ・サブシェルなどは使わせない
 - 実行できるのは、決まった形の git・`gh api`・pnpm・npm、読み取り系のコマンド、リポジトリにコミットされた `.claude/skills/*/scripts/` のスクリプトだけ。読めるのはリポジトリと `/tmp/repo-patrol/` の中だけ
-- GitHub の読み書きは設定のリポジトリだけ。書き込みは巡回 PR の作成と更新、コメントだけ（close とラベルは `stale.sh` の中）
+- GitHub の読み書きは設定のリポジトリだけ。書き込みは巡回 PR の作成と更新、Dependabot の PR へのコメントだけ（close とラベルは `stale.sh` の中）
 - ファイルの書き込みは `/tmp/repo-patrol/` と、追跡済みの依存ファイルだけ
 - install・run の前と push の前に `check-diff.mjs` を通す（push のときは HEAD のコミットを見る）
 
