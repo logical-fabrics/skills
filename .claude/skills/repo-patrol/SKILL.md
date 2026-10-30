@@ -135,7 +135,7 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 
 ### 6. Slack に報告する
 
-報告は事実だけを JSON で書き、`/tmp/repo-patrol/report.json` に Write ツールで置く。件数・見出し・@channel・投稿するかは `slack-post.sh` が決める。
+報告は事実だけを JSON で書き、`/tmp/repo-patrol/report.json` に Write ツールで置く。件数・見出し・深刻さの印・並び・@channel・投稿するか・スレッドの返信は `slack-post.sh` が決める。親の投稿は、深刻さの印を付けた見出し、件数の欄、種類ごとに 5 件までの 1 件 1 行になる。5 件を超えた分・見送り中・既定ブランチの CI・実行ログは、そのスレッドの返信に並ぶ。
 
 1. `.claude/skills/repo-patrol/scripts/slack-post.sh --check /tmp/repo-patrol/report.json` で形を確かめる（投稿しない。何度呼んでもよい）。exit 1 なら、出力の理由に沿って直す
 2. `.claude/skills/repo-patrol/scripts/slack-post.sh /tmp/repo-patrol/report.json` を 1 回だけ呼ぶ。報告することがない日は、スクリプトが投稿せずに「報告することがないので投稿しなかった」と出す（月曜だけは「異常なし」を投稿する）。投稿に失敗したら、セッションの最後にそのことを書いて終える（ほかに知らせる手段はない）
@@ -158,8 +158,9 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 }
 ```
 
-- `date` は `date +%F` の値、`base` は `<BASE>`、`sessionUrl` は `<SESSION_URL>`。`base` と `sessionUrl` は分からなければ省く
+- `date` は `date +%F` の値、`base` は `<BASE>`、`sessionUrl` は `<SESSION_URL>`。`base` と `sessionUrl` は分からなければ省く（Actions では、省いても今の実行の URL が付く）
 - `items` は人が動くもの。1 項目が 1 行になり、項目の数が見出しの「要対応 N 件」になる。キーは全部書く（`?` の付いたものは省いてよい）
+- `ci: "failure"` の `merge` は、スクリプトが「CI 失敗」に数えて先頭に並べる（マージ待ちには入れない）。`label` に失敗したステップ名を添えておく
 
 | kind | 使う場面 | キー |
 |---|---|---|
@@ -169,7 +170,7 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 | `closing_soon` | 7 日以内に閉じる予定（`stale.sh list` の notice と notice-first） | `number`、`title`、`firstNotice`（notice-first） |
 
 - `notes` は添えるだけのもので、どれも省いてよい。`deferred` は見送り中（`number?`・`label`・`reason`）、`baseCi` は手順 5
-- 見送り中のものは毎回 `notes.deferred` に並べる。それだけでは投稿もメンションもされない
+- 見送り中のものは毎回 `notes.deferred` に並べる（スレッドの返信に出る）。それだけでは投稿もメンションもされない
 - @channel が付くのは、`isNew`・`commentedNow`・`security`・`nudge`・`firstNotice` のどれかが true の項目があるときだけ
 - `label`・`reason`・`title` は 300 文字以内の 1 行。番号・名前・版・状態を先に、理由を後ろに短く書く。パッケージ名はバッククォートで囲む。`#<番号>` はこのリポジトリの Issue / PR へのリンクになる
 - スクリプトが `&` `<` `>` をエスケープするので、Slack のリンク記法やメンションは書けない

@@ -109,13 +109,40 @@ const closingItem = (extra = {}) => ({
   ...extra,
 });
 
-// プレビューの出力から Block Kit の blocks を取り出す
-function previewBlocks(result) {
+// プレビューの出力から、親と返信の blocks を取り出す
+function preview(result) {
   assert.equal(result.status, 0, result.stderr);
-  return JSON.parse(result.stdout.split("（Block Kit:）\n")[1]);
+  const [, rest] = result.stdout.split("（Block Kit:）\n");
+  const [rich, replyPart] = rest.split("（スレッドの返信:）\n");
+  return {
+    blocks: JSON.parse(rich),
+    reply: replyPart
+      ? JSON.parse(replyPart.split("（返信の Block Kit:）\n")[1])
+      : null,
+  };
 }
 
-// chat.postMessage の代わり。REJECT_BLOCKS=1 なら、blocks のある本文に invalid_blocks を返す
+const link = (number) => `<https://github.com/o/r/issues/${number}|#${number}>`;
+const sectionOf = (...lines) => ({
+  type: "section",
+  text: { type: "mrkdwn", text: lines.join("\n"), verbatim: true },
+});
+const countsOf = (ci, decision, merge, closing) => ({
+  type: "section",
+  fields: [
+    ["CI 失敗", ci],
+    ["要判断", decision],
+    ["マージ待ち", merge],
+    ["閉じる予定", closing],
+  ].map(([label, count]) => ({
+    type: "mrkdwn",
+    text: `*${label}*\n${count}`,
+    verbatim: true,
+  })),
+});
+
+// chat.postMessage の代わり。REJECT_BLOCKS=1 なら blocks のある本文に invalid_blocks、
+// REJECT_THREAD=1 ならスレッドの返信に失敗を返す
 function fakeSlack(t) {
   const bin = tempDir(t);
   const log = path.join(bin, "curl.log");
@@ -135,6 +162,8 @@ done
 printf '%s\\n' "$data" >>"$CURL_LOG"
 if [ "$REJECT_BLOCKS" = 1 ] && printf '%s' "$data" | grep -q '"blocks"'; then
   echo '{"ok":false,"error":"invalid_blocks"}' >"$out"
+elif [ "$REJECT_THREAD" = 1 ] && printf '%s' "$data" | grep -q '"thread_ts"'; then
+  echo '{"ok":false,"error":"channel_not_found"}' >"$out"
 else
   echo '{"ok":true,"ts":"1.2"}' >"$out"
 fi
@@ -143,11 +172,12 @@ printf 200
   );
   chmodSync(path.join(bin, "curl"), 0o755);
   return {
-    env: (reject = "0") => ({
+    env: (reject = "0", rejectThread = "0") => ({
       REPO_PATROL: "1",
       PATH: `${bin}:${process.env.PATH}`,
       CURL_LOG: log,
       REJECT_BLOCKS: reject,
+      REJECT_THREAD: rejectThread,
     }),
     auth: () =>
       existsSync(`${log}.auth`) ? readFileSync(`${log}.auth`, "utf8") : "",
@@ -160,9 +190,9 @@ printf 200
   };
 }
 
-test("slack-post renders the report as Block Kit in order of severity", (t) => {
+test("slack-post renders a summary card in order of severity and the rest in the thread", (t) => {
   const repo = slackRepo(t, SLACK_CONFIG);
-  const blocks = previewBlocks(
+  const message = preview(
     repo.post(
       report(
         [
@@ -175,6 +205,7 @@ test("slack-post renders the report as Block Kit in order of severity", (t) => {
             ci: "pending",
             ageDays: 3,
           }),
+          mergeItem({ number: 14, label: "依存更新 5 件", ci: "failure" }),
           ciFailureItem(),
         ],
         {
@@ -187,40 +218,31 @@ test("slack-post renders the report as Block Kit in order of severity", (t) => {
       ),
     ),
   );
-  const link = (number) =>
-    `<https://github.com/o/r/issues/${number}|#${number}>`;
-  const section = (...lines) => ({
-    type: "section",
-    text: { type: "mrkdwn", text: lines.join("\n"), verbatim: true },
-  });
-  assert.deepEqual(blocks, [
+  assert.deepEqual(message.blocks, [
     {
       type: "header",
       text: {
         type: "plain_text",
-        text: "r の巡回（2026-10-27）: 要対応 5 件",
+        text: "🔴 r の巡回（10/27）: 要対応 6 件",
         emoji: true,
       },
     },
-    section("<!channel>"),
-    section(
-      "*:x: main の CI が失敗*",
-      "• <https://github.com/o/r/actions/runs/123/job/4|CI>",
-    ),
-    section(
-      "*:thinking_face: 要判断*",
-      `• ${link(48)} \`knip\` 7.0.0: メジャー更新`,
-    ),
-    section(
-      "*:eyes: マージしてください*",
-      `• ${link(12)} 巡回 PR: 依存更新 2 件（ \`a\` 1.2.4・ \`b\` 2.0.1）・CI 成功`,
-      `• ${link(13)} \`actions/setup-node\` 6.1.0（npm 以外の Dependabot PR）・作成から 3 日・CI 実行中`,
-    ),
-    section(
-      "*:hourglass_flowing_sand: 7 日以内に閉じる予定*",
-      `• ${link(31)} 古い Issue`,
-    ),
+    sectionOf("<!channel>"),
+    // CI が落ちた Dependabot の PR は、マージ待ちではなく CI 失敗に数えて並べる
+    countsOf(2, 1, 2, 1),
     { type: "divider" },
+    sectionOf(
+      "❌ main の CI: <https://github.com/o/r/actions/runs/123/job/4|CI>",
+      `❌ ${link(14)} 依存更新 5 件・CI 失敗`,
+    ),
+    sectionOf(`🤔 ${link(48)} \`knip\` 7.0.0: メジャー更新`),
+    sectionOf(
+      `✅ ${link(12)} 巡回 PR: 依存更新 2 件（ \`a\` 1.2.4・ \`b\` 2.0.1）`,
+      `⏳ ${link(13)} \`actions/setup-node\` 6.1.0（npm 以外の Dependabot PR）・作成から 3 日・CI 実行中`,
+    ),
+    sectionOf(`⌛ ${link(31)} 古い Issue`),
+  ]);
+  assert.deepEqual(message.reply, [
     {
       type: "context",
       elements: [
@@ -238,6 +260,19 @@ test("slack-post renders the report as Block Kit in order of severity", (t) => {
   ]);
 });
 
+test("slack-post marks the heading with the most severe item", (t) => {
+  const repo = slackRepo(t, SLACK_CONFIG);
+  for (const [items, mark] of [
+    [[ciFailureItem(), decisionItem(), mergeItem()], "🔴"],
+    [[mergeItem({ ci: "failure" })], "🔴"],
+    [[decisionItem(), mergeItem()], "🟡"],
+    [[mergeItem(), closingItem()], "🟢"],
+  ]) {
+    const [header] = preview(repo.post(report(items))).blocks;
+    assert.ok(header.text.text.startsWith(`${mark} r の巡回`), mark);
+  }
+});
+
 test("slack-post mentions the channel only for new facts in the items", (t) => {
   const repo = slackRepo(t, SLACK_CONFIG);
   const quiet = [mergeItem(), decisionItem(), ciFailureItem(), closingItem()];
@@ -252,21 +287,21 @@ test("slack-post mentions the channel only for new facts in the items", (t) => {
   ];
   for (const [items, mentioned] of cases) {
     const result = repo.post(report(items));
-    const blocks = previewBlocks(result);
+    const { blocks } = preview(result);
     const label = JSON.stringify(items);
-    assert.equal(
+    assert.match(
       blocks[0].text.text,
-      `r の巡回（2026-10-27）: 要対応 ${items.length} 件`,
+      new RegExp(`^\\S+ r の巡回（10/27）: 要対応 ${items.length} 件$`),
       label,
     );
-    assert.equal(blocks[1].text.text === "<!channel>", mentioned, label);
+    assert.equal(blocks[1].text?.text === "<!channel>", mentioned, label);
     assert.equal(/^<!channel> /m.test(result.stdout), mentioned, label);
   }
 });
 
 test("slack-post escapes outside text and links only allowed URLs", (t) => {
   const repo = slackRepo(t, SLACK_CONFIG);
-  const blocks = previewBlocks(
+  const { blocks } = preview(
     repo.post(
       report([
         ciFailureItem({
@@ -285,22 +320,17 @@ test("slack-post escapes outside text and links only allowed URLs", (t) => {
     ),
   );
   assert.deepEqual(
-    blocks.slice(1).map((block) => block.text.text),
+    blocks.slice(3).map((block) => block.text.text),
     [
       [
-        "*:x: main の CI が失敗*",
-        "• <https://github.com/o/r/actions/runs/9|&lt;!channel&gt;>",
-        "• CI: https://github.com/other/r/actions/runs/9",
-        "• CI: https://evil.example/o/r/actions/runs/9",
+        "❌ main の CI: <https://github.com/o/r/actions/runs/9|&lt;!channel&gt;>",
+        "❌ main の CI: CI（https://github.com/other/r/actions/runs/9）",
+        "❌ main の CI: CI（https://evil.example/o/r/actions/runs/9）",
       ].join("\n"),
-      [
-        "*:thinking_face: 要判断*",
-        "• 題名 &lt;!channel&gt; &lt;https://evil.example|click&gt;: <https://github.com/o/r/issues/7|#7> a#8 https://x.example/#9 &amp;#10; `#11` &lt;@U999999&gt; ## 見出し",
-      ].join("\n"),
+      "🤔 題名 &lt;!channel&gt; &lt;https://evil.example|click&gt;: <https://github.com/o/r/issues/7|#7> a#8 https://x.example/#9 &amp;#10; `#11` &lt;@U999999&gt; ## 見出し",
     ],
   );
 });
-
 test("slack-post rejects a report that does not match the format", (t) => {
   const repo = slackRepo(t, SLACK_CONFIG);
   const cases = [
@@ -353,43 +383,14 @@ test("slack-post rejects a report that does not match the format", (t) => {
   assert.match(result.stderr, /リポジトリ/);
 });
 
-test("slack-post posts an empty report only on Mondays", (t) => {
-  const repo = slackRepo(t, SLACK_CONFIG);
-  const slack = fakeSlack(t);
-  const empty = (date) =>
-    report([], {
-      date,
-      sessionUrl: "https://claude.ai/code/session_abc123",
-      notes: { baseCi: "success" },
-    });
-
-  const tuesday = repo.post(empty("2026-10-27"), slack.env());
-  assert.equal(tuesday.status, 0, tuesday.stderr);
-  assert.match(tuesday.stdout, /報告することがないので投稿しなかった/);
-  assert.deepEqual(slack.sent(), []);
-
-  const monday = repo.post(empty("2026-10-26"), slack.env());
-  assert.equal(monday.status, 0, monday.stderr);
-  const [sent] = slack.sent();
-  assert.equal(sent.text, "r の巡回（2026-10-26）: 異常なし");
-  assert.deepEqual(
-    sent.blocks.map((block) => block.type),
-    ["header", "divider", "context"],
-  );
-  assert.equal(
-    sent.blocks[2].elements[0].text,
-    ":white_check_mark: main の CI: 成功\n<https://claude.ai/code/session_abc123|実行ログ>",
-  );
-});
-
 test("slack-post accepts a channel name as the destination", (t) => {
   const repo = slackRepo(
     t,
     "## リポジトリ\n\no/r\n\n## Slack チャンネル\n\n`#engineer`\n",
   );
-  const preview = repo.post(report([mergeItem()]));
-  assert.equal(preview.status, 0, preview.stderr);
-  assert.match(preview.stdout, /宛先: #engineer/);
+  const checked = repo.post(report([mergeItem()]));
+  assert.equal(checked.status, 0, checked.stderr);
+  assert.match(checked.stdout, /宛先: #engineer/);
 });
 
 test("slack-post refuses to post without a channel in the config", (t) => {
@@ -406,7 +407,34 @@ test("slack-post refuses to post without a channel in the config", (t) => {
   }
 });
 
-test("slack-post keeps the blocks within Slack's limits", (t) => {
+test("slack-post posts an empty report only on Mondays, with the notes in the thread", (t) => {
+  const repo = slackRepo(t, SLACK_CONFIG);
+  const slack = fakeSlack(t);
+  const empty = (date) =>
+    report([], {
+      date,
+      sessionUrl: "https://claude.ai/code/session_abc123",
+      notes: { baseCi: "success" },
+    });
+
+  const tuesday = repo.post(empty("2026-10-27"), slack.env());
+  assert.equal(tuesday.status, 0, tuesday.stderr);
+  assert.match(tuesday.stdout, /報告することがないので投稿しなかった/);
+  assert.deepEqual(slack.sent(), []);
+
+  const monday = repo.post(empty("2026-10-26"), slack.env());
+  assert.equal(monday.status, 0, monday.stderr);
+  const [parent, reply] = slack.sent();
+  assert.equal(parent.text, "🟢 r の巡回（10/26）: 異常なし");
+  assert.deepEqual(parent.blocks.slice(1), [countsOf(0, 0, 0, 0)]);
+  assert.equal(reply.thread_ts, "1.2");
+  assert.equal(
+    reply.blocks[0].elements[0].text,
+    ":white_check_mark: main の CI: 成功\n<https://claude.ai/code/session_abc123|実行ログ>",
+  );
+});
+
+test("slack-post shows five items of a kind and lists the rest in the thread", (t) => {
   const repo = slackRepo(
     t,
     `## リポジトリ\n\no/${"r".repeat(200)}\n\n## Slack チャンネル\n\n\`C0123ABCD\`\n`,
@@ -415,82 +443,134 @@ test("slack-post keeps the blocks within Slack's limits", (t) => {
     Array.from({ length: count }, (_, i) =>
       closingItem({ number: i + 1, title: "あ".repeat(290) }),
     );
-  const blocks = previewBlocks(repo.post(report(closing(60))));
-  assert.equal(blocks[0].text.text.length, 150);
-  const sections = blocks.filter((block) => block.type === "section");
-  assert.ok(sections.length > 1);
+  const message = preview(repo.post(report([decisionItem(), ...closing(60)])));
+  assert.equal(message.blocks[0].text.text.length, 150);
+  const [decision, closingLines] = message.blocks
+    .slice(3)
+    .map((block) => block.text.text.split("\n"));
+  assert.equal(decision.length, 1);
+  assert.equal(closingLines.length, 6);
+  assert.match(
+    closingLines[0],
+    /^⌛ <https:\/\/github\.com\/o\/r+\/issues\/1\|#1> あ/,
+  );
+  assert.equal(closingLines[5], "他 55 件（スレッドに一覧）");
+
+  // 返信は 3000 文字以内の section に分け、5 件を超えた分をすべて並べる
+  const sections = message.reply.filter((block) => block.type === "section");
   for (const section of sections) {
     assert.ok(section.text.text.length <= 3000, section.text.text.length);
   }
-  assert.match(
-    sections[0].text.text,
-    /^\*:hourglass_flowing_sand: 7 日以内に閉じる予定\*\n• /,
-  );
+  const listed = sections.flatMap((section) => section.text.text.split("\n"));
+  assert.equal(listed[0], "*親の投稿に入らなかった項目*");
+  assert.equal(listed.length, 56);
+  assert.match(listed[1], /issues\/6\|#6>/);
 
+  // 返信のブロックが 50 を超えたら、返信は文字だけにし、Slack の上限より短く切る
   const many = repo.post(report(closing(600)));
   assert.equal(many.status, 0, many.stderr);
-  assert.match(many.stdout, /（Block Kit:）\nnull\n$/);
+  assert.match(many.stdout, /（返信の Block Kit:）\nnull\n$/);
+  const replyText = many.stdout
+    .split("（スレッドの返信:）\n")[1]
+    .split("\n（返信の Block Kit:）")[0];
+  assert.ok(replyText.length <= 39000, replyText.length);
 });
 
 test("on Actions the run URL is the log link and the Slack token is sent as a header", (t) => {
-  const url = runScript("session-url.sh", [], {
-    env: {
-      GITHUB_RUN_ID: "42",
-      GITHUB_REPOSITORY: "o/r",
-      GITHUB_SERVER_URL: "https://github.com",
-    },
-  });
+  const actions = {
+    GITHUB_RUN_ID: "42",
+    GITHUB_REPOSITORY: "o/r",
+    GITHUB_SERVER_URL: "https://github.com",
+  };
+  const url = runScript("session-url.sh", [], { env: actions });
   assert.equal(url.status, 0, url.stderr);
   assert.equal(url.stdout, "https://github.com/o/r/actions/runs/42\n");
 
   const repo = slackRepo(t, SLACK_CONFIG);
   const slack = fakeSlack(t);
-  const input = report([mergeItem()], { sessionUrl: url.stdout.trim() });
-  const posted = repo.post(input, {
-    ...slack.env(),
-    SLACK_BOT_TOKEN: "xoxb-test",
-  });
+  const posted = repo.post(
+    report([mergeItem()], { sessionUrl: url.stdout.trim() }),
+    { ...slack.env(), SLACK_BOT_TOKEN: "xoxb-test" },
+  );
   assert.equal(posted.status, 0, posted.stderr);
-  const [message] = slack.sent();
+  const [, reply] = slack.sent();
   assert.match(
-    JSON.stringify(message.blocks),
+    JSON.stringify(reply.blocks),
     /<https:\/\/github\.com\/o\/r\/actions\/runs\/42\|実行ログ>/,
   );
-  assert.equal(slack.auth(), "Authorization: Bearer xoxb-test\n");
+  assert.equal(
+    slack.auth(),
+    "Authorization: Bearer xoxb-test\nAuthorization: Bearer xoxb-test\n",
+  );
+
+  // 報告に sessionUrl がなくても、Actions の上ではその実行の URL を付ける。別のリポジトリの実行は付けない
+  const fallback = preview(repo.post(report([mergeItem()]), actions));
+  assert.match(
+    JSON.stringify(fallback.reply),
+    /<https:\/\/github\.com\/o\/r\/actions\/runs\/42\|実行ログ>/,
+  );
+  const other = preview(
+    repo.post(report([mergeItem()]), { ...actions, GITHUB_REPOSITORY: "x/r" }),
+  );
+  assert.equal(other.reply, null);
 });
 
-test("slack-post posts once, falls back to plain text and never posts with --check", (t) => {
+test("slack-post replies in the thread, falls back to plain text and never posts with --check", (t) => {
   const repo = slackRepo(t, SLACK_CONFIG);
   const slack = fakeSlack(t);
-  const input = report([mergeItem({ isNew: true })]);
+  const input = report([mergeItem({ isNew: true })], {
+    notes: { baseCi: "success" },
+  });
 
   const accepted = repo.post(input, slack.env());
   assert.equal(accepted.status, 0, accepted.stderr);
-  assert.match(accepted.stdout, /投稿した（ts=1\.2）/);
-  const [rich] = slack.sent();
+  assert.match(
+    accepted.stdout,
+    /投稿した（ts=1\.2）\nスレッドに返信した（ts=1\.2）/,
+  );
+  const [rich, reply] = slack.sent();
   assert.equal(rich.channel, "C0123ABCD");
-  assert.equal(rich.text, "<!channel> r の巡回（2026-10-27）: 要対応 1 件");
-  assert.equal(rich.blocks.length, 3);
+  assert.equal(rich.text, "<!channel> 🟢 r の巡回（10/27）: 要対応 1 件");
+  assert.deepEqual(
+    rich.blocks.map((block) => block.type),
+    ["header", "section", "section", "divider", "section"],
+  );
+  assert.equal(reply.thread_ts, "1.2");
+  assert.equal(reply.channel, "C0123ABCD");
 
+  // Block Kit が拒否されたら、親も返信も文字だけで送る
   const rejected = repo.post(input, slack.env("1"));
   assert.equal(rejected.status, 0, rejected.stderr);
   assert.match(rejected.stderr, /invalid_blocks/);
-  const [first, second] = slack.sent();
+  const [first, second, plainReply] = slack.sent();
   assert.ok(first.blocks);
   assert.equal(second.blocks, undefined);
   assert.equal(
     second.text,
     [
-      "<!channel> r の巡回（2026-10-27）: 要対応 1 件",
+      "<!channel> 🟢 r の巡回（10/27）: 要対応 1 件",
+      "CI 失敗 0・要判断 0・マージ待ち 1・閉じる予定 0",
       "",
-      "*:eyes: マージしてください*",
-      "• <https://github.com/o/r/issues/12|#12> 巡回 PR: 依存更新 2 件（ `a` 1.2.4・ `b` 2.0.1）・CI 成功",
+      `✅ ${link(12)} 巡回 PR: 依存更新 2 件（ \`a\` 1.2.4・ \`b\` 2.0.1）`,
     ].join("\n"),
   );
+  assert.equal(plainReply.blocks, undefined);
+  assert.equal(plainReply.thread_ts, "1.2");
+  assert.equal(plainReply.text, ":white_check_mark: main の CI: 成功");
+
+  // 返信に失敗しても、親は届いているので exit 0
+  const lostReply = repo.post(input, slack.env("0", "1"));
+  assert.equal(lostReply.status, 0, lostReply.stderr);
+  assert.match(lostReply.stderr, /スレッドへの返信に失敗した/);
+  assert.equal(slack.sent().length, 2);
 
   const checked = repo.post(input, slack.env(), ["--check"]);
   assert.equal(checked.status, 0, checked.stderr);
   assert.match(checked.stdout, /投稿しない。宛先: C0123ABCD/);
+  assert.match(
+    checked.stdout,
+    /（スレッドの返信:）\n:white_check_mark: main の CI: 成功/,
+  );
   assert.deepEqual(slack.sent(), []);
   const invalid = repo.post(report([{ kind: "x" }]), slack.env(), ["--check"]);
   assert.equal(invalid.status, 1);
