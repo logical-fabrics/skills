@@ -20,9 +20,9 @@
 - 公開者: `npm view <name>@<version> _npmUser maintainers dist.attestations --json` を、今の版と新しい版で比べる。次のどれかなら要判断にする
   - 新しい版の `_npmUser` が、今の版の `maintainers` にいない
   - 今の版に provenance（`dist.attestations`）があるのに、新しい版にない
-  - 今の版は `GitHub Actions`（trusted publishing）が公開しているのに、新しい版は人が公開している
+  - 今の版は trusted publishing（`_npmUser` が `GitHub Actions` か `GitLab CI/CD`）で公開されているのに、新しい版は人が公開している
 
-  人から `GitHub Actions` に変わり、新しい版に provenance があるもの（trusted publishing への移行）は通す。`GitHub Actions` として公開された版は、npm 側に登録したリポジトリとワークフローからしか出せないので、盗まれたトークンで人の名前で公開される版より確かめやすい
+  人から trusted publishing に変わり、新しい版に provenance があるもの（trusted publishing への移行）は通す。trusted publishing の版は、npm 側に登録したリポジトリとワークフロー（パイプライン）からしか出せないので、盗まれたトークンで人の名前で公開される版より確かめやすい
 
 ## 推移依存の脆弱性
 
