@@ -7,7 +7,7 @@
 | 種類 | 扱い |
 |---|---|
 | npm 系以外（GitHub Actions・cargo・docker など） | CI の状態を添えてマージ待ちとして報告し、人がそのままマージする |
-| npm 系の patch / minor（groups で 1 本にまとまる） | CI と dependency-check が通っていればマージ待ちとして報告する。dependency-check が公開から 4 日未満で落ちていれば見送り中にする（4 日たったら人が re-run する） |
+| npm 系の patch / minor（groups で 1 本にまとまる） | CI と dependency-check が通っていればマージ待ちとして報告する。dependency-check が公開から 4 日未満で落ちていれば見送り中にする（head のコミットから 4 日たつと、検査の workflow が自動で再実行する） |
 | npm 系のメジャー | マージ待ちにしない。理由（移行が必要か、peer 依存の都合か）を 1 回だけコメントし、見送り中として報告する |
 | セキュリティ（アラート・audit・本文に GHSA / CVE） | 直す Dependabot の PR（セキュリティ更新は cooldown を待たずに来る）があれば、それを見る。なければ下の「推移依存の脆弱性」に沿って見込みを書き、要判断（`security: true`）にする |
 | グループ PR（複数の依存をまとめたもの） | 中身を 1 つずつ上の基準で判断する。範囲内の最新化で新しく入った版も、dependency-check が 1 つずつ公開者・install script・公開日を確かめる |

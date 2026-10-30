@@ -20,7 +20,7 @@ claude.ai の scheduled task（リポジトリごとに 1 つ・毎朝・リポ�
    └─ Slack（Slack アプリのボット名義・プロジェクトのチャンネル）: 報告がある日と月曜に 1 投稿、新しい要対応のときだけ @channel
 GitHub Actions（各リポジトリの .github/workflows/・workflow のトークン）
    ├─ repo-patrol stale（毎朝 08:17 JST）: 30 日を過ぎた Issue / PR の close・ラベル・理由のコメント
-   └─ repo-patrol dependency check（Dependabot の npm 系の PR）: check-diff と、新しい版の公開者・install script・公開日の検査
+   └─ repo-patrol dependency check（Dependabot の npm 系の PR）: check-diff と、新しい版の公開者・install script・公開日の検査。毎朝 08:37 JST に、公開から 4 日未満で落ちたものを 4 日たってから再実行
 Dependabot（.github/dependabot.yml）: npm の minor・patch を groups で 1 本の PR に。公開から 4 日は cooldown で待つ
 ```
 
@@ -272,5 +272,5 @@ Slack の宛先は「Slack チャンネル」に書いたものだけで、`slac
 - scheduled tasks は research preview で、挙動が変わることがある。毎回の guard の確認と GitHub 側の設定で、変わっても安全側に倒れるようにしている
 - Claude GitHub App には Dependabot アラートの権限がないので、アラートの API は 403 になる。巡回はアラートが読めるときも audit を取り、`audit-summary.mjs` で版ごとに直接依存か推移依存かを見る
 - Actions のジョブログはクラウドから取れないことがある。その場合は失敗したステップ名とリンクを報告する
-- Dependabot のセキュリティ更新は cooldown を待たずに来るので、公開から 4 日未満なら `dependency-check` が落ちる。4 日たってから人が re-run する（巡回は workflow を再実行しない）
+- Dependabot のセキュリティ更新は cooldown を待たずに来るので、公開から 4 日未満なら `dependency-check` が落ちる。head のコミットから 4 日たつと、検査の workflow の `recheck`（毎朝 08:37）が 1 回だけ再実行する（巡回は workflow を再実行しない）
 - `dependency-check` は前の版と同じ install script を通す（毎回止めないため）。巡回は `references/dependency-triage.md` のとおり、install script のある版を要判断にする
