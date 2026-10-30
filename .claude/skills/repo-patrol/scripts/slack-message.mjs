@@ -4,7 +4,7 @@
 // 出力: {"rich": Block Kit の本文, "plain": 文字だけの本文, "reply": スレッドの返信の {rich, plain} か null}。
 //   投稿しない日（items が空で月曜でない日）は null。
 //   Block Kit が拒否されたら、slack-post.sh が plain で送り直す。ブロックが 50 を超えるときは rich も文字だけにする
-// 親の投稿は、見出しと、色の帯の付いたカード（件数の欄と、種類ごとに 5 件までの 1 件 1 行）。
+// 親の投稿は、深刻さの印（🔴 CI 失敗・🟡 要判断・🟢 それ以外）を付けた見出し、件数の欄、種類ごとに 5 件までの 1 件 1 行。
 // 5 件を超えた分・見送り中・既定ブランチの CI・実行ログは、スレッドの返信に並べる。
 // 報告の形は SKILL.md の手順 6。巡回は事実だけを書き、件数・色・並び・@channel・投稿するかはここで決める。
 // 形に合わなければ、理由を標準エラーに出して exit 1（巡回は直して呼び直す）
@@ -222,7 +222,8 @@ function chunk(texts) {
 const MAX_LINES = 5;
 // Slack の text の上限（40,000 文字）より短く
 const MESSAGE_LIMIT = 39000;
-const COLORS = { failure: "#d1242f", decision: "#bf8700", ok: "#1a7f37" };
+// 見出しの先頭の印で深刻さを示す（attachments の色の帯は、長いと Slack が「もっと表示する」で畳むので使わない）
+const MARKS = { failure: "🔴", decision: "🟡", ok: "🟢" };
 const MERGE_ICONS = {
   success: "✅",
   pending: "⏳",
@@ -300,19 +301,19 @@ function render(report, channel, repo) {
     ],
     ["閉じる予定", of((item) => item.kind === "closing_soon")],
   ];
-  const color =
+  const mark =
     groups[0][1].length > 0
-      ? COLORS.failure
+      ? MARKS.failure
       : groups[1][1].length > 0
-        ? COLORS.decision
-        : COLORS.ok;
+        ? MARKS.decision
+        : MARKS.ok;
 
   const mention = items.some((item) =>
     KINDS[item.kind].mentions.some((key) => item[key] === true),
   );
   const status = items.length > 0 ? `要対応 ${items.length} 件` : "異常なし";
   const [, month, day] = report.date.split("-").map(Number);
-  const title = `${repo.split("/")[1]} の巡回（${month}/${day}）: ${status}`;
+  const title = `${mark} ${repo.split("/")[1]} の巡回（${month}/${day}）: ${status}`;
   const heading = `${mention ? "<!channel> " : ""}${escapeMarkup(title)}`;
   const counts = groups.map(([label, list]) => `${label} ${list.length}`);
 
@@ -343,44 +344,37 @@ function render(report, channel, repo) {
     ...message,
     text: truncate(texts.join("\n"), MESSAGE_LIMIT),
   });
-  const richMessage = (blocks, extra, fallback) =>
-    blocks.length <= BLOCK_LIMIT ? { ...message, ...extra, blocks } : fallback;
+  // ブロックが 50 を超えるときは文字だけにする
+  const richMessage = (blocks, text, fallback) =>
+    blocks.length <= BLOCK_LIMIT ? { ...message, text, blocks } : fallback;
 
-  const top = [
-    {
-      type: "header",
-      text: { type: "plain_text", text: plainText(title), emoji: true },
-    },
-    ...(mention ? [section("<!channel>")] : []),
-  ];
-  const card = [
-    {
-      type: "section",
-      fields: groups.map(([label, list]) => ({
-        type: "mrkdwn",
-        text: `*${label}*\n${list.length}`,
-        verbatim: true,
-      })),
-    },
-    ...(shown.length > 0 ? [{ type: "divider" }] : []),
-    ...shown.flatMap((texts) => chunk(texts).map(section)),
-  ];
   const plain = plainMessage([
     heading,
     counts.join("・"),
     ...shown.flatMap((texts) => ["", ...texts]),
   ]);
-  // attachments のブロックも、Slack の 50 の上限に数える
-  const rich =
-    top.length + card.length <= BLOCK_LIMIT
-      ? {
-          ...message,
-          // モバイルの通知は text だけを使うので、text には見出しとメンションを入れる
-          text: heading,
-          blocks: top,
-          attachments: [{ color, blocks: card }],
-        }
-      : plain;
+  const rich = richMessage(
+    [
+      {
+        type: "header",
+        text: { type: "plain_text", text: plainText(title), emoji: true },
+      },
+      ...(mention ? [section("<!channel>")] : []),
+      {
+        type: "section",
+        fields: groups.map(([label, list]) => ({
+          type: "mrkdwn",
+          text: `*${label}*\n${list.length}`,
+          verbatim: true,
+        })),
+      },
+      ...(shown.length > 0 ? [{ type: "divider" }] : []),
+      ...shown.flatMap((texts) => chunk(texts).map(section)),
+    ],
+    // モバイルの通知は text だけを使うので、text には見出しとメンションを入れる
+    heading,
+    plain,
+  );
 
   const context = [];
   if (notes.deferred?.length > 0) {
@@ -414,7 +408,7 @@ function render(report, channel, repo) {
       })),
     ];
     reply = {
-      rich: richMessage(replyBlocks, { text: escapeMarkup(title) }, replyPlain),
+      rich: richMessage(replyBlocks, escapeMarkup(title), replyPlain),
       plain: replyPlain,
     };
   }

@@ -49,7 +49,7 @@ if [ "$check" = 1 ] || [ "${REPO_PATROL:-}" != 1 ]; then
   echo "（投稿しない。宛先: ${channel}。送る本文:）"
   jq -r .plain.text <<<"$messages"
   echo "（Block Kit:）"
-  jq '.rich | {blocks, attachments}' <<<"$messages"
+  jq .rich.blocks <<<"$messages"
   if [ "$(jq '.reply != null' <<<"$messages")" = true ]; then
     echo "（スレッドの返信:）"
     jq -r .reply.plain.text <<<"$messages"
@@ -85,7 +85,7 @@ send() {
     error=$(jq -r '.error // empty' "$body" 2>/dev/null || true)
     error="${error:-http_$code}"
     case $error in
-    invalid_blocks | invalid_blocks_format | msg_blocks_too_long | invalid_attachments)
+    invalid_blocks | invalid_blocks_format | msg_blocks_too_long)
       if [ "$payload" != "$plain" ]; then
         echo "Block Kit が拒否された（${error}）ので、文字だけで送り直す" >&2
         payload=$plain

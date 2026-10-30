@@ -135,7 +135,7 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 
 ### 6. Slack に報告する
 
-報告は事実だけを JSON で書き、`/tmp/repo-patrol/report.json` に Write ツールで置く。件数・見出し・色の帯・並び・@channel・投稿するか・スレッドの返信は `slack-post.sh` が決める。親の投稿は、件数の欄と、種類ごとに 5 件までの 1 件 1 行のカードになる。5 件を超えた分・見送り中・既定ブランチの CI・実行ログは、そのスレッドの返信に並ぶ。
+報告は事実だけを JSON で書き、`/tmp/repo-patrol/report.json` に Write ツールで置く。件数・見出し・深刻さの印・並び・@channel・投稿するか・スレッドの返信は `slack-post.sh` が決める。親の投稿は、深刻さの印を付けた見出し、件数の欄、種類ごとに 5 件までの 1 件 1 行になる。5 件を超えた分・見送り中・既定ブランチの CI・実行ログは、そのスレッドの返信に並ぶ。
 
 1. `.claude/skills/repo-patrol/scripts/slack-post.sh --check /tmp/repo-patrol/report.json` で形を確かめる（投稿しない。何度呼んでもよい）。exit 1 なら、出力の理由に沿って直す
 2. `.claude/skills/repo-patrol/scripts/slack-post.sh /tmp/repo-patrol/report.json` を 1 回だけ呼ぶ。報告することがない日は、スクリプトが投稿せずに「報告することがないので投稿しなかった」と出す（月曜だけは「異常なし」を投稿する）。投稿に失敗したら、セッションの最後にそのことを書いて終える（ほかに知らせる手段はない）

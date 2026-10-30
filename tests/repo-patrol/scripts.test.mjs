@@ -109,16 +109,13 @@ const closingItem = (extra = {}) => ({
   ...extra,
 });
 
-// プレビューの出力から、親の blocks と attachments、返信の blocks を取り出す
+// プレビューの出力から、親と返信の blocks を取り出す
 function preview(result) {
   assert.equal(result.status, 0, result.stderr);
   const [, rest] = result.stdout.split("（Block Kit:）\n");
   const [rich, replyPart] = rest.split("（スレッドの返信:）\n");
-  const { blocks, attachments } = JSON.parse(rich);
   return {
-    blocks,
-    color: attachments?.[0].color,
-    card: attachments?.[0].blocks,
+    blocks: JSON.parse(rich),
     reply: replyPart
       ? JSON.parse(replyPart.split("（返信の Block Kit:）\n")[1])
       : null,
@@ -226,15 +223,12 @@ test("slack-post renders a summary card in order of severity and the rest in the
       type: "header",
       text: {
         type: "plain_text",
-        text: "r の巡回（10/27）: 要対応 6 件",
+        text: "🔴 r の巡回（10/27）: 要対応 6 件",
         emoji: true,
       },
     },
     sectionOf("<!channel>"),
-  ]);
-  assert.equal(message.color, "#d1242f");
-  // CI が落ちた Dependabot の PR は、マージ待ちではなく CI 失敗に数えて並べる
-  assert.deepEqual(message.card, [
+    // CI が落ちた Dependabot の PR は、マージ待ちではなく CI 失敗に数えて並べる
     countsOf(2, 1, 2, 1),
     { type: "divider" },
     sectionOf(
@@ -266,15 +260,16 @@ test("slack-post renders a summary card in order of severity and the rest in the
   ]);
 });
 
-test("slack-post colors the card by the most severe item", (t) => {
+test("slack-post marks the heading with the most severe item", (t) => {
   const repo = slackRepo(t, SLACK_CONFIG);
-  for (const [items, color] of [
-    [[ciFailureItem(), decisionItem(), mergeItem()], "#d1242f"],
-    [[mergeItem({ ci: "failure" })], "#d1242f"],
-    [[decisionItem(), mergeItem()], "#bf8700"],
-    [[mergeItem(), closingItem()], "#1a7f37"],
+  for (const [items, mark] of [
+    [[ciFailureItem(), decisionItem(), mergeItem()], "🔴"],
+    [[mergeItem({ ci: "failure" })], "🔴"],
+    [[decisionItem(), mergeItem()], "🟡"],
+    [[mergeItem(), closingItem()], "🟢"],
   ]) {
-    assert.equal(preview(repo.post(report(items))).color, color);
+    const [header] = preview(repo.post(report(items))).blocks;
+    assert.ok(header.text.text.startsWith(`${mark} r の巡回`), mark);
   }
 });
 
@@ -294,19 +289,19 @@ test("slack-post mentions the channel only for new facts in the items", (t) => {
     const result = repo.post(report(items));
     const { blocks } = preview(result);
     const label = JSON.stringify(items);
-    assert.equal(
+    assert.match(
       blocks[0].text.text,
-      `r の巡回（10/27）: 要対応 ${items.length} 件`,
+      new RegExp(`^\\S+ r の巡回（10/27）: 要対応 ${items.length} 件$`),
       label,
     );
-    assert.equal(blocks[1]?.text.text === "<!channel>", mentioned, label);
+    assert.equal(blocks[1].text?.text === "<!channel>", mentioned, label);
     assert.equal(/^<!channel> /m.test(result.stdout), mentioned, label);
   }
 });
 
 test("slack-post escapes outside text and links only allowed URLs", (t) => {
   const repo = slackRepo(t, SLACK_CONFIG);
-  const { card } = preview(
+  const { blocks } = preview(
     repo.post(
       report([
         ciFailureItem({
@@ -325,7 +320,7 @@ test("slack-post escapes outside text and links only allowed URLs", (t) => {
     ),
   );
   assert.deepEqual(
-    card.slice(2).map((block) => block.text.text),
+    blocks.slice(3).map((block) => block.text.text),
     [
       [
         "❌ main の CI: <https://github.com/o/r/actions/runs/9|&lt;!channel&gt;>",
@@ -430,14 +425,8 @@ test("slack-post posts an empty report only on Mondays, with the notes in the th
   const monday = repo.post(empty("2026-10-26"), slack.env());
   assert.equal(monday.status, 0, monday.stderr);
   const [parent, reply] = slack.sent();
-  assert.equal(parent.text, "r の巡回（10/26）: 異常なし");
-  assert.deepEqual(
-    parent.blocks.map((block) => block.type),
-    ["header"],
-  );
-  assert.deepEqual(parent.attachments, [
-    { color: "#1a7f37", blocks: [countsOf(0, 0, 0, 0)] },
-  ]);
+  assert.equal(parent.text, "🟢 r の巡回（10/26）: 異常なし");
+  assert.deepEqual(parent.blocks.slice(1), [countsOf(0, 0, 0, 0)]);
   assert.equal(reply.thread_ts, "1.2");
   assert.equal(
     reply.blocks[0].elements[0].text,
@@ -456,8 +445,8 @@ test("slack-post shows five items of a kind and lists the rest in the thread", (
     );
   const message = preview(repo.post(report([decisionItem(), ...closing(60)])));
   assert.equal(message.blocks[0].text.text.length, 150);
-  const [decision, closingLines] = message.card
-    .slice(2)
+  const [decision, closingLines] = message.blocks
+    .slice(3)
     .map((block) => block.text.text.split("\n"));
   assert.equal(decision.length, 1);
   assert.equal(closingLines.length, 6);
@@ -541,9 +530,11 @@ test("slack-post replies in the thread, falls back to plain text and never posts
   );
   const [rich, reply] = slack.sent();
   assert.equal(rich.channel, "C0123ABCD");
-  assert.equal(rich.text, "<!channel> r の巡回（10/27）: 要対応 1 件");
-  assert.equal(rich.blocks.length, 2);
-  assert.equal(rich.attachments[0].blocks.length, 3);
+  assert.equal(rich.text, "<!channel> 🟢 r の巡回（10/27）: 要対応 1 件");
+  assert.deepEqual(
+    rich.blocks.map((block) => block.type),
+    ["header", "section", "section", "divider", "section"],
+  );
   assert.equal(reply.thread_ts, "1.2");
   assert.equal(reply.channel, "C0123ABCD");
 
@@ -554,11 +545,10 @@ test("slack-post replies in the thread, falls back to plain text and never posts
   const [first, second, plainReply] = slack.sent();
   assert.ok(first.blocks);
   assert.equal(second.blocks, undefined);
-  assert.equal(second.attachments, undefined);
   assert.equal(
     second.text,
     [
-      "<!channel> r の巡回（10/27）: 要対応 1 件",
+      "<!channel> 🟢 r の巡回（10/27）: 要対応 1 件",
       "CI 失敗 0・要判断 0・マージ待ち 1・閉じる予定 0",
       "",
       `✅ ${link(12)} 巡回 PR: 依存更新 2 件（ \`a\` 1.2.4・ \`b\` 2.0.1）`,
