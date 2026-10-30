@@ -1229,6 +1229,67 @@ test("publisher-check fails on new install scripts, publisher changes and young 
   }
 });
 
+test("the dependency checks annotate one line per reason only when asked", (t) => {
+  const repo = bumpedRepo(t);
+  const versions = releases();
+  for (const [spec, version] of [
+    ["realc@1.1.0", "1.1.0"],
+    ["a@1.3.0", "1.3.0"],
+    ["@scope/url@0.11.4", "0.11.4"],
+  ]) {
+    versions[spec].time = { [version]: daysAgo(1) };
+  }
+  versions["a@1.3.0"]._npmUser = npmPerson("mallory");
+  versions["@scope/url@0.11.4"].scripts = { postinstall: "node x.js" };
+  const annotations = (stdout) =>
+    stdout.split("\n").filter((line) => line.startsWith("::"));
+  const publisher = (env) =>
+    spawnSync(
+      process.execPath,
+      [path.join(scriptsDir, "publisher-check.mjs"), "main"],
+      {
+        cwd: repo.dir,
+        encoding: "utf8",
+        env: { ...fakeNpm(t, versions), ...env },
+      },
+    );
+
+  const plain = publisher({});
+  assert.equal(plain.status, 1, plain.stdout);
+  assert.deepEqual(annotations(plain.stdout), []);
+  const annotated = publisher({ REPO_PATROL_ANNOTATE: "1" });
+  assert.equal(annotated.status, 1, annotated.stdout);
+  assert.deepEqual(annotations(annotated.stdout), [
+    "::error title=publisher-check::公開から 4 日たっていない: 3 件（realc@1.1.0・a@1.3.0・@scope/url@0.11.4）",
+    "::error title=publisher-check::公開者が前の版の maintainers にいない: 1 件（a@1.3.0）",
+    "::error title=publisher-check::install script が増えた・変わった: 1 件（@scope/url@0.11.4）",
+  ]);
+
+  // lockfile の文字は、workflow command として読まれないようにエスケープする
+  const diffRepo = createRepo(t);
+  diffRepo.writeLock(
+    withPackage(
+      "  e@1.0.0:\n    resolution: {tarball: https://evil.example/e%0A.tgz}",
+    ),
+  );
+  const diff = spawnSync(
+    process.execPath,
+    [path.join(scriptsDir, "check-diff.mjs"), "main"],
+    {
+      cwd: diffRepo.dir,
+      encoding: "utf8",
+      env: { ...process.env, REPO_PATROL_ANNOTATE: "1" },
+    },
+  );
+  assert.equal(diff.status, 1, diff.stdout);
+  const [annotation, ...rest] = annotations(diff.stdout);
+  assert.deepEqual(rest, []);
+  assert.match(
+    annotation,
+    /^::error title=check-diff::既存の依存の版の更新以外の変更がある: \d+ 件（.*e%250A\.tgz/,
+  );
+});
+
 test("check-diff and publisher-check read the explicit keys pnpm writes for long keys", (t) => {
   // pnpm は 1024 文字を超える鍵を「? 鍵」と「: 値」の 2 行で書く。値は対応表か {}
   const explicit = BUMPED_LOCK.replace(

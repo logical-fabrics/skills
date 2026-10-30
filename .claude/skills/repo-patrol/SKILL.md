@@ -91,8 +91,8 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 - Dependabot アラート: `gh api --paginate "repos/<REPO>/dependabot/alerts?state=open&per_page=100"`
 - 既定ブランチのワークフロー実行: `gh api "repos/<REPO>/actions/runs?branch=<BASE>&event=push&per_page=50"`
 - 失敗したジョブのステップ: `gh api repos/<REPO>/actions/jobs/<check_run_id>`
-- check run の annotations: `gh api repos/<REPO>/check-runs/<check_run_id>/annotations`
-- ジョブのログ: `gh api repos/<REPO>/actions/jobs/<check_run_id>/logs`（クラウドでは取れないことがある。取れなければ失敗したステップ名とリンクを報告する）
+- check run の annotations: `gh api repos/<REPO>/check-runs/<check_run_id>/annotations`（dependency-check は、落ちた理由を種類ごとに 1 件ずつここに出す）
+- ジョブのログ: `gh api repos/<REPO>/actions/jobs/<check_run_id>/logs --allow-escape-sequences > /tmp/repo-patrol/log-<check_run_id>.txt`（ログは色の制御文字を含むので、`--allow-escape-sequences` がないと gh が出力しない。JSON ではないので `--jq` は付けない。長いので、ファイルに書いて `tail` や `grep` で読む。取れなければ失敗したステップ名とリンクを報告する）
 
 ## 手順
 
@@ -116,7 +116,7 @@ guard は、巡回が使う形のコマンドだけを通す。次に収まる�
 1. マージ待ちにしないもの（メジャー更新、設定の見送り表にあるもの）は、まだ巡回のコメント（本文に `<!-- repo-patrol -->` か `— repo-patrol` を含むもの。書いた人の名前では見分けない）がなければ、理由と見直す条件を 1 回だけコメントする。本文の先頭に `<!-- repo-patrol -->` を付ける。PR は作成から 30 日で自動で閉じる（次の版が出れば Dependabot が出し直す）ことも書き、「open のまま残す」とは書かない。どちらも `notes.deferred` に並べる（今回コメントしたものは、`commentedNow: true` の要判断にもする）
 2. それ以外の npm 系の PR（minor・patch のグループや、1 つずつの PR）は、`.claude/skills/repo-patrol/scripts/wait-checks.sh <REPO> <番号> '<設定の CI のワークフロー>,repo-patrol dependency check'` を 1 回だけ呼ぶ（既定の 9 分。ワークフロー名は空白を含むので単一引用符で囲む。設定の CI が「なし」なら `'repo-patrol dependency check'` だけを渡す。`-` は 1 つだけで渡したときにしか「待つワークフローがない」の意味にならない）。終了コードは 0 成功・1 失敗・3 時間切れ・4 コンフリクト・5 チェックがない・6 GitHub API の失敗・64 引数の誤り（直して呼び直す）
    - 0・3 なら `merge` 項目にする（`ci` は `success` か `pending`）。3 は呼び直さない（翌日の巡回でまた見る）
-   - 1 なら、落ちたのが dependency-check か CI かを失敗したジョブで確かめる。dependency-check なら、check の出力（annotations かジョブのログ）にある理由を添えて要判断にする（公開から 4 日未満だけが理由なら見送り中にし、4 日たったら人が re-run すると書く）。CI なら `ci: "failure"` の `merge` 項目にし、失敗したジョブのステップ名を `label` に短く添える
+   - 1 なら、落ちたのが dependency-check か CI かを失敗したジョブで確かめる。dependency-check なら、check run の annotations にある理由を添えて要判断にする（annotations がなければジョブのログを読む）（公開から 4 日未満だけが理由なら見送り中にし、4 日たったら人が re-run すると書く）。CI なら `ci: "failure"` の `merge` 項目にし、失敗したジョブのステップ名を `label` に短く添える
    - 4 なら `merge` 項目の `label` に「コンフリクト」と書き、`ci: "unknown"` にする（Dependabot が rebase する）。5・6 は `ci: "unknown"`
    - `merge` 項目の `ageDays` は作成からの日数。`isNew` は作成の日（0 日）、`nudge` は作成から 7 日ごと（7・14・21 日目…）に true
 3. npm 系以外の Dependabot の PR は、`wait-checks.sh <REPO> <番号> - 0` で CI の状態だけを見て `merge` 項目にする

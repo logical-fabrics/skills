@@ -18,6 +18,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { annotateFailures } from "./annotations.mjs";
 import {
   normalizePnpmKeys,
   npmResolutions,
@@ -145,6 +146,9 @@ for (const file of changed) {
 if (problems.length > 0) {
   console.log("既存の依存の版の更新以外の変更がある:");
   for (const problem of problems) console.log(`  ${problem}`);
+  annotateFailures("check-diff", [
+    ["既存の依存の版の更新以外の変更がある", problems],
+  ]);
   process.exit(1);
 }
 console.log("既存の依存の版の更新だけ");

@@ -396,6 +396,7 @@ test("gh api allows reads of the configured repository and listed writes", (t) =
     "gh api repos/o/r/pulls/1 -H 'Accept: application/vnd.github.diff'",
     "gh api -X GET repos/o/r/dependabot/alerts",
     "gh api repos/o/r/pulls 2>&1 | head -5",
+    "gh api repos/o/r/actions/jobs/1/logs --allow-escape-sequences > /tmp/repo-patrol/log-1.txt",
   ]);
   fixture.assertBlocked([
     "gh api repos/other/repo/pulls",
