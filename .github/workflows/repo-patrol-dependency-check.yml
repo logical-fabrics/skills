@@ -42,3 +42,5 @@ jobs:
         run: node "$RUNNER_TEMP/base/.claude/skills/repo-patrol/scripts/dependency-check.mjs" "$BASE_SHA"
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          # 落ちた理由を annotations にも出す（巡回は check run の annotations で読む）
+          REPO_PATROL_ANNOTATE: "1"
