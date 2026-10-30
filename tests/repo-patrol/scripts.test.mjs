@@ -816,6 +816,28 @@ test("check-diff rejects changes beyond dependency versions", (t) => {
         repo.writeLock(withPackage("  e@1.0.0:\n    engines: {node: '>=18'}")),
     ],
     [
+      "an explicit key without its value",
+      (repo) => repo.writeLock(withPackage("  ? e@1.0.0")),
+    ],
+    [
+      "an explicit key with a flow value",
+      (repo) =>
+        repo.writeLock(
+          withPackage(
+            "  ? e@1.0.0\n  : {resolution: {tarball: 'https://evil.example/e.tgz'}}",
+          ),
+        ),
+    ],
+    [
+      "a tarball resolution behind an explicit key",
+      (repo) =>
+        repo.writeLock(
+          withPackage(
+            "  ? e@1.0.0\n  : resolution: {tarball: https://evil.example/e.tgz}",
+          ),
+        ),
+    ],
+    [
       "a flow style packages section",
       (repo) =>
         repo.writeLock(
@@ -1186,6 +1208,32 @@ test("publisher-check fails on new install scripts, publisher changes and young 
     );
     assert.match(result.stdout + result.stderr, output, label);
   }
+});
+
+test("check-diff and publisher-check read the explicit keys pnpm writes for long keys", (t) => {
+  // pnpm は 1024 文字を超える鍵を「? 鍵」と「: 値」の 2 行で書く。値は対応表か {}
+  const explicit = BUMPED_LOCK.replace(
+    "  a@1.3.0:\n    resolution:",
+    "  ? a@1.3.0\n  : resolution:",
+  )
+    .replace(
+      "  a@1.3.0(react@19.2.8):\n    dependencies:",
+      "  ? a@1.3.0(react@19.2.8)\n  : dependencies:",
+    )
+    .replace("  '@scope/url@0.11.4': {}", "  ? '@scope/url@0.11.4'\n  : {}");
+  const repo = createRepo(t);
+  repo.writeLock(explicit);
+  const diff = repo.check();
+  assert.equal(diff.status, 0, diff.stdout);
+
+  execFileSync("git", ["commit", "-q", "-am", "bump"], { cwd: repo.dir });
+  const publish = spawnSync(
+    process.execPath,
+    [path.join(scriptsDir, "publisher-check.mjs"), "main"],
+    { cwd: repo.dir, encoding: "utf8", env: fakeNpm(t, releases()) },
+  );
+  assert.equal(publish.status, 0, publish.stdout + publish.stderr);
+  assert.match(publish.stdout, /新しく入る版: 3 件/);
 });
 
 // lockfile を base と HEAD の 2 つのコミットにした git リポジトリ
