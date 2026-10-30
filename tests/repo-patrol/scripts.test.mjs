@@ -997,6 +997,93 @@ test("stale.sh close closes first, caps at 10 a day and keeps the order", (t) =>
   );
 });
 
+test("recheck re-runs a failed dependency check once, four days after the commit", (t) => {
+  const ago = (days) =>
+    new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  // [番号, 作成者, head のリポジトリ, コミットからの日数, check run（結論, 始まってからの日数）]
+  const cases = [
+    [1, "dependabot[bot]", "o/r", 5, ["failure", 5]],
+    [2, "dependabot[bot]", "o/r", 5, ["failure", 0.5]],
+    [3, "dependabot[bot]", "o/r", 2, ["failure", 2]],
+    [4, "dependabot[bot]", "o/r", 5, ["success", 5]],
+    [5, "someone", "o/r", 5, ["failure", 5]],
+    [6, "dependabot[bot]", "fork/r", 5, ["failure", 5]],
+    [7, "dependabot[bot]", "O/R", 6, ["failure", 6]],
+  ];
+  const responses = {
+    "repos/o/r/pulls?state=open&per_page=100": [
+      cases.map(([number, login, head]) => ({
+        number,
+        user: { login },
+        head: { sha: `sha${number}`, repo: { full_name: head } },
+      })),
+    ],
+  };
+  for (const [number, , , committed, [conclusion, started]] of cases) {
+    responses[`repos/o/r/commits/sha${number}`] = {
+      commit: { committer: { date: ago(committed) } },
+    };
+    responses[
+      `repos/o/r/commits/sha${number}/check-runs?check_name=dependency-check&per_page=100`
+    ] = {
+      check_runs: [
+        // 別の app の同じ名前の check と、古い実行は見ない
+        {
+          id: 900 + number,
+          app: { slug: "other" },
+          conclusion: "failure",
+          started_at: ago(0),
+        },
+        {
+          id: 800 + number,
+          app: { slug: "github-actions" },
+          conclusion: "failure",
+          started_at: ago(committed + 1),
+        },
+        {
+          id: 100 + number,
+          app: { slug: "github-actions" },
+          conclusion,
+          started_at: ago(started),
+        },
+      ],
+    };
+  }
+  const dir = tempDir(t);
+  const responsesFile = path.join(dir, "responses.json");
+  const log = path.join(dir, "calls.log");
+  writeFileSync(responsesFile, JSON.stringify(responses));
+  writeFileSync(
+    path.join(dir, "gh"),
+    `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(log)}, args.join(" ") + "\\n");
+if (args.includes("-X")) process.exit(0);
+const responses = JSON.parse(fs.readFileSync(${JSON.stringify(responsesFile)}, "utf8"));
+const endpoint = args.at(-1);
+if (!(endpoint in responses)) { console.error("HTTP 404 " + endpoint); process.exit(1); }
+process.stdout.write(JSON.stringify(responses[endpoint]));
+`,
+  );
+  chmodSync(path.join(dir, "gh"), 0o755);
+
+  const result = spawnSync(
+    process.execPath,
+    [path.join(scriptsDir, "recheck.mjs"), "o/r"],
+    { encoding: "utf8", env: { PATH: `${dir}:${process.env.PATH}` } },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, "rerun\t#1\t101\nrerun\t#7\t107\n");
+  const posts = readFileSync(log, "utf8")
+    .split("\n")
+    .filter((line) => line.includes("-X"));
+  assert.deepEqual(posts, [
+    "api -X POST repos/o/r/actions/jobs/101/rerun",
+    "api -X POST repos/o/r/actions/jobs/107/rerun",
+  ]);
+});
+
 test("the workflows of this repository are the templates", () => {
   for (const [name, command] of [
     [
