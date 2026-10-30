@@ -1077,6 +1077,7 @@ const daysAgo = (days) =>
   new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 const npmPerson = (name) => `${name} <${name}@example.com>`;
 const TRUSTED = "GitHub Actions <npm-oidc-no-reply@github.com>";
+const GITLAB_TRUSTED = "GitLab CI/CD <npm-oidc-no-reply@github.com>";
 const PROVENANCE = {
   url: "https://registry.npmjs.org/-/npm/v1/attestations/x",
 };
@@ -1175,6 +1176,24 @@ test("publisher-check fails on new install scripts, publisher changes and young 
       },
       0,
       /問題はない/,
+    ],
+    [
+      "人から GitLab CI/CD の trusted publishing へ",
+      (v) => {
+        v["a@1.3.0"]._npmUser = GITLAB_TRUSTED;
+        v["a@1.3.0"].dist = { attestations: PROVENANCE };
+      },
+      0,
+      /問題はない/,
+    ],
+    [
+      "GitLab CI/CD の trusted publishing から人の公開へ",
+      (v) => {
+        v["a@1.2.0"]._npmUser = GITLAB_TRUSTED;
+        v["a@1.2.0"].dist = { attestations: PROVENANCE };
+      },
+      1,
+      /trusted publishing だったのに、alice が公開している/,
     ],
     [
       "公開から 4 日未満",

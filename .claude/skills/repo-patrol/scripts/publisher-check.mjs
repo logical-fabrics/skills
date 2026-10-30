@@ -24,7 +24,8 @@ const LOCKFILES = new Set([
   "package-lock.json",
   "npm-shrinkwrap.json",
 ]);
-const TRUSTED_PUBLISHER = "GitHub Actions";
+// trusted publishing で公開された版の _npmUser の名前
+const TRUSTED_PUBLISHERS = new Set(["GitHub Actions", "GitLab CI/CD"]);
 const REGISTRY = "https://registry.npmjs.org/";
 
 const [base] = process.argv.slice(2);
@@ -145,8 +146,8 @@ try {
 
     if (prev) {
       const user = personName(next._npmUser);
-      const trusted = user === TRUSTED_PUBLISHER;
-      const prevTrusted = personName(prev._npmUser) === TRUSTED_PUBLISHER;
+      const trusted = TRUSTED_PUBLISHERS.has(user);
+      const prevTrusted = TRUSTED_PUBLISHERS.has(personName(prev._npmUser));
       const provenance = Boolean(next.dist?.attestations);
       const prevProvenance = Boolean(prev.dist?.attestations);
       if (!(trusted && provenance)) {
