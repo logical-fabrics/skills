@@ -94,6 +94,7 @@ const decisionItem = (extra = {}) => ({
   security: false,
   ...extra,
 });
+const deferredEntry = { number: 48, label: "`knip` 7.0.0", reason: "メジャー" };
 const ciFailureItem = (extra = {}) => ({
   kind: "ci_failure",
   workflow: "CI",
@@ -370,11 +371,23 @@ test("slack-post rejects a report that does not match the format", (t) => {
       report([], { notes: { deferred: [{ label: "a" }] } }),
       /notes\.deferred\[0\]\.reason がない/,
     ],
+    [
+      report([decisionItem()], { notes: { deferred: [deferredEntry] } }),
+      /items\[0\] の #48 は見送り中（notes\.deferred）にある/,
+    ],
   ];
   for (const [input, message] of cases) {
     const result = repo.post(input);
     assert.equal(result.status, 1, JSON.stringify(input));
     assert.match(result.stderr, message, JSON.stringify(input));
+  }
+
+  // 今回コメントした日と、セキュリティの理由があるときは、見送り中のものを要判断にも並べてよい
+  for (const extra of [{ commentedNow: true }, { security: true }]) {
+    const result = repo.post(
+      report([decisionItem(extra)], { notes: { deferred: [deferredEntry] } }),
+    );
+    assert.equal(result.status, 0, result.stderr);
   }
 
   const noRepo = slackRepo(t, "## Slack チャンネル\n\n`#engineer`\n");
