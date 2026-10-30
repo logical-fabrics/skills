@@ -202,6 +202,8 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
 3. リポジトリ変数 `REPO_PATROL_MODE` を `observe` にする（`gh variable set REPO_PATROL_MODE --body observe -R <owner/repo>`）。観察モードは GitHub に書かず、Slack にも投稿しない。報告は実行の job summary に出る。scheduled task と並行して 1 週間、報告の中身を比べる
 4. 一致したら `REPO_PATROL_MODE` を `live` にし、scheduled task をオフにする。1 週間オフのまま問題がなければ、scheduled task と cloud environment を消す
 
+pnpm は、`corepack enable` で、`package.json` の `packageManager` の版を使う。`packageManager` がないリポジトリでは corepack が最新の pnpm を使うので、リポジトリ変数 `REPO_PATROL_PNPM` に版を置く（`gh variable set REPO_PATROL_PNPM --body 10.34.7 -R <owner/repo>`）。置くと、corepack を使わずにその版を入れる。設定ファイルには、巡回が確かめる版として同じ版を書く。
+
 Claude に使わせるのは Bash・Write・Edit だけで、guard の hook を通らない読み取りのツール（Read・Glob・Grep）や Task・WebFetch は使わせない（`/proc` などからトークンを読めないように）。guard は、書き込む内容とコメントにトークンの値が入っていれば止める。失敗した日は、live なら失敗したことだけを Slack に知らせる。
 
 private リポジトリでは、実行時間が Actions の分を使う（CI を 9 分まで待つ）。まず 1 リポジトリの観察モードで実行時間を見てから広げる。止めるときは `gh variable delete REPO_PATROL_MODE -R <owner/repo>` か `gh workflow disable repo-patrol`。
