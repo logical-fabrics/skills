@@ -371,10 +371,6 @@ test("slack-post rejects a report that does not match the format", (t) => {
       report([], { notes: { deferred: [{ label: "a" }] } }),
       /notes\.deferred\[0\]\.reason がない/,
     ],
-    [
-      report([decisionItem()], { notes: { deferred: [deferredEntry] } }),
-      /items\[0\] の #48 は見送り中（notes\.deferred）にある/,
-    ],
   ];
   for (const [input, message] of cases) {
     const result = repo.post(input);
@@ -386,9 +382,21 @@ test("slack-post rejects a report that does not match the format", (t) => {
   for (const extra of [{ commentedNow: true }, { security: true }]) {
     const result = repo.post(
       report([decisionItem(extra)], { notes: { deferred: [deferredEntry] } }),
+      {},
+      ["--check"],
     );
     assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /🤔/);
   }
+  // 前の日にコメントした見送りは、報告ごと落とさずに要判断から外す
+  const stale = repo.post(
+    report([decisionItem()], { notes: { deferred: [deferredEntry] } }),
+    {},
+    ["--check"],
+  );
+  assert.equal(stale.status, 0, stale.stderr);
+  assert.match(stale.stderr, /#48 は見送り中.*要判断から外した/);
+  assert.match(stale.stdout, /報告することがないので投稿しなかった/);
 
   const noRepo = slackRepo(t, "## Slack チャンネル\n\n`#engineer`\n");
   const result = noRepo.post(report([mergeItem()]));
