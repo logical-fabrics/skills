@@ -5,7 +5,7 @@ Claude Code の scheduled tasks（旧 routines）で、リポジトリを毎日 
 ## 何をするか
 
 - Dependabot の PR（npm の minor・patch は groups で 1 本にまとまる）ごとに、CI と dependency-check の結果を見て、マージ待ち・見送り中・要判断に分ける（CI が 9 分で終わらなければ、翌日の巡回でまた見る）。取り込まないメジャー更新には理由を 1 回だけコメントする
-- 30 日を過ぎた Issue と PR を、理由のコメントと `patrol-closed` ラベルを付けて閉じる（1 日 10 件まで。7 日前に予告する）。閉じるのは Actions の定期 workflow で、巡回は予告と workflow の失敗を報告する
+- 30 日を過ぎた Issue と PR を、理由のコメントと `patrol-closed` ラベルを付けて閉じる（1 日 10 件まで。7 日前に予告する）。閉じるのは Actions の巡回の workflow の、Claude より前の step で、巡回は予告と step の失敗を報告する
 - 既定ブランチの CI の状態を見る
 - 人が見るべきもの（マージ待ち・要判断・CI の失敗・閉じる予定）がある日に、リポジトリの設定に書いた Slack チャンネルに 1 投稿する。投稿は、件数の欄と 1 件 1 行の項目を並べたもので、見出しの先頭の印が深刻さを表す（🔴 CI の失敗、🟡 要判断、🟢 それ以外）。見送り中・既定ブランチの CI・実行ログと、種類ごとに 5 件を超えた分は、そのスレッドに返信する。新しく対応が要るときは @channel を付ける。何もない日は投稿しないが、月曜だけは「異常なし」を投稿する（月曜に投稿がなければ、巡回が止まっている）
 
@@ -19,8 +19,8 @@ claude.ai の scheduled task（リポジトリごとに 1 つ・毎朝・リポ�
    ├─ GitHub（Claude GitHub App 経由・REST だけ）: 読み取りと、Dependabot の PR へのコメント
    └─ Slack（Slack アプリのボット名義・プロジェクトのチャンネル）: 報告がある日と月曜に 1 投稿、新しい要対応のときだけ @channel
 GitHub Actions（各リポジトリの .github/workflows/・workflow のトークン）
-   ├─ repo-patrol stale（毎朝 08:17 JST）: 30 日を過ぎた Issue / PR の close・ラベル・理由のコメント
-   └─ repo-patrol dependency check（Dependabot の npm 系の PR）: check-diff と、新しい版の公開者・install script・公開日の検査。毎朝 08:37 JST に、公開から 4 日未満で落ちたものを 4 日たってから再実行
+   ├─ repo-patrol（平日 09:07 JST、live のとき）: 30 日を過ぎた Issue / PR の close・ラベル・理由のコメントと、公開から 4 日未満で落ちた dependency-check の 4 日後の再実行。そのあと同じ job で Claude が巡回する（下の「Actions で動かす」）
+   └─ repo-patrol dependency check（Dependabot の npm 系の PR）: check-diff と、新しい版の公開者・install script・公開日の検査
 Dependabot（.github/dependabot.yml）: npm の minor・patch を groups で 1 本の PR に。公開から 4 日は cooldown で待つ
 ```
 
@@ -35,7 +35,7 @@ Dependabot（.github/dependabot.yml）: npm の minor・patch を groups で 1 �
 
 - シェルの変数展開・グロブ・サブシェルなどは使わせない
 - 実行できるのは、git の fetch と読み取り、決まった形の `gh api`、pnpm・npm の audit・why・view、読み取り系のコマンド、リポジトリにコミットされた `.claude/skills/*/scripts/` のスクリプトだけ。push・commit・install・run は止める。読めるのはリポジトリと `/tmp/repo-patrol/` の中だけ
-- GitHub の読み書きは設定のリポジトリだけ。書き込みは Dependabot の PR へのコメントだけ（close とラベルは Actions の workflow が行う）
+- GitHub の読み書きは設定のリポジトリだけ。書き込みは Dependabot の PR へのコメントだけ（close とラベルは workflow の step が行う）
 - ファイルの書き込みは `/tmp/repo-patrol/` だけ
 - 1 回の実行の書き込みは、コメント 20 件・Slack 投稿 1 回まで。hook の `session_id` ごとに `/tmp/repo-patrol-guard/` で数える
 - Dependabot の npm 系の PR には、Actions の `dependency-check` が check-diff（既存の依存の版の更新だけか）と、新しい版の公開者・install script・公開日の検査（`publisher-check.mjs`）をかける。workflow は `pull_request_target` で base の定義が動き、検査のスクリプトと設定も base のコミットから取り出すので、PR が検査を書き換えたり外したりできない。PR のコードは実行しない（git で読み、`npm view` はチェックアウトの外で npm のレジストリに問い合わせるだけ）
@@ -48,7 +48,7 @@ guard が効かなかったとき（hook が読まれない、仕様が変わる
 |---|---|
 | 既定ブランチ・本番ブランチへの直接の書き込み | ruleset: Require a pull request・Block force pushes・Restrict deletions。bypass list は空（github-actions も入れない） |
 | 巡回が ruleset を外せないこと | GitHub との接続を Claude GitHub App 方式にする（`/web-setup` で手元のトークンを渡さない）。App はリポジトリ設定の権限を read しか持たない |
-| Actions のトークン | Actions の既定のトークンを read にし、「Allow GitHub Actions to create and approve pull requests」を切る。close の workflow は、自分の `permissions` で Issue と PR の書き込みだけを得る |
+| Actions のトークン | Actions の既定のトークンを read にし、「Allow GitHub Actions to create and approve pull requests」を切る。巡回の workflow は、自分の `permissions` で Issue と PR の書き込みと、依存の検査の再実行（`actions: write`）を得る |
 
 ruleset が使えないプラン（Free の private リポジトリなど）では、巡回を入れない。
 
@@ -78,6 +78,8 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
    mkdir -p .github/workflows
    cp .claude/skills/repo-patrol/workflows/*.yml .github/workflows/
    ```
+
+   正本から消えた `repo-patrol*.yml` は、`.github/workflows/` からも消す（`cp` では消えない）。
 
    リポジトリの lint（Biome・ESLint・knip など）が `.claude/` を対象にしていれば、`.claude/skills/repo-patrol/` を対象外にする。
 
@@ -191,11 +193,11 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
     - SKILL.md の手順 1 の guard の確認（`ls /`）が guard に止められている
     - 報告することがあれば、プロジェクトのチャンネルにボット名義で 1 回投稿される（新しい要対応があれば @channel が付く）。なければ、実行ログの最後に投稿しなかったことが書かれている（月曜なら「異常なし」が投稿される）
     - GitHub への書き込みが、Dependabot の PR へのコメントの範囲に収まっている
-    - Actions の repo-patrol stale を `workflow_dispatch` で 1 回動かし、成功する（閉じる候補がなくても summary が出る）
+    - Actions で動かすときは、live にしたあとの `repo-patrol` の実行で、close の step が成功する（閉じる候補がなくても summary が出る）
 
 ## Actions で動かす（scheduled task の代わり）
 
-`.github/workflows/repo-patrol.yml`（導入の 2 で写すもの）は、同じ巡回を GitHub Actions 上の Claude（`anthropics/claude-code-action`）で毎朝 09:07 に動かす。境界は workflow の `permissions` で、コードは書けず、PR へのコメントと読み取りだけができる。guard も `.claude/settings.json` の hook として同じく効く。人が次を置くまでは動かない。
+`.github/workflows/repo-patrol.yml`（導入の 2 で写すもの）は、同じ巡回を GitHub Actions 上の Claude（`anthropics/claude-code-action`）で平日 09:07 に動かす。30 日を過ぎたものの close と依存の検査の再実行も、live のとき Claude より前の step で行う（job ごとに 1 分単位で課金されるので 1 つの job にまとめている。scheduled task だけで巡回するリポジトリでは動かない）。境界は workflow の `permissions` で、コードは書けない。close と再実行の step のために Issue・PR の書き込みと `actions: write` を持つが、Claude の書き込みは guard が Dependabot の PR へのコメントに絞る。guard も `.claude/settings.json` の hook として同じく効く。人が次を置くまでは動かない。
 
 1. 持ち主が `claude setup-token` で OAuth トークンを作り、`CLAUDE_CODE_OAUTH_TOKEN` として Actions secrets に置く。組織の secrets にして、導入したリポジトリだけに見せる（`gh secret set CLAUDE_CODE_OAUTH_TOKEN --org <org> --visibility selected --repos <リポジトリ,…>`）。持ち主のサブスクの枠を使い、持ち主が退職・休止すると止まるのは scheduled task と同じ
 2. Slack のボットトークンを `SLACK_BOT_TOKEN` として同じように置く。投稿の step にだけ渡り、Claude と、Claude が起動したプロセスには見えない
@@ -260,12 +262,12 @@ Slack の宛先は「Slack チャンネル」に書いたものだけで、`slac
 3. Org Owner が、Claude GitHub App のインストール対象からリポジトリを外す
 4. Slack アプリのトークンを revoke する
 5. https://claude.ai/code/routines でタスクをオフにする（実行中のセッションは止まらない）
-6. close や依存の検査を止めるときは、Actions の workflow を無効にする（`gh workflow disable "repo-patrol stale"`、`gh workflow disable "repo-patrol dependency check"`。required check に足していれば、先に ruleset から外す）
+6. close や依存の検査を止めるときは、Actions の workflow を無効にする（close と再実行は巡回ごと `gh workflow disable repo-patrol`、検査は `gh workflow disable "repo-patrol dependency check"`。required check に足していれば、先に ruleset から外す）
 
 戻す:
 
 - 閉じたものは `is:closed label:patrol-closed` で探して reopen する
-- 巡回をやめるときは、`.claude/skills/repo-patrol/`・`.claude/repo-patrol.md`・`settings.json` の guard・`.github/workflows/repo-patrol-*.yml` を消す PR を出す
+- 巡回をやめるときは、`.claude/skills/repo-patrol/`・`.claude/repo-patrol.md`・`settings.json` の guard・`.github/workflows/repo-patrol*.yml` を消す PR を出す
 
 ## 制約
 
@@ -274,5 +276,5 @@ Slack の宛先は「Slack チャンネル」に書いたものだけで、`slac
 - scheduled tasks は research preview で、挙動が変わることがある。毎回の guard の確認と GitHub 側の設定で、変わっても安全側に倒れるようにしている
 - Claude GitHub App には Dependabot アラートの権限がないので、アラートの API は 403 になる。巡回はアラートが読めるときも audit を取り、`audit-summary.mjs` で版ごとに直接依存か推移依存かを見る
 - Actions のジョブログはクラウドから取れないことがある。その場合は失敗したステップ名とリンクを報告する
-- Dependabot のセキュリティ更新は cooldown を待たずに来るので、公開から 4 日未満なら `dependency-check` が落ちる。head のコミットから 4 日たつと、検査の workflow の `recheck`（毎朝 08:37）が 1 回だけ再実行する（巡回は workflow を再実行しない）
+- Dependabot のセキュリティ更新は cooldown を待たずに来るので、公開から 4 日未満なら `dependency-check` が落ちる。head のコミットから 4 日たつと、巡回の workflow の再実行の step（平日の朝）が 1 回だけ再実行する（Claude は再実行しない）。手で再実行するときは `node .claude/skills/repo-patrol/scripts/recheck.mjs <owner/repo>`
 - `dependency-check` は前の版と同じ install script を通す（毎回止めないため）。巡回は `references/dependency-triage.md` のとおり、install script のある版を要判断にする

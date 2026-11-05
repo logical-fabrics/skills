@@ -1210,17 +1210,14 @@ process.stdout.write(JSON.stringify(responses[endpoint]));
 test("the workflows of this repository are the templates", () => {
   for (const [name, command] of [
     [
-      "repo-patrol-stale.yml",
-      /bash \.claude\/skills\/repo-patrol\/scripts\/stale\.sh "\$GITHUB_REPOSITORY" close/,
-    ],
-    [
       "repo-patrol-dependency-check.yml",
       /node "\$RUNNER_TEMP\/base\/\.claude\/skills\/repo-patrol\/scripts\/dependency-check\.mjs" "\$BASE_SHA"/,
     ],
-    // 人が secrets と vars.REPO_PATROL_MODE を置くまで動かず、Slack のトークンは投稿の step にだけ渡す
+    // 人が secrets と vars.REPO_PATROL_MODE を置くまで動かず、close と再実行は live のとき Claude より前の step で行い、
+    // Slack のトークンは投稿の step にだけ渡す
     [
       "repo-patrol.yml",
-      /if: vars\.REPO_PATROL_MODE == 'observe' \|\| vars\.REPO_PATROL_MODE == 'live'\n[\s\S]*uses: anthropics\/claude-code-action@v1[\s\S]*- name: Post the report to Slack\n {8}if: vars\.REPO_PATROL_MODE == 'live'\n {8}run: bash \.claude\/skills\/repo-patrol\/scripts\/slack-post\.sh \/tmp\/repo-patrol\/report\.json\n {8}env:\n {10}SLACK_BOT_TOKEN: \$\{\{ secrets\.SLACK_BOT_TOKEN \}\}/,
+      /if: vars\.REPO_PATROL_MODE == 'observe' \|\| vars\.REPO_PATROL_MODE == 'live'\n[\s\S]*if: vars\.REPO_PATROL_MODE == 'live'\n {8}continue-on-error: true\n {8}run: bash \.claude\/skills\/repo-patrol\/scripts\/stale\.sh "\$GITHUB_REPOSITORY" close\n[\s\S]*if: vars\.REPO_PATROL_MODE == 'live'\n {8}continue-on-error: true\n {8}run: node \.claude\/skills\/repo-patrol\/scripts\/recheck\.mjs "\$GITHUB_REPOSITORY"\n[\s\S]*uses: anthropics\/claude-code-action@v1[\s\S]*- name: Post the report to Slack\n {8}if: vars\.REPO_PATROL_MODE == 'live'\n {8}run: bash \.claude\/skills\/repo-patrol\/scripts\/slack-post\.sh \/tmp\/repo-patrol\/report\.json\n {8}env:\n {10}SLACK_BOT_TOKEN: \$\{\{ secrets\.SLACK_BOT_TOKEN \}\}/,
     ],
   ]) {
     const template = readFileSync(
@@ -1233,10 +1230,56 @@ test("the workflows of this repository are the templates", () => {
     );
     assert.equal(own, template, name);
     assert.match(template, command, name);
-    // 依存の検査は base の定義で動かす（PR が check を外せないように）
+    // 依存の検査は base の定義で動かす（PR が check を外せないように）。再実行の権限（actions: write）は持たない
     if (name === "repo-patrol-dependency-check.yml") {
-      assert.match(template, /^on:\n {2}pull_request_target:\n/m);
+      assert.match(template, /^on:\n {2}pull_request_target:\n\n/m);
+      assert.doesNotMatch(template, /actions: write/);
     }
+  }
+  // close は巡回の workflow の step に移した（正本にも、このリポジトリにも残さない）
+  for (const dir of [
+    path.join(scriptsDir, "..", "workflows"),
+    path.resolve(scriptsDir, "../../../../.github/workflows"),
+  ]) {
+    assert.equal(existsSync(path.join(dir, "repo-patrol-stale.yml")), false);
+  }
+});
+
+test("stale.sh lists the first notice for the days since the previous weekday patrol", (t) => {
+  // GitHub の日時はミリ秒を持たない
+  const hoursAgo = (hours) =>
+    new Date(Date.now() - hours * 60 * 60 * 1000)
+      .toISOString()
+      .replace(/\.\d{3}Z$/, "Z");
+  // 経過日数 22〜26 の Issue。notice は 23 日から
+  const issues = [22, 23, 24, 25, 26].map((age) => ({
+    ...oldIssue(age),
+    updated_at: hoursAgo(age * 24 + 12),
+  }));
+  const gh = fakeGh(t, { issues });
+  // [曜日（1=月）, notice-first になる経過日数]
+  for (const [weekday, first] of [
+    ["1", [23, 24, 25]],
+    ["2", [23]],
+    ["7", [23]],
+  ]) {
+    const result = runScript("stale.sh", ["o/r", "list"], {
+      env: { ...gh.env, STALE_WEEKDAY: weekday },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const rows = result.stdout
+      .trim()
+      .split("\n")
+      .map((line) => line.split("\t"));
+    assert.deepEqual(
+      rows
+        .filter(([category]) => category === "notice-first")
+        .map((row) => Number(row[3]))
+        .sort((a, b) => a - b),
+      first,
+      `weekday ${weekday}`,
+    );
+    assert.equal(rows.length, 4, `weekday ${weekday}`);
   }
 });
 
