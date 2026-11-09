@@ -20,6 +20,7 @@ reviewer role は agent 数と同義ではない。medium / high risk では独�
 
 - Implementation reviewer: 実装手順、scope、検証可能性。medium / high risk で使う。
 - Adversarial reviewer: 隠れた失敗、矛盾、曖昧さ。medium / high risk で使う。
+- Comprehension reviewer: plan が実装者にとって自己完結しているか。medium / high risk で使う。手順は下の Comprehension Test。
 - UX reviewer: UI / user flow / copy / accessibility を変える場合。`ui-ux.md` の canonical rubric に従う。
 - Simplicity reviewer: 新しい abstraction、基盤、state management、広い refactor を計画する場合。
 
@@ -29,6 +30,15 @@ Domain reviewers:
 - Security reviewer: auth、secret、permission、CI、external input。
 - Delivery reviewer: CI/CD、staging、production、OGP、monitoring。
 - AI reviewer: AI UX、AI Gateway、latency、cost、fallback。ユーザーの入力、本人素材、ライブ生成、AI 生成結果などの主成果物を、別素材、seed、sample、mock、demo asset で置き換えて成功扱いしていないかを確認する。
+
+## Comprehension Test
+
+plan は、作成時の会話を知らない実装者が読む。会話で共有した前提が plan に書かれていないと、実装者は推測で埋める。
+
+- fresh context の reviewer に、plan 本体と repo の場所だけを渡す。会話の要約や planner の意図説明は渡さない。渡すとこの test は成立しない。
+- reviewer は repo を読む前に、plan だけから目的、scope、実装手順、完了条件を自分の言葉で言い換える。続けて、実装者が推測で埋めることになる箇所を列挙する。
+- planner は言い換えを自分の意図と比べる。ずれ、または挙動を左右する推測箇所は P1 として plan に書き足す。
+- role は agent 数ではない。既定では、独立 adversarial review と同じ reviewer がこの test を先に行う。
 
 ## Stop Conditions
 
