@@ -62,7 +62,7 @@ Disallowed unless explicitly requested:
 8. `references/artifact-lifecycle.md` で保存場所、active plan、完了時の扱いを決める。
 9. `references/output-contracts.md` に従って計画成果物を作る。
 10. `references/review-rubric.md` で low / medium / high risk を選び、必要な reviewer を決める。
-11. implementation / adversarial と、発火した UX、simplicity、schema、security、delivery、AI の観点だけをレビューする。
+11. implementation / adversarial / comprehension と、発火した UX、simplicity、schema、security、delivery、AI の観点だけをレビューする。
 12. `references/review-rubric.md` の closure 条件を満たすまで修正する。修正後は変わった section に関係する reviewer だけ再実行する。同じ原因で進展しなければ model / role / scope を escalation する。
 13. review 結果を plan に畳み込む。active plan には未解決 findings、Decision Log、実装者に必要な判断理由だけを残す。
 14. `abstract-plan.html` の要否を判定する。必要なら作成/更新し、不要なら理由を `Next Action Contract` に書く。

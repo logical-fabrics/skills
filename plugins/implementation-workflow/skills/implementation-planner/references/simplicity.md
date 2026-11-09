@@ -14,4 +14,5 @@ Review checks:
 - 既存の仕組みで解けない理由は明確か。
 - より狭い scope、単純な data shape、少ない dependency、少ない状態で実現できないか。
 - 後で削除・縮小できるか。削除条件は明確か。
+- 新しい utility、helper、module、component、hook を足す計画では、reviewer が名前と役割で repo を検索し、同等の既存実装がないか確かめる。見つかれば再利用を finding にする。検索した語と結果を evidence に残す。
 

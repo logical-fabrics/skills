@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.0
+
+- Planner: added a Comprehension reviewer for medium / high risk plans. A fresh-context reviewer gets only the plan and the repo location, restates the goal, scope, steps, and done criteria in its own words before reading the repo, and lists every point an implementer would have to guess. Mismatches with the planner's intent and behavior-affecting guesses are P1. By default the same independent reviewer runs it before the adversarial review, so no extra agent is started. Adapted from the Comprehension Test in the Elephant-Goldfish Model (Apache-2.0).
+- Planner: the Simplicity review now searches the repo for an existing equivalent before a plan adds a new utility, helper, module, component, or hook, and records the search terms and results as evidence.
+- Migration: update to 0.13.0 and restart the host. Existing plans need no changes.
+
 ## 0.12.0
 
 - Made a single main agent the default for coding, following Anthropic's October 2026 guidance on folding subagents into the main loop. The executor no longer splits work by phase (implementation / tests / checking) and no longer delegates re-checks of its own work. Short checks run in the main agent. Independent review required by the risk table is unchanged. The delegation contract is now version 4.
