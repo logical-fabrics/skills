@@ -11,6 +11,17 @@ updates:
       npm-minor-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+  # Actions の巡回が Agent SDK で動くときの依存（導入先には写しが入るだけで、導入先の Dependabot は見ない）
+  - package-ecosystem: npm
+    directory: /.claude/skills/repo-patrol/agent
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 4
+    groups:
+      agent-sdk:
+        patterns: ["*"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
