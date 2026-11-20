@@ -197,10 +197,10 @@ ruleset が使えないプラン（Free の private リポジトリなど）で�
 
 ## Actions で動かす（scheduled task の代わり）
 
-`.github/workflows/repo-patrol.yml`（導入の 2 で写すもの）は、同じ巡回を GitHub Actions 上の Claude（`anthropics/claude-code-action`）で平日 09:07 に動かす。30 日を過ぎたものの close と依存の検査の再実行も、live のとき Claude より前の step で行う（job ごとに 1 分単位で課金されるので 1 つの job にまとめている。scheduled task だけで巡回するリポジトリでは動かない）。境界は workflow の `permissions` で、コードは書けない。close と再実行の step のために Issue・PR の書き込みと `actions: write` を持つが、Claude の書き込みは guard が Dependabot の PR へのコメントに絞る。guard も `.claude/settings.json` の hook として同じく効く。人が次を置くまでは動かない。
+`.github/workflows/repo-patrol.yml`（導入の 2 で写すもの）は、同じ巡回を GitHub Actions 上の Claude で平日 09:07 に動かす（`ANTHROPIC_API_KEY` のときは Agent SDK、OAuth トークンのときは `anthropics/claude-code-action`）。30 日を過ぎたものの close と依存の検査の再実行も、live のとき Claude より前の step で行う（job ごとに 1 分単位で課金されるので 1 つの job にまとめている。scheduled task だけで巡回するリポジトリでは動かない）。境界は workflow の `permissions` で、コードは書けない。close と再実行の step のために Issue・PR の書き込みと `actions: write` を持つが、Claude の書き込みは guard が Dependabot の PR へのコメントに絞る。guard も `.claude/settings.json` の hook として同じく効く。人が次を置くまでは動かない。
 
 1. Claude の認証を Actions secrets に置く。組織の secrets にして、導入したリポジトリだけに見せる（`gh secret set <名前> --org <org> --visibility selected --repos <リポジトリ,…>`）。`ANTHROPIC_API_KEY` があればそれを使い、なければ `CLAUDE_CODE_OAUTH_TOKEN` を使う
-   - `ANTHROPIC_API_KEY`: Claude Console（platform.claude.com）の組織で、巡回用の workspace に API キーを作る。組織のクレジットを使い、人の退職・休止では止まらない。workspace に月の上限を付けておく
+   - `ANTHROPIC_API_KEY`: Claude Console（platform.claude.com）の組織で、巡回用の workspace に API キーを作る。組織のクレジットを使い、人の退職・休止では止まらない。workspace に月の上限を付けておく。Console のプロモーションクレジットは Claude Code には使えないことがあるので、このときは `agent/patrol.mjs` が Agent SDK で巡回する（SDK と依存は `agent/package-lock.json` の版に固定、モデルは Sonnet）
    - `CLAUDE_CODE_OAUTH_TOKEN`: 持ち主が `claude setup-token` で作る。持ち主のサブスクの枠を使い、持ち主が退職・休止すると止まるのは scheduled task と同じ
 2. Slack のボットトークンを `SLACK_BOT_TOKEN` として同じように置く。投稿の step にだけ渡り、Claude と、Claude が起動したプロセスには見えない
 3. リポジトリ変数 `REPO_PATROL_MODE` を `observe` にする（`gh variable set REPO_PATROL_MODE --body observe -R <owner/repo>`）。観察モードは GitHub に書かず、Slack にも投稿しない。報告は実行の job summary に出る。scheduled task と並行して 1 週間、報告の中身を比べる
